@@ -95,6 +95,7 @@ export interface PlacementCostItem {
   category: CostCategory;
   title: string;
   amount: number;
+  borneBy?: "AGENSI_MAJIKAN" | "CPMI_KUR" | "TALANGAN_P3MI";
   status: "PAID" | "PENDING";
   paidDate?: string;
   vendorName?: string;
