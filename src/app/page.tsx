@@ -1285,143 +1285,55 @@ export default function PASMigranProCommandCenter() {
 
   if (!isAuthenticated) {
     return (
-      <div className="relative flex min-h-screen flex-col justify-between overflow-hidden bg-slate-950 text-white lg:flex-row">
-        {/* Elemen Dekorasi Cahaya Latar (Ambient Glow) */}
-        <div className="pointer-events-none absolute -top-40 -left-40 h-96 w-96 rounded-full bg-sky-500/20 blur-3xl" />
-        <div className="pointer-events-none absolute top-1/3 right-1/4 h-96 w-96 rounded-full bg-teal-500/15 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-32 right-10 h-80 w-80 rounded-full bg-amber-500/10 blur-3xl" />
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 p-6 text-white">
+        {/* Elemen Dekorasi Cahaya Latar (Ambient Glow Halus) */}
+        <div className="pointer-events-none absolute -top-40 -left-40 h-96 w-96 rounded-full bg-sky-500/15 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-teal-500/15 blur-3xl" />
 
-        {/* KOLOM KIRI: BRANDING EKSEKUTIF & ARSITEKTUR MULTI-TENANT P3MI */}
-        <div className="relative z-10 flex flex-1 flex-col justify-between border-b border-white/10 p-8 sm:p-12 lg:border-r lg:border-b-0 lg:p-16">
-          <div>
-            {/* Logo & Identitas Utama */}
-            <div className="flex items-center gap-3.5">
-              <img
-                src="/logo-pas.png"
-                alt="PASMigranPro Logo"
-                className="h-12 w-12 rounded-2xl bg-white object-contain p-1 shadow-lg ring-2 ring-white/20"
-              />
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xl font-extrabold tracking-tight text-white">
-                    PASMigranPro
-                  </span>
-                  <span className="rounded-full border border-teal-400/40 bg-teal-500/20 px-2.5 py-0.5 text-[10px] font-bold tracking-wider text-teal-300 uppercase">
-                    Enterprise Cloud
-                  </span>
-                </div>
-                <p className="text-xs text-slate-400">
-                  PT Panca Banyu Ajisakti · Sistem Manajemen Operasional P3MI Terpadu
-                </p>
-              </div>
+        {/* KARTU LOGIN SUPERADMIN TERPUSAT YANG BERSIH & ELEGAN */}
+        <div className="relative z-10 w-full max-w-md">
+          {/* Header Logo & Identitas Perusahaan di Atas Kartu */}
+          <div className="mb-6 flex flex-col items-center text-center">
+            <img
+              src="/logo-pas.png"
+              alt="PASMigranPro Logo"
+              className="h-14 w-14 rounded-2xl bg-white object-contain p-1.5 shadow-xl ring-2 ring-white/20"
+            />
+            <div className="mt-3 flex items-center gap-2">
+              <span className="text-2xl font-extrabold tracking-tight text-white">
+                PASMigranPro
+              </span>
+              <span className="rounded-full border border-teal-400/40 bg-teal-500/20 px-2.5 py-0.5 text-[10px] font-bold tracking-wider text-teal-300 uppercase">
+                Enterprise Cloud
+              </span>
             </div>
-
-            {/* Headline Utama */}
-            <div className="mt-10 max-w-xl">
-              <div className="inline-flex items-center gap-2 rounded-full border border-sky-400/30 bg-sky-500/10 px-3.5 py-1 text-xs font-semibold text-sky-300">
-                <Sparkles className="h-3.5 w-3.5 text-sky-400" />
-                Arsitektur Multi-Tenant P3MI · Siap Integrasi SISKOP2MI & Musaned
-              </div>
-              <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl leading-tight">
-                Satu Command Center untuk Seluruh Siklus Penempatan PMI.
-              </h1>
-              <p className="mt-3 text-sm leading-relaxed text-slate-300">
-                Kendalikan seluruh operasional P3MI mulai dari akuisisi Lead, verifikasi 10 berkas digital & scan fisik berpelindung UU PDP, pencairan bertahap Fee Sponsor (DP 1–DP 3 & Pelunasan), hingga manajemen pergantian kandidat <strong>Badil (بديل)</strong> Timur Tengah dan Asia Pasifik.
-              </p>
-            </div>
-
-            {/* 3 Pilar Keunggulan Multi-Tenant */}
-            <div className="mt-8 grid max-w-xl grid-cols-1 gap-3.5 sm:grid-cols-3">
-              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-500/20 text-sky-300">
-                  <Building2 className="h-4 w-4" />
-                </div>
-                <p className="mt-2.5 text-xs font-bold text-white">
-                  Multi-Tenant Ready
-                </p>
-                <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
-                  Satu akun Superadmin memegang kendali penuh atas Tenant P3MI, Kantor Cabang Daerah, dan BLK-LN.
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-500/20 text-teal-300">
-                  <ShieldCheck className="h-4 w-4" />
-                </div>
-                <p className="mt-2.5 text-xs font-bold text-white">
-                  Kepatuhan UU PDP
-                </p>
-                <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
-                  Pratinjau fisik e-KTP, Paspor & Medical dilengkapi watermark keamanan dan pencatatan Audit Log otomatis.
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/20 text-amber-300">
-                  <Globe className="h-4 w-4" />
-                </div>
-                <p className="mt-2.5 text-xs font-bold text-white">
-                  Timur Tengah & Asia
-                </p>
-                <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
-                  Mendukung skema SPSK Saudi, Tadbeer UAE, Kuwait, Oman, Yordania (termasuk fitur Badil), Taiwan, Jepang & HK.
-                </p>
-              </div>
-            </div>
+            <p className="mt-1 text-xs text-slate-400">
+              PT Panca Banyu Ajisakti · Sistem Manajemen Operasional P3MI
+            </p>
           </div>
 
-          {/* Statistik Ringkas Live Database di Kaki Kiri */}
-          <div className="mt-10 flex flex-wrap items-center gap-6 border-t border-white/10 pt-6 text-xs text-slate-400">
-            <div>
-              <span className="block text-lg font-extrabold text-white">
-                {db.candidates.length} CPMI/PMI
-              </span>
-              <span>Terdaftar di Database Aktif</span>
-            </div>
-            <div className="h-8 w-px bg-white/10" />
-            <div>
-              <span className="block text-lg font-extrabold text-teal-400">
-                {db.branches.length} Kantor Cabang
-              </span>
-              <span>Terhubung Secara Real-Time</span>
-            </div>
-            <div className="h-8 w-px bg-white/10" />
-            <div>
-              <span className="block text-lg font-extrabold text-amber-400">
-                {db.foreignAgencies?.length || 5} Syarikah / Agensi
-              </span>
-              <span>Mitra Resmi Luar Negeri</span>
-            </div>
-          </div>
-        </div>
-
-        {/* KOLOM KANAN: FORM LOGIN SUPERADMIN YANG CANTIK & ELEGAN */}
-        <div className="relative z-10 flex w-full items-center justify-center p-6 sm:p-12 lg:w-[500px] xl:w-[540px]">
-          <div className="w-full max-w-md rounded-3xl border border-white/15 bg-slate-900/85 p-8 shadow-2xl backdrop-blur-xl">
+          <div className="rounded-3xl border border-white/15 bg-slate-900/85 p-8 shadow-2xl backdrop-blur-xl">
             <div className="flex items-center justify-between">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/15 px-3 py-1 text-[11px] font-bold text-emerald-300">
                 <Lock className="h-3 w-3" />
-                Gerbang Otorisasi Superadmin
+                Otorisasi Superadmin
               </span>
-              <span className="font-mono text-[11px] text-slate-400">v2.5 Multi-Tenant</span>
+              <span className="font-mono text-[11px] text-slate-400">Multi-Tenant</span>
             </div>
 
-            <h2 className="mt-4 text-2xl font-extrabold text-white">
+            <h2 className="mt-4 text-xl font-extrabold text-white">
               Masuk ke Command Center
             </h2>
-            <p className="mt-1 text-xs text-slate-400">
-              Gunakan kredensial <strong>Superadmin Utama</strong> untuk mengelola seluruh modul operasional, keuangan sponsor, dan master mitra P3MI.
-            </p>
 
             {/* Informasi Tenant Aktif */}
-            <div className="mt-5 flex items-center justify-between rounded-2xl border border-sky-500/25 bg-sky-500/10 px-4 py-3 text-xs">
+            <div className="mt-4 flex items-center justify-between rounded-2xl border border-sky-500/25 bg-sky-500/10 px-4 py-2.5 text-xs">
               <div>
                 <span className="text-[10px] font-bold tracking-wider text-sky-300 uppercase block">
-                  Instance / Master Tenant P3MI
+                  Master Tenant P3MI
                 </span>
-                <strong className="text-white">PT Panca Banyu Ajisakti (P3MI-ID-001)</strong>
+                <strong className="text-white">PT Panca Banyu Ajisakti</strong>
               </div>
-              <span className="rounded-lg bg-sky-500/20 px-2 py-1 text-[10px] font-bold text-sky-200 border border-sky-400/30">
+              <span className="rounded-lg bg-sky-500/20 px-2 py-0.5 text-[10px] font-bold text-sky-200 border border-sky-400/30">
                 Verified
               </span>
             </div>
@@ -1484,11 +1396,11 @@ export default function PASMigranProCommandCenter() {
             </form>
 
             {/* Box Kredensial Demo 1 User Superadmin */}
-            <div className="mt-6 rounded-2xl border border-white/10 bg-slate-950/70 p-4 text-xs">
+            <div className="mt-5 rounded-2xl border border-white/10 bg-slate-950/70 p-3.5 text-xs">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-slate-200 flex items-center gap-1.5">
                   <KeyRound className="h-3.5 w-3.5 text-amber-400" />
-                  Akun Tunggal Demo Superadmin
+                  Akun Demo Superadmin
                 </span>
                 <button
                   type="button"
@@ -1502,20 +1414,14 @@ export default function PASMigranProCommandCenter() {
                   ⚡ Isi Otomatis
                 </button>
               </div>
-              <div className="mt-2.5 space-y-1 font-mono text-[11px] text-slate-300">
+              <div className="mt-2 space-y-1 font-mono text-[11px] text-slate-300">
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Username / Email:</span>
+                  <span className="text-slate-500">Username:</span>
                   <span className="font-bold text-white">superadmin@pasmigranpro.id</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500">Password:</span>
                   <span className="font-bold text-teal-300">SuperAdmin2026!</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Hak Akses:</span>
-                  <span className="font-sans font-semibold text-amber-300">
-                    All-Access Superadmin (Multi-Tenant)
-                  </span>
                 </div>
               </div>
             </div>
