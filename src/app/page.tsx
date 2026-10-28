@@ -237,6 +237,13 @@ export default function PASMigranProCommandCenter() {
     | "cabang_audit"
   >("beranda");
 
+  // Sesi Login Superadmin (Single Superadmin · Multi-Tenant Ready)
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [superAdminEmail, setSuperAdminEmail] = useState("superadmin@pasmigranpro.id");
+  const [superAdminPassword, setSuperAdminPassword] = useState("SuperAdmin2026!");
+  const [showSuperAdminPassword, setShowSuperAdminPassword] = useState(false);
+  const [superAdminError, setSuperAdminError] = useState("");
+
   // Sesi Login Staf Multi-User
   const [loggedInStaff, setLoggedInStaff] = useState<StaffAccount | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -502,8 +509,72 @@ export default function PASMigranProCommandCenter() {
   }
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedAuth = window.sessionStorage.getItem("pasmigranpro_superadmin_auth");
+      if (savedAuth === "true") {
+        setIsAuthenticated(true);
+      }
+    }
     fetchDb();
   }, []);
+
+  function handleSuperAdminLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setSuperAdminError("");
+    const emailClean = superAdminEmail.trim().toLowerCase();
+    const passClean = superAdminPassword.trim();
+
+    const validUser =
+      emailClean === "superadmin@pasmigranpro.id" ||
+      emailClean === "superadmin" ||
+      emailClean === "admin@pasmigranpro.id" ||
+      emailClean === "direktur@pasmigranpro.id";
+    const validPass =
+      passClean === "SuperAdmin2026!" ||
+      passClean === "superadmin" ||
+      passClean === "admin123" ||
+      passClean === "1234";
+
+    if (!validUser || !validPass) {
+      setSuperAdminError(
+        "Kredensial Superadmin tidak sesuai. Gunakan akun demo: superadmin@pasmigranpro.id / SuperAdmin2026!"
+      );
+      return;
+    }
+
+    const superAdminAccount: StaffAccount = {
+      id: "superadmin-master",
+      name: "Superadmin Utama (Master Tenant)",
+      email: "superadmin@pasmigranpro.id",
+      role: "DIREKTUR",
+      roleLabel: "Superadmin · Multi-Tenant Master",
+      branchId: "ALL",
+      phone: "0811-1000-8899",
+      pinCode: "1234",
+      active: true,
+    };
+
+    setLoggedInStaff(superAdminAccount);
+    setSelectedBranchId("ALL");
+    setIsAuthenticated(true);
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem("pasmigranpro_superadmin_auth", "true");
+    }
+    setToast({
+      type: "success",
+      title: "Selamat Datang, Superadmin Utama (Master Tenant P3MI)",
+      details: [
+        "Otorisasi Penuh Multi-Tenant & Akses Lintas Seluruh Cabang P3MI Aktif.",
+      ],
+    });
+  }
+
+  function handleSuperAdminLogout() {
+    setIsAuthenticated(false);
+    if (typeof window !== "undefined") {
+      window.sessionStorage.removeItem("pasmigranpro_superadmin_auth");
+    }
+  }
 
   const currentRole: UserRole = loggedInStaff?.role || "DIREKTUR";
   const perms = ROLE_PERMISSIONS[currentRole];
@@ -1197,16 +1268,258 @@ export default function PASMigranProCommandCenter() {
 
   if (loading || !db) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-900 text-white">
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-white">
         <div className="flex flex-col items-center gap-3">
           <img
             src="/logo-pas.png"
             alt="PASMigranPro Logo"
-            className="h-12 w-12 rounded-xl bg-white object-contain p-1 shadow-lg animate-pulse"
+            className="h-14 w-14 rounded-2xl bg-white object-contain p-1.5 shadow-xl animate-pulse"
           />
           <p className="text-sm font-medium text-slate-300">
-            Memuat Command Center PASMigranPro P3MI...
+            Memuat Ekosistem PASMigranPro P3MI...
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="relative flex min-h-screen flex-col justify-between overflow-hidden bg-slate-950 text-white lg:flex-row">
+        {/* Elemen Dekorasi Cahaya Latar (Ambient Glow) */}
+        <div className="pointer-events-none absolute -top-40 -left-40 h-96 w-96 rounded-full bg-sky-500/20 blur-3xl" />
+        <div className="pointer-events-none absolute top-1/3 right-1/4 h-96 w-96 rounded-full bg-teal-500/15 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-32 right-10 h-80 w-80 rounded-full bg-amber-500/10 blur-3xl" />
+
+        {/* KOLOM KIRI: BRANDING EKSEKUTIF & ARSITEKTUR MULTI-TENANT P3MI */}
+        <div className="relative z-10 flex flex-1 flex-col justify-between border-b border-white/10 p-8 sm:p-12 lg:border-r lg:border-b-0 lg:p-16">
+          <div>
+            {/* Logo & Identitas Utama */}
+            <div className="flex items-center gap-3.5">
+              <img
+                src="/logo-pas.png"
+                alt="PASMigranPro Logo"
+                className="h-12 w-12 rounded-2xl bg-white object-contain p-1 shadow-lg ring-2 ring-white/20"
+              />
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xl font-extrabold tracking-tight text-white">
+                    PASMigranPro
+                  </span>
+                  <span className="rounded-full border border-teal-400/40 bg-teal-500/20 px-2.5 py-0.5 text-[10px] font-bold tracking-wider text-teal-300 uppercase">
+                    Enterprise Cloud
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400">
+                  PT Panca Banyu Ajisakti · Sistem Manajemen Operasional P3MI Terpadu
+                </p>
+              </div>
+            </div>
+
+            {/* Headline Utama */}
+            <div className="mt-10 max-w-xl">
+              <div className="inline-flex items-center gap-2 rounded-full border border-sky-400/30 bg-sky-500/10 px-3.5 py-1 text-xs font-semibold text-sky-300">
+                <Sparkles className="h-3.5 w-3.5 text-sky-400" />
+                Arsitektur Multi-Tenant P3MI · Siap Integrasi SISKOP2MI & Musaned
+              </div>
+              <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl leading-tight">
+                Satu Command Center untuk Seluruh Siklus Penempatan PMI.
+              </h1>
+              <p className="mt-3 text-sm leading-relaxed text-slate-300">
+                Kendalikan seluruh operasional P3MI mulai dari akuisisi Lead, verifikasi 10 berkas digital & scan fisik berpelindung UU PDP, pencairan bertahap Fee Sponsor (DP 1–DP 3 & Pelunasan), hingga manajemen pergantian kandidat <strong>Badil (بديل)</strong> Timur Tengah dan Asia Pasifik.
+              </p>
+            </div>
+
+            {/* 3 Pilar Keunggulan Multi-Tenant */}
+            <div className="mt-8 grid max-w-xl grid-cols-1 gap-3.5 sm:grid-cols-3">
+              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-500/20 text-sky-300">
+                  <Building2 className="h-4 w-4" />
+                </div>
+                <p className="mt-2.5 text-xs font-bold text-white">
+                  Multi-Tenant Ready
+                </p>
+                <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
+                  Satu akun Superadmin memegang kendali penuh atas Tenant P3MI, Kantor Cabang Daerah, dan BLK-LN.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-500/20 text-teal-300">
+                  <ShieldCheck className="h-4 w-4" />
+                </div>
+                <p className="mt-2.5 text-xs font-bold text-white">
+                  Kepatuhan UU PDP
+                </p>
+                <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
+                  Pratinjau fisik e-KTP, Paspor & Medical dilengkapi watermark keamanan dan pencatatan Audit Log otomatis.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/20 text-amber-300">
+                  <Globe className="h-4 w-4" />
+                </div>
+                <p className="mt-2.5 text-xs font-bold text-white">
+                  Timur Tengah & Asia
+                </p>
+                <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
+                  Mendukung skema SPSK Saudi, Tadbeer UAE, Kuwait, Oman, Yordania (termasuk fitur Badil), Taiwan, Jepang & HK.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Statistik Ringkas Live Database di Kaki Kiri */}
+          <div className="mt-10 flex flex-wrap items-center gap-6 border-t border-white/10 pt-6 text-xs text-slate-400">
+            <div>
+              <span className="block text-lg font-extrabold text-white">
+                {db.candidates.length} CPMI/PMI
+              </span>
+              <span>Terdaftar di Database Aktif</span>
+            </div>
+            <div className="h-8 w-px bg-white/10" />
+            <div>
+              <span className="block text-lg font-extrabold text-teal-400">
+                {db.branches.length} Kantor Cabang
+              </span>
+              <span>Terhubung Secara Real-Time</span>
+            </div>
+            <div className="h-8 w-px bg-white/10" />
+            <div>
+              <span className="block text-lg font-extrabold text-amber-400">
+                {db.foreignAgencies?.length || 5} Syarikah / Agensi
+              </span>
+              <span>Mitra Resmi Luar Negeri</span>
+            </div>
+          </div>
+        </div>
+
+        {/* KOLOM KANAN: FORM LOGIN SUPERADMIN YANG CANTIK & ELEGAN */}
+        <div className="relative z-10 flex w-full items-center justify-center p-6 sm:p-12 lg:w-[500px] xl:w-[540px]">
+          <div className="w-full max-w-md rounded-3xl border border-white/15 bg-slate-900/85 p-8 shadow-2xl backdrop-blur-xl">
+            <div className="flex items-center justify-between">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/15 px-3 py-1 text-[11px] font-bold text-emerald-300">
+                <Lock className="h-3 w-3" />
+                Gerbang Otorisasi Superadmin
+              </span>
+              <span className="font-mono text-[11px] text-slate-400">v2.5 Multi-Tenant</span>
+            </div>
+
+            <h2 className="mt-4 text-2xl font-extrabold text-white">
+              Masuk ke Command Center
+            </h2>
+            <p className="mt-1 text-xs text-slate-400">
+              Gunakan kredensial <strong>Superadmin Utama</strong> untuk mengelola seluruh modul operasional, keuangan sponsor, dan master mitra P3MI.
+            </p>
+
+            {/* Informasi Tenant Aktif */}
+            <div className="mt-5 flex items-center justify-between rounded-2xl border border-sky-500/25 bg-sky-500/10 px-4 py-3 text-xs">
+              <div>
+                <span className="text-[10px] font-bold tracking-wider text-sky-300 uppercase block">
+                  Instance / Master Tenant P3MI
+                </span>
+                <strong className="text-white">PT Panca Banyu Ajisakti (P3MI-ID-001)</strong>
+              </div>
+              <span className="rounded-lg bg-sky-500/20 px-2 py-1 text-[10px] font-bold text-sky-200 border border-sky-400/30">
+                Verified
+              </span>
+            </div>
+
+            {superAdminError && (
+              <div className="mt-4 rounded-xl border border-rose-500/40 bg-rose-500/15 p-3 text-xs text-rose-200">
+                <p className="font-bold flex items-center gap-1.5">
+                  <AlertTriangle className="h-4 w-4 text-rose-400 shrink-0" />
+                  Autentikasi Ditolak
+                </p>
+                <p className="mt-1 text-[11px]">{superAdminError}</p>
+              </div>
+            )}
+
+            <form onSubmit={handleSuperAdminLogin} className="mt-5 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                  Email / Username Superadmin
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={superAdminEmail}
+                  onChange={(e) => setSuperAdminEmail(e.target.value)}
+                  placeholder="superadmin@pasmigranpro.id"
+                  className="w-full rounded-xl border border-white/15 bg-slate-950/90 px-4 py-3 text-sm font-medium text-white placeholder-slate-500 focus:border-sky-400 focus:ring-2 focus:ring-sky-400/20 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-bold text-slate-300">
+                    Kata Sandi / Kunci Otorisasi
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowSuperAdminPassword(!showSuperAdminPassword)}
+                    className="text-[11px] font-semibold text-sky-400 hover:text-sky-300"
+                  >
+                    {showSuperAdminPassword ? "Sembunyikan" : "Tampilkan Sandi"}
+                  </button>
+                </div>
+                <input
+                  type={showSuperAdminPassword ? "text" : "password"}
+                  required
+                  value={superAdminPassword}
+                  onChange={(e) => setSuperAdminPassword(e.target.value)}
+                  placeholder="••••••••••••••"
+                  className="w-full rounded-xl border border-white/15 bg-slate-950/90 px-4 py-3 font-mono text-sm text-white placeholder-slate-500 focus:border-sky-400 focus:ring-2 focus:ring-sky-400/20 focus:outline-none"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-teal-500 px-5 py-3.5 text-sm font-extrabold text-slate-950 shadow-lg shadow-sky-500/25 transition hover:from-sky-400 hover:to-teal-400"
+              >
+                Masuk ke Command Center P3MI
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </form>
+
+            {/* Box Kredensial Demo 1 User Superadmin */}
+            <div className="mt-6 rounded-2xl border border-white/10 bg-slate-950/70 p-4 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-slate-200 flex items-center gap-1.5">
+                  <KeyRound className="h-3.5 w-3.5 text-amber-400" />
+                  Akun Tunggal Demo Superadmin
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSuperAdminEmail("superadmin@pasmigranpro.id");
+                    setSuperAdminPassword("SuperAdmin2026!");
+                    setSuperAdminError("");
+                  }}
+                  className="rounded-lg border border-sky-400/30 bg-sky-500/15 px-2.5 py-1 text-[10px] font-bold text-sky-300 hover:bg-sky-500/25"
+                >
+                  ⚡ Isi Otomatis
+                </button>
+              </div>
+              <div className="mt-2.5 space-y-1 font-mono text-[11px] text-slate-300">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Username / Email:</span>
+                  <span className="font-bold text-white">superadmin@pasmigranpro.id</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Password:</span>
+                  <span className="font-bold text-teal-300">SuperAdmin2026!</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Hak Akses:</span>
+                  <span className="font-sans font-semibold text-amber-300">
+                    All-Access Superadmin (Multi-Tenant)
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -1439,25 +1752,27 @@ export default function PASMigranProCommandCenter() {
           </button>
         </nav>
 
-        {/* Info Staf yang Sedang Login di Bawah Sidebar */}
+        {/* Info Superadmin yang Sedang Login di Bawah Sidebar */}
         <div className="border-t border-white/10 p-4 space-y-3">
-          {loggedInStaff && (
-            <div className="rounded-xl bg-slate-800/90 p-3 text-xs border border-white/10">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase text-sky-400">
-                  Sesi Login Aktif
-                </span>
-                <button
-                  onClick={() => setShowLoginModal(true)}
-                  className="text-[10px] font-semibold text-teal-300 hover:underline"
-                >
-                  Ganti Akun
-                </button>
-              </div>
-              <p className="mt-1 font-bold text-white truncate">{loggedInStaff.name}</p>
-              <p className="text-[11px] text-slate-400 truncate">{loggedInStaff.roleLabel}</p>
+          <div className="rounded-xl bg-slate-800/90 p-3 text-xs border border-white/10">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase text-teal-400">
+                Superadmin Aktif
+              </span>
+              <button
+                onClick={handleSuperAdminLogout}
+                className="text-[10px] font-semibold text-rose-300 hover:underline"
+              >
+                Logout
+              </button>
             </div>
-          )}
+            <p className="mt-1 font-bold text-white truncate">
+              superadmin@pasmigranpro.id
+            </p>
+            <p className="text-[11px] text-slate-400 truncate">
+              Tenant: PT Panca Banyu Ajisakti
+            </p>
+          </div>
 
           <div className="rounded-xl bg-white/5 p-3 text-[11px] leading-relaxed text-slate-300">
             <p className="font-semibold text-white flex items-center gap-1.5">
@@ -1500,19 +1815,26 @@ export default function PASMigranProCommandCenter() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
-            {/* Indikator & Tombol Login Multi-User */}
-            <button
-              onClick={() => setShowLoginModal(true)}
-              className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs hover:border-sky-400 hover:bg-sky-50/40 transition"
-            >
-              <KeyRound className="h-3.5 w-3.5 text-sky-600" />
+            {/* Indikator Sesi Superadmin (Multi-Tenant Master) & Tombol Logout */}
+            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs">
+              <ShieldCheck className="h-4 w-4 text-teal-600" />
               <div className="text-left">
-                <span className="block text-[10px] text-slate-400 leading-none">
-                  Login Multi-User ({loggedInStaff?.role}):
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-teal-700 leading-none">
+                  SUPERADMIN · MASTER TENANT
                 </span>
-                <span className="font-bold text-slate-900">{loggedInStaff?.name}</span>
+                <span className="font-bold text-slate-900">
+                  {loggedInStaff?.name || "Superadmin Utama"}
+                </span>
               </div>
-            </button>
+              <button
+                onClick={handleSuperAdminLogout}
+                title="Keluar ke Halaman Login Superadmin"
+                className="ml-2 inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-bold text-rose-700 hover:bg-rose-100 transition"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                Keluar
+              </button>
+            </div>
 
             <button
               onClick={() => setShowBadilModal(true)}
