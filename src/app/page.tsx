@@ -265,6 +265,13 @@ export default function PASMigranProCommandCenter() {
 
   // State Modul Keuangan (Pembayaran Fee Sponsor Bertahap DP1, DP2, DP3, Pelunasan & HPP)
   const [financeSponsorFilter, setFinanceSponsorFilter] = useState<string>("ALL");
+  const [financeSearchQuery, setFinanceSearchQuery] = useState<string>("");
+  const [financeStatusFilter, setFinanceStatusFilter] = useState<
+    "ALL" | "SIAP_CAIR" | "BELUM_LUNAS" | "LUNAS_100"
+  >("ALL");
+  const [financeViewMode, setFinanceViewMode] = useState<"TABEL_RINGKAS" | "KARTU_DETAIL">(
+    "TABEL_RINGKAS"
+  );
   const [selectedFinanceCandidateId, setSelectedFinanceCandidateId] = useState<string>("cpmi-1");
   const [payingTerminModal, setPayingTerminModal] = useState<{
     candidate: Candidate;
@@ -4368,317 +4375,566 @@ export default function PASMigranProCommandCenter() {
                     </div>
                   </div>
 
-                  {/* BAGIAN 1: MATRIKS PEMBAYARAN FEE SPONSOR BERTAHAP (DP 1, DP 2, DP 3, PELUNASAN) */}
-                  <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                  {/* BAGIAN 1: TABEL RINGKAS PEMBAYARAN FEE SPONSOR BERTAHAP (DP 1, DP 2, DP 3, PELUNASAN) */}
+                  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
                       <div>
-                        <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-800">
-                          Kontrol Anti-Boncos Sponsor / PL
-                        </span>
-                        <h2 className="mt-1 text-base font-bold text-slate-900">
-                          Pembayaran Fee Sponsor Bertahap (DP 1 · DP 2 · DP 3 · Pelunasan)
+                        <h2 className="text-base font-bold text-slate-900">
+                          Daftar Pembayaran Fee Sponsor Bertahap (DP 1 · DP 2 · DP 3 · Pelunasan)
                         </h2>
-                        <p className="text-xs text-slate-500">
-                          Pencairan komisi sponsor dikunci berurutan sesuai tahapan progres CPMI:
-                          <strong> DP 1 (20% saat Medical FIT)</strong> →{" "}
-                          <strong>DP 2 (25% saat Paspor & Rekom ID)</strong> →{" "}
-                          <strong>DP 3 (25% saat Visa & Kontrak PK)</strong> →{" "}
-                          <strong>Pelunasan (30% saat Terbang)</strong>.
+                        <p className="mt-0.5 text-xs text-slate-500">
+                          <strong>DP 1 (20% Medical FIT)</strong> →{" "}
+                          <strong>DP 2 (25% Paspor/ID)</strong> →{" "}
+                          <strong>DP 3 (25% Visa/PK)</strong> →{" "}
+                          <strong>Pelunasan (30% Terbang)</strong>
                         </p>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-2">
+                      {/* Toggle Tampilan Tabel Ringkas vs Kartu Detail */}
+                      <div className="inline-flex rounded-xl border border-slate-200 bg-slate-100 p-1 text-xs">
+                        <button
+                          type="button"
+                          onClick={() => setFinanceViewMode("TABEL_RINGKAS")}
+                          className={`rounded-lg px-3 py-1.5 font-bold transition ${
+                            financeViewMode === "TABEL_RINGKAS"
+                              ? "bg-slate-900 text-white shadow-xs"
+                              : "text-slate-600 hover:text-slate-900"
+                          }`}
+                        >
+                          📋 Tabel Ringkas (Skala Besar)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFinanceViewMode("KARTU_DETAIL")}
+                          className={`rounded-lg px-3 py-1.5 font-bold transition ${
+                            financeViewMode === "KARTU_DETAIL"
+                              ? "bg-slate-900 text-white shadow-xs"
+                              : "text-slate-600 hover:text-slate-900"
+                          }`}
+                        >
+                          🗂️ Kartu Detail
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Baris Filter Cepat Sponsor (Chip Ringkas) */}
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setFinanceSponsorFilter("ALL")}
+                        className={`rounded-lg border px-3 py-1.5 text-xs font-bold transition ${
+                          financeSponsorFilter === "ALL"
+                            ? "border-slate-900 bg-slate-900 text-white"
+                            : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
+                        }`}
+                      >
+                        Semua Sponsor ({db.sponsors.length})
+                      </button>
+                      {db.sponsors.map((sp) => {
+                        const active = financeSponsorFilter === sp.id;
+                        return (
+                          <button
+                            key={sp.id}
+                            type="button"
+                            onClick={() =>
+                              setFinanceSponsorFilter(active ? "ALL" : sp.id)
+                            }
+                            className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs transition ${
+                              active
+                                ? "border-emerald-600 bg-emerald-600 text-white font-bold"
+                                : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                            }`}
+                          >
+                            <span className="font-semibold">{sp.name}</span>
+                            <span
+                              className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${
+                                active
+                                  ? "bg-white/20 text-white"
+                                  : "bg-rose-50 text-rose-700"
+                              }`}
+                            >
+                              Sisa: {formatRupiah(sp.payableAmount)}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Baris Pencarian & Filter Status Pembayaran */}
+                    <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-12">
+                      <div className="relative sm:col-span-6">
+                        <Search className="pointer-events-none absolute top-2.5 left-3 h-4 w-4 text-slate-400" />
+                        <input
+                          type="text"
+                          value={financeSearchQuery}
+                          onChange={(e) => setFinanceSearchQuery(e.target.value)}
+                          placeholder="Cari nama CPMI, No. Registrasi, negara, atau nama sponsor..."
+                          className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pr-3 pl-9 text-xs text-slate-900 focus:border-sky-500 focus:bg-white focus:outline-none"
+                        />
+                      </div>
+                      <div className="sm:col-span-3">
+                        <select
+                          value={financeStatusFilter}
+                          onChange={(e) =>
+                            setFinanceStatusFilter(
+                              e.target.value as
+                                | "ALL"
+                                | "SIAP_CAIR"
+                                | "BELUM_LUNAS"
+                                | "LUNAS_100"
+                            )
+                          }
+                          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-800"
+                        >
+                          <option value="ALL">Semua Status Termin</option>
+                          <option value="SIAP_CAIR">⚡ Ada Termin Siap Cair</option>
+                          <option value="BELUM_LUNAS">⏳ Masih Ada Sisa Terutang</option>
+                          <option value="LUNAS_100">✓ Sudah Lunas 100%</option>
+                        </select>
+                      </div>
+                      <div className="sm:col-span-3">
                         <select
                           value={financeSponsorFilter}
                           onChange={(e) => setFinanceSponsorFilter(e.target.value)}
-                          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800"
+                          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-800"
                         >
-                          <option value="ALL">Semua Sponsor / PL ({db.sponsors.length})</option>
+                          <option value="ALL">Pilih Sponsor / PL (Semua)</option>
                           {db.sponsors.map((sp) => (
                             <option key={sp.id} value={sp.id}>
-                              {sp.code} · {sp.name} ({sp.area})
+                              {sp.code} · {sp.name}
                             </option>
                           ))}
                         </select>
                       </div>
                     </div>
 
-                    {/* Kartu Rekapitulasi Saldo per Sponsor */}
-                    <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
-                      {db.sponsors.map((sp) => {
-                        const totalSp = sp.paidAmount + sp.payableAmount;
-                        const pct = totalSp > 0 ? Math.round((sp.paidAmount / totalSp) * 100) : 0;
-                        const cpmiCount = db.candidates.filter((c) => c.sponsorId === sp.id).length;
+                    {/* DATA CPMI & TERMIN FEE SPONSOR */}
+                    {(() => {
+                      const stageOrder: JourneyStage[] = [
+                        "LEAD",
+                        "PROSPECT",
+                        "CPMI",
+                        "READY",
+                        "DEPLOYED",
+                        "ACTIVE_WORKER",
+                        "RETURNED",
+                        "ALUMNI",
+                      ];
+
+                      const filteredFinanceCandidates = db.candidates.filter((c) => {
+                        if (selectedBranchId !== "ALL" && c.branchId !== selectedBranchId)
+                          return false;
+                        if (!c.sponsorId || c.sponsorCommission <= 0) return false;
+                        if (
+                          financeSponsorFilter !== "ALL" &&
+                          c.sponsorId !== financeSponsorFilter
+                        )
+                          return false;
+
+                        const sp = db.sponsors.find((s) => s.id === c.sponsorId);
+                        if (financeSearchQuery.trim()) {
+                          const q = financeSearchQuery.toLowerCase();
+                          const match =
+                            c.fullName.toLowerCase().includes(q) ||
+                            c.regNumber.toLowerCase().includes(q) ||
+                            c.destinationCountry.toLowerCase().includes(q) ||
+                            (sp?.name || "").toLowerCase().includes(q);
+                          if (!match) return false;
+                        }
+
+                        const installments = c.finance?.sponsorInstallments || [];
+                        const paidSum = installments
+                          .filter((i) => i.status === "PAID")
+                          .reduce((acc, i) => acc + i.amount, 0);
+                        const totalFee = c.sponsorCommission || 0;
+                        const currentIdx = stageOrder.indexOf(c.stage);
+
+                        const hasReadyToPay = installments.some((inst, idx) => {
+                          if (inst.status === "PAID") return false;
+                          const prevInst = idx > 0 ? installments[idx - 1] : null;
+                          if (prevInst && prevInst.status !== "PAID") return false;
+                          return currentIdx >= stageOrder.indexOf(inst.requiredStage);
+                        });
+
+                        if (financeStatusFilter === "SIAP_CAIR" && !hasReadyToPay) return false;
+                        if (financeStatusFilter === "BELUM_LUNAS" && paidSum >= totalFee)
+                          return false;
+                        if (financeStatusFilter === "LUNAS_100" && paidSum < totalFee)
+                          return false;
+
+                        return true;
+                      });
+
+                      if (filteredFinanceCandidates.length === 0) {
                         return (
-                          <div
-                            key={sp.id}
-                            onClick={() =>
-                              setFinanceSponsorFilter(
-                                financeSponsorFilter === sp.id ? "ALL" : sp.id
-                              )
-                            }
-                            className={`cursor-pointer rounded-xl border p-4 transition ${
-                              financeSponsorFilter === sp.id
-                                ? "border-emerald-500 bg-emerald-50/50 ring-2 ring-emerald-500/20"
-                                : "border-slate-200 bg-slate-50/70 hover:border-slate-300"
-                            }`}
-                          >
-                            <div className="flex items-start justify-between">
-                              <div>
-                                <span className="rounded bg-slate-900 px-2 py-0.5 font-mono text-[10px] font-bold text-white">
-                                  {sp.code}
-                                </span>
-                                <p className="mt-1 text-sm font-bold text-slate-900">{sp.name}</p>
-                                <p className="text-[11px] text-slate-500">
-                                  Area: {sp.area} · {cpmiCount} CPMI
-                                </p>
-                              </div>
-                              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800">
-                                {pct}% Cair
-                              </span>
-                            </div>
-
-                            <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-200">
-                              <div
-                                className="h-full rounded-full bg-emerald-600 transition-all"
-                                style={{ width: `${pct}%` }}
-                              />
-                            </div>
-
-                            <div className="mt-2.5 flex items-center justify-between text-xs">
-                              <span className="text-slate-600">
-                                Sudah Cair:{" "}
-                                <strong className="text-emerald-700">
-                                  {formatRupiah(sp.paidAmount)}
-                                </strong>
-                              </span>
-                              <span className="text-rose-600 font-bold">
-                                Sisa: {formatRupiah(sp.payableAmount)}
-                              </span>
-                            </div>
+                          <div className="mt-4 rounded-xl border border-dashed border-slate-200 p-8 text-center text-xs text-slate-500">
+                            Tidak ada data CPMI yang sesuai dengan filter pencarian fee sponsor.
                           </div>
                         );
-                      })}
-                    </div>
+                      }
 
-                    {/* Daftar CPMI & 4 Kartu Termin (DP1, DP2, DP3, PELUNASAN) */}
-                    <div className="mt-5 space-y-4">
-                      {db.candidates
-                        .filter((c) => {
-                          if (selectedBranchId !== "ALL" && c.branchId !== selectedBranchId)
-                            return false;
-                          if (!c.sponsorId || c.sponsorCommission <= 0) return false;
-                          if (
-                            financeSponsorFilter !== "ALL" &&
-                            c.sponsorId !== financeSponsorFilter
-                          )
-                            return false;
-                          return true;
-                        })
-                        .map((c) => {
-                          const sp = db.sponsors.find((s) => s.id === c.sponsorId);
-                          const installments = c.finance?.sponsorInstallments || [];
-                          const paidSum = installments
-                            .filter((i) => i.status === "PAID")
-                            .reduce((acc, i) => acc + i.amount, 0);
-                          const totalFee = c.sponsorCommission || 0;
-                          const pctPaid =
-                            totalFee > 0 ? Math.round((paidSum / totalFee) * 100) : 0;
-
-                          return (
-                            <div
-                              key={c.id}
-                              className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
-                            >
-                              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
-                                <div>
-                                  <div className="flex flex-wrap items-center gap-2">
-                                    <span className="font-mono text-xs font-bold text-sky-700">
-                                      {c.regNumber}
-                                    </span>
-                                    <h3 className="text-sm font-bold text-slate-900">
-                                      {c.fullName}
-                                    </h3>
-                                    <span className="rounded-md bg-slate-900 px-2 py-0.5 text-[10px] font-bold text-white">
-                                      Tahap Saat Ini: {c.stage}
-                                    </span>
-                                    <span className="rounded-md bg-sky-50 px-2 py-0.5 text-[11px] font-semibold text-sky-800 border border-sky-200">
-                                      {c.destinationCountry} · {c.jobSector}
-                                    </span>
-                                  </div>
-                                  <p className="mt-1 text-xs text-slate-500">
-                                    Sponsor Pengirim:{" "}
-                                    <strong className="text-slate-800">
-                                      {sp?.name || "-"} ({sp?.code})
-                                    </strong>{" "}
-                                    · Total Fee Sponsor:{" "}
-                                    <strong className="text-slate-900">
-                                      {formatRupiah(totalFee)}
-                                    </strong>
-                                  </p>
-                                </div>
-
-                                <div className="flex items-center gap-3">
-                                  <div className="text-right text-xs">
-                                    <span className="block font-bold text-emerald-700">
-                                      Terbayar: {formatRupiah(paidSum)} ({pctPaid}%)
-                                    </span>
-                                    <span className="block text-[11px] text-rose-600 font-semibold">
-                                      Sisa Terutang: {formatRupiah(Math.max(0, totalFee - paidSum))}
-                                    </span>
-                                  </div>
-                                  <button
-                                    onClick={() => {
-                                      setSelectedFinanceCandidateId(c.id);
-                                      const el = document.getElementById("hpp-breakdown-panel");
-                                      el?.scrollIntoView({ behavior: "smooth" });
-                                    }}
-                                    className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
-                                  >
-                                    Lihat Rincian HPP →
-                                  </button>
-                                </div>
-                              </div>
-
-                              {/* 4 Kolom Termin: DP 1, DP 2, DP 3, PELUNASAN */}
-                              <div className="mt-3.5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                                {installments.map((inst, idx) => {
-                                  const isPaid = inst.status === "PAID";
-                                  const prevInst = idx > 0 ? installments[idx - 1] : null;
-                                  const isPrevUnpaid = prevInst && prevInst.status !== "PAID";
-
-                                  const stageOrder: JourneyStage[] = [
-                                    "LEAD",
-                                    "PROSPECT",
-                                    "CPMI",
-                                    "READY",
-                                    "DEPLOYED",
-                                    "ACTIVE_WORKER",
-                                    "RETURNED",
-                                    "ALUMNI",
-                                  ];
+                      if (financeViewMode === "TABEL_RINGKAS") {
+                        return (
+                          <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200">
+                            <table className="w-full text-left text-xs">
+                              <thead>
+                                <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-bold uppercase text-slate-500">
+                                  <th className="py-3 px-3">Kandidat CPMI & Tahap</th>
+                                  <th className="py-3 px-3">Sponsor & Total Fee</th>
+                                  <th className="py-3 px-2.5 text-center">DP 1 (20%)</th>
+                                  <th className="py-3 px-2.5 text-center">DP 2 (25%)</th>
+                                  <th className="py-3 px-2.5 text-center">DP 3 (25%)</th>
+                                  <th className="py-3 px-2.5 text-center">Pelunasan (30%)</th>
+                                  <th className="py-3 px-3 text-right">Terbayar / Sisa</th>
+                                  <th className="py-3 px-3 text-right">HPP</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-100">
+                                {filteredFinanceCandidates.map((c) => {
+                                  const sp = db.sponsors.find((s) => s.id === c.sponsorId);
+                                  const installments = c.finance?.sponsorInstallments || [];
+                                  const paidSum = installments
+                                    .filter((i) => i.status === "PAID")
+                                    .reduce((acc, i) => acc + i.amount, 0);
+                                  const totalFee = c.sponsorCommission || 0;
+                                  const remSum = Math.max(0, totalFee - paidSum);
+                                  const pctPaid =
+                                    totalFee > 0 ? Math.round((paidSum / totalFee) * 100) : 0;
                                   const currentIdx = stageOrder.indexOf(c.stage);
-                                  const reqIdx = stageOrder.indexOf(inst.requiredStage);
-                                  const stageReached = currentIdx >= reqIdx;
 
                                   return (
-                                    <div
-                                      key={inst.terminKey}
-                                      className={`flex flex-col justify-between rounded-xl border p-3.5 text-xs transition ${
-                                        isPaid
-                                          ? "border-emerald-200 bg-emerald-50/60"
-                                          : stageReached && !isPrevUnpaid
-                                          ? "border-amber-300 bg-amber-50/50"
-                                          : "border-slate-200 bg-slate-50"
-                                      }`}
+                                    <tr
+                                      key={c.id}
+                                      className="hover:bg-slate-50/80 transition"
                                     >
-                                      <div>
-                                        <div className="flex items-center justify-between gap-1">
-                                          <span className="font-extrabold text-slate-900">
-                                            {inst.terminKey === "PELUNASAN"
-                                              ? "TERMIN 4 · PELUNASAN"
-                                              : `TERMIN ${idx + 1} · ${inst.terminKey}`}{" "}
-                                            ({inst.percentage}%)
-                                          </span>
-                                          {isPaid ? (
-                                            <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-bold text-white">
-                                              ✓ LUNAS
-                                            </span>
-                                          ) : stageReached && !isPrevUnpaid ? (
-                                            <span className="rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-slate-950">
-                                              SIAP CAIR
-                                            </span>
-                                          ) : (
-                                            <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-700">
-                                              TERTUNDA
-                                            </span>
-                                          )}
-                                        </div>
-
-                                        <p className="mt-1.5 text-base font-extrabold text-slate-900">
-                                          {formatRupiah(inst.amount)}
-                                        </p>
-
-                                        <p className="mt-1 text-[11px] leading-snug text-slate-600">
-                                          Syarat: <strong>{inst.label}</strong> (Min.{" "}
-                                          <span className="font-mono font-bold">
-                                            {inst.requiredStage}
-                                          </span>
-                                          )
-                                        </p>
-
-                                        {isPaid && (
-                                          <div className="mt-2 rounded-lg border border-emerald-200 bg-white p-2 text-[11px] text-slate-600">
-                                            <p className="font-mono font-bold text-emerald-800">
-                                              {inst.receiptNumber}
-                                            </p>
-                                            <p>
-                                              Cair: <strong>{inst.paidAt}</strong> (
-                                              {inst.paymentMethod || "Transfer Bank"})
+                                      {/* Kolom 1: Kandidat */}
+                                      <td className="py-3 px-3">
+                                        <div className="flex items-center gap-2.5">
+                                          <img
+                                            src={getCandidateAvatarUrl(c)}
+                                            alt={c.fullName}
+                                            className="h-9 w-7 shrink-0 rounded border border-slate-300 object-cover"
+                                          />
+                                          <div>
+                                            <div className="flex items-center gap-1.5">
+                                              <span className="font-bold text-slate-900">
+                                                {c.fullName}
+                                              </span>
+                                              <span className="rounded bg-slate-900 px-1.5 py-0.5 text-[9px] font-bold text-white">
+                                                {c.stage}
+                                              </span>
+                                            </div>
+                                            <p className="text-[11px] text-slate-500">
+                                              <span className="font-mono">{c.regNumber}</span> ·{" "}
+                                              {c.destinationCountry}
                                             </p>
                                           </div>
-                                        )}
-                                      </div>
+                                        </div>
+                                      </td>
 
-                                      <div className="mt-3 pt-2 border-t border-slate-200/70">
-                                        {isPaid ? (
-                                          <button
-                                            type="button"
-                                            onClick={() =>
-                                              setReceiptPreviewModal({
-                                                candidate: c,
-                                                installment: inst,
-                                                sponsorName: sp?.name || "Sponsor Lapangan",
-                                                sponsorArea: sp?.area || "-",
-                                              })
-                                            }
-                                            className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-[11px] font-bold text-emerald-800 hover:bg-emerald-100"
+                                      {/* Kolom 2: Sponsor & Total Fee */}
+                                      <td className="py-3 px-3">
+                                        <p className="font-bold text-slate-800">
+                                          {sp?.name || "-"}
+                                        </p>
+                                        <p className="text-[11px] text-slate-500">
+                                          Total:{" "}
+                                          <strong className="text-slate-900">
+                                            {formatRupiah(totalFee)}
+                                          </strong>
+                                        </p>
+                                      </td>
+
+                                      {/* Kolom 3-6: DP1, DP2, DP3, PELUNASAN */}
+                                      {installments.map((inst, idx) => {
+                                        const isPaid = inst.status === "PAID";
+                                        const prevInst = idx > 0 ? installments[idx - 1] : null;
+                                        const isPrevUnpaid =
+                                          prevInst && prevInst.status !== "PAID";
+                                        const reqIdx = stageOrder.indexOf(inst.requiredStage);
+                                        const stageReached = currentIdx >= reqIdx;
+
+                                        return (
+                                          <td
+                                            key={inst.terminKey}
+                                            className="py-2.5 px-2 text-center align-middle"
                                           >
-                                            <Receipt className="h-3.5 w-3.5" />
-                                            Kwitansi {inst.terminKey}
-                                          </button>
-                                        ) : (
-                                          <button
-                                            type="button"
-                                            disabled={Boolean(isPrevUnpaid)}
-                                            onClick={() => {
-                                              setPayTerminForm({
-                                                paymentMethod: "TRANSFER_BANK",
-                                                notes: `Pencairan ${inst.label} a.n ${c.fullName}`,
-                                                forceOverride: false,
-                                              });
-                                              setPayingTerminModal({
-                                                candidate: c,
-                                                installment: inst,
-                                                sponsorName: sp?.name || "Sponsor",
-                                                stageWarningMsg: !stageReached
-                                                  ? `Tahap ${c.fullName} saat ini baru "${c.stage}", sedangkan syarat ${inst.label} adalah minimal tahap "${inst.requiredStage}".`
-                                                  : undefined,
-                                              });
-                                            }}
-                                            className={`inline-flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-bold transition ${
-                                              isPrevUnpaid
-                                                ? "cursor-not-allowed bg-slate-200 text-slate-400"
-                                                : stageReached
-                                                ? "bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm"
-                                                : "bg-slate-900 text-white hover:bg-slate-800"
-                                            }`}
-                                          >
-                                            <CreditCard className="h-3.5 w-3.5" />
-                                            {isPrevUnpaid
-                                              ? `Bayar ${prevInst?.terminKey} Dulu`
-                                              : `Bayar ${inst.terminKey}`}
-                                          </button>
-                                        )}
-                                      </div>
-                                    </div>
+                                            <div className="inline-flex flex-col items-center gap-1">
+                                              <span className="font-mono text-[11px] font-bold text-slate-800">
+                                                {formatRupiah(inst.amount)}
+                                              </span>
+                                              {isPaid ? (
+                                                <button
+                                                  type="button"
+                                                  title={`Cetak Kwitansi ${inst.receiptNumber}`}
+                                                  onClick={() =>
+                                                    setReceiptPreviewModal({
+                                                      candidate: c,
+                                                      installment: inst,
+                                                      sponsorName:
+                                                        sp?.name || "Sponsor Lapangan",
+                                                      sponsorArea: sp?.area || "-",
+                                                    })
+                                                  }
+                                                  className="inline-flex items-center gap-1 rounded-md border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-800 hover:bg-emerald-100"
+                                                >
+                                                  ✓ Lunas · Kwitansi
+                                                </button>
+                                              ) : isPrevUnpaid ? (
+                                                <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-400">
+                                                  Tunggu {prevInst?.terminKey}
+                                                </span>
+                                              ) : (
+                                                <button
+                                                  type="button"
+                                                  onClick={() => {
+                                                    setPayTerminForm({
+                                                      paymentMethod: "TRANSFER_BANK",
+                                                      notes: `Pencairan ${inst.label} a.n ${c.fullName}`,
+                                                      forceOverride: false,
+                                                    });
+                                                    setPayingTerminModal({
+                                                      candidate: c,
+                                                      installment: inst,
+                                                      sponsorName: sp?.name || "Sponsor",
+                                                      stageWarningMsg: !stageReached
+                                                        ? `Tahap ${c.fullName} saat ini baru "${c.stage}", sedangkan syarat ${inst.label} adalah minimal tahap "${inst.requiredStage}".`
+                                                        : undefined,
+                                                    });
+                                                  }}
+                                                  className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[10px] font-bold transition ${
+                                                    stageReached
+                                                      ? "bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs"
+                                                      : "border border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
+                                                  }`}
+                                                >
+                                                  <CreditCard className="h-3 w-3" />
+                                                  {stageReached
+                                                    ? `Cairkan ${inst.terminKey}`
+                                                    : `Bayar ${inst.terminKey}`}
+                                                </button>
+                                              )}
+                                            </div>
+                                          </td>
+                                        );
+                                      })}
+
+                                      {/* Kolom 7: Terbayar & Sisa */}
+                                      <td className="py-3 px-3 text-right">
+                                        <span className="block font-bold text-emerald-700">
+                                          {formatRupiah(paidSum)} ({pctPaid}%)
+                                        </span>
+                                        <span className="block text-[11px] font-semibold text-rose-600">
+                                          Sisa: {formatRupiah(remSum)}
+                                        </span>
+                                      </td>
+
+                                      {/* Kolom 8: Tombol Rincian HPP */}
+                                      <td className="py-3 px-3 text-right">
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setSelectedFinanceCandidateId(c.id);
+                                            const el = document.getElementById(
+                                              "hpp-breakdown-panel"
+                                            );
+                                            el?.scrollIntoView({ behavior: "smooth" });
+                                          }}
+                                          className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-100"
+                                        >
+                                          HPP →
+                                        </button>
+                                      </td>
+                                    </tr>
                                   );
                                 })}
+                              </tbody>
+                            </table>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="mt-4 space-y-4">
+                          {filteredFinanceCandidates.map((c) => {
+                            const sp = db.sponsors.find((s) => s.id === c.sponsorId);
+                            const installments = c.finance?.sponsorInstallments || [];
+                            const paidSum = installments
+                              .filter((i) => i.status === "PAID")
+                              .reduce((acc, i) => acc + i.amount, 0);
+                            const totalFee = c.sponsorCommission || 0;
+                            const pctPaid =
+                              totalFee > 0 ? Math.round((paidSum / totalFee) * 100) : 0;
+
+                            return (
+                              <div
+                                key={c.id}
+                                className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+                              >
+                                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                                  <div>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <span className="font-mono text-xs font-bold text-sky-700">
+                                        {c.regNumber}
+                                      </span>
+                                      <h3 className="text-sm font-bold text-slate-900">
+                                        {c.fullName}
+                                      </h3>
+                                      <span className="rounded-md bg-slate-900 px-2 py-0.5 text-[10px] font-bold text-white">
+                                        Tahap Saat Ini: {c.stage}
+                                      </span>
+                                      <span className="rounded-md bg-sky-50 px-2 py-0.5 text-[11px] font-semibold text-sky-800 border border-sky-200">
+                                        {c.destinationCountry} · {c.jobSector}
+                                      </span>
+                                    </div>
+                                    <p className="mt-1 text-xs text-slate-500">
+                                      Sponsor Pengirim:{" "}
+                                      <strong className="text-slate-800">
+                                        {sp?.name || "-"} ({sp?.code})
+                                      </strong>{" "}
+                                      · Total Fee Sponsor:{" "}
+                                      <strong className="text-slate-900">
+                                        {formatRupiah(totalFee)}
+                                      </strong>
+                                    </p>
+                                  </div>
+
+                                  <div className="flex items-center gap-3">
+                                    <div className="text-right text-xs">
+                                      <span className="block font-bold text-emerald-700">
+                                        Terbayar: {formatRupiah(paidSum)} ({pctPaid}%)
+                                      </span>
+                                      <span className="block text-[11px] text-rose-600 font-semibold">
+                                        Sisa Terutang: {formatRupiah(Math.max(0, totalFee - paidSum))}
+                                      </span>
+                                    </div>
+                                    <button
+                                      onClick={() => {
+                                        setSelectedFinanceCandidateId(c.id);
+                                        const el = document.getElementById("hpp-breakdown-panel");
+                                        el?.scrollIntoView({ behavior: "smooth" });
+                                      }}
+                                      className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                                    >
+                                      Lihat Rincian HPP →
+                                    </button>
+                                  </div>
+                                </div>
+
+                                <div className="mt-3.5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                                  {installments.map((inst, idx) => {
+                                    const isPaid = inst.status === "PAID";
+                                    const prevInst = idx > 0 ? installments[idx - 1] : null;
+                                    const isPrevUnpaid = prevInst && prevInst.status !== "PAID";
+                                    const currentIdx = stageOrder.indexOf(c.stage);
+                                    const reqIdx = stageOrder.indexOf(inst.requiredStage);
+                                    const stageReached = currentIdx >= reqIdx;
+
+                                    return (
+                                      <div
+                                        key={inst.terminKey}
+                                        className={`flex flex-col justify-between rounded-xl border p-3.5 text-xs transition ${
+                                          isPaid
+                                            ? "border-emerald-200 bg-emerald-50/60"
+                                            : stageReached && !isPrevUnpaid
+                                            ? "border-amber-300 bg-amber-50/50"
+                                            : "border-slate-200 bg-slate-50"
+                                        }`}
+                                      >
+                                        <div>
+                                          <div className="flex items-center justify-between gap-1">
+                                            <span className="font-extrabold text-slate-900">
+                                              {inst.terminKey === "PELUNASAN"
+                                                ? "TERMIN 4 · PELUNASAN"
+                                                : `TERMIN ${idx + 1} · ${inst.terminKey}`}{" "}
+                                              ({inst.percentage}%)
+                                            </span>
+                                            {isPaid ? (
+                                              <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-bold text-white">
+                                                ✓ LUNAS
+                                              </span>
+                                            ) : stageReached && !isPrevUnpaid ? (
+                                              <span className="rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-slate-950">
+                                                SIAP CAIR
+                                              </span>
+                                            ) : (
+                                              <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-700">
+                                                TERTUNDA
+                                              </span>
+                                            )}
+                                          </div>
+                                          <p className="mt-1.5 text-base font-extrabold text-slate-900">
+                                            {formatRupiah(inst.amount)}
+                                          </p>
+                                          <p className="mt-1 text-[11px] leading-snug text-slate-600">
+                                            Syarat: <strong>{inst.label}</strong> (Min.{" "}
+                                            <span className="font-mono font-bold">
+                                              {inst.requiredStage}
+                                            </span>
+                                            )
+                                          </p>
+                                        </div>
+                                        <div className="mt-3 pt-2 border-t border-slate-200/70">
+                                          {isPaid ? (
+                                            <button
+                                              type="button"
+                                              onClick={() =>
+                                                setReceiptPreviewModal({
+                                                  candidate: c,
+                                                  installment: inst,
+                                                  sponsorName: sp?.name || "Sponsor Lapangan",
+                                                  sponsorArea: sp?.area || "-",
+                                                })
+                                              }
+                                              className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-[11px] font-bold text-emerald-800 hover:bg-emerald-100"
+                                            >
+                                              <Receipt className="h-3.5 w-3.5" />
+                                              Kwitansi {inst.terminKey}
+                                            </button>
+                                          ) : (
+                                            <button
+                                              type="button"
+                                              disabled={Boolean(isPrevUnpaid)}
+                                              onClick={() => {
+                                                setPayTerminForm({
+                                                  paymentMethod: "TRANSFER_BANK",
+                                                  notes: `Pencairan ${inst.label} a.n ${c.fullName}`,
+                                                  forceOverride: false,
+                                                });
+                                                setPayingTerminModal({
+                                                  candidate: c,
+                                                  installment: inst,
+                                                  sponsorName: sp?.name || "Sponsor",
+                                                  stageWarningMsg: !stageReached
+                                                    ? `Tahap ${c.fullName} saat ini baru "${c.stage}", sedangkan syarat ${inst.label} adalah minimal tahap "${inst.requiredStage}".`
+                                                    : undefined,
+                                                });
+                                              }}
+                                              className={`inline-flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-bold transition ${
+                                                isPrevUnpaid
+                                                  ? "cursor-not-allowed bg-slate-200 text-slate-400"
+                                                  : stageReached
+                                                  ? "bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm"
+                                                  : "bg-slate-900 text-white hover:bg-slate-800"
+                                              }`}
+                                            >
+                                              <CreditCard className="h-3.5 w-3.5" />
+                                              {isPrevUnpaid
+                                                ? `Bayar ${prevInst?.terminKey} Dulu`
+                                                : `Bayar ${inst.terminKey}`}
+                                            </button>
+                                          )}
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
                               </div>
-                            </div>
-                          );
-                        })}
-                    </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* BAGIAN 2: RINCIAN HPP BIAYA PENEMPATAN PER CPMI, SKEMA PEMBIAYAAN (KUR / ZERO COST) & LABA BERSIH */}
