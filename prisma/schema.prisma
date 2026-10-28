@@ -1,0 +1,137 @@
+// Skema Database Prisma untuk Sistem Manajemen P3MI & Penempatan PMI (MigranPro Clone)
+// Mendukung SQLite maupun PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Branch {
+  id        String      @id @default(cuid())
+  code      String      @unique // misal: JKT-HQ, IDM-01, CLP-02, MLG-03
+  name      String      // misal: Kantor Pusat Jakarta, Cabang Indramayu
+  city      String
+  headName  String
+  phone     String
+  cpmiList  Candidate[]
+  sponsors  Sponsor[]
+  staffList Staff[]
+  createdAt DateTime    @default(now())
+}
+
+model Sponsor {
+  id              String      @id @default(cuid())
+  code            String      @unique
+  name            String
+  phone           String
+  area            String
+  branchId        String
+  branch          Branch      @relation(fields: [branchId], references: [id])
+  commissionRate  Int         // dalam Rupiah per keberangkatan
+  totalPaid       Int         @default(0)
+  totalPayable    Int         @default(0)
+  candidates      Candidate[]
+  createdAt       DateTime    @default(now())
+}
+
+model Staff {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  role      String   // DIREKTUR, ADMIN_PUSAT, KEPALA_CABANG, STAF_DOKUMEN, SPONSOR_PL
+  branchId  String
+  branch    Branch   @relation(fields: [branchId], references: [id])
+  active    Boolean  @default(true)
+}
+
+model Candidate {
+  id                 String          @id @default(cuid())
+  regNumber          String          @unique // Nomor Registrasi Internal P3MI: P3MI-2026-XXXX
+  nik                String?         @unique // 16 digit NIK unik, boleh kosong saat masih LEAD
+  fullName           String
+  gender             String          // P / L
+  birthPlace         String?
+  birthDate          String?
+  phone              String
+  address            String?
+  maritalStatus      String?         // Belum Kawin, Kawin, Cerai Hidup, Cerai Mati
+  education          String?         // SD, SMP, SMA/SMK, D3/S1
+  destinationCountry String          // Taiwan, Hong Kong, Jepang, Malaysia, Singapura, Korea Selatan
+  jobSector          String          // Caregiver, Domestic Worker, Operator Pabrik, Konstruksi, Pertanian
+  employerName       String?         // Nama Majikan / Agensi Mitra Luar Negeri
+  agencyPartner      String?
+  stage              String          // LEAD, PROSPECT, CPMI, READY, DEPLOYED, ACTIVE_WORKER, RETURNED, ALUMNI
+  specialStatus      String?         // null, REHIRE, BLACKLISTED, INACTIVE
+  siskop2miId        String?         // ID SISKOP2MI Pemerintah (Pelengkap operasional)
+  flightInfo         String?         // Misal: Garuda Indonesia GA872
+  departureDate      String?
+  returnDate         String?
+  placementFee       Int             @default(0)
+  costIncurred       Int             @default(0)
+  branchId           String
+  branch             Branch          @relation(fields: [branchId], references: [id])
+  sponsorId          String?
+  sponsor            Sponsor?        @relation(fields: [sponsorId], references: [id])
+  documents          CpmiDocument[]
+  renewalTasks       RenewalTask[]
+  auditLogs          AuditLog[]
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+}
+
+model CpmiDocument {
+  id              String    @id @default(cuid())
+  candidateId     String
+  candidate       Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  docType         String    // KTP, KK, AKTA_IJAZAH, IZIN_KELUARGA, PASPOR, MEDICAL, SERTIFIKAT_KOMPETENSI, PERJANJIAN_PENEMPATAN, VISA, TIKET_EKTKLN
+  title           String
+  docNumber       String?   // Nomor Paspor / Nomor Visa / Nomor Surat / Klinik Medical
+  issuedBy        String?   // Imigrasi Cirebon, Klinik Pramita, TETO Taipei, dll.
+  issueDate       String?   // YYYY-MM-DD
+  expiryDate      String?   // YYYY-MM-DD (Dipantau otomatis oleh Pengingat Dokumen)
+  status          String    // MISSING, UPLOADED, VERIFIED, REJECTED, EXPIRED
+  medicalResult   String?   // FIT, UNFIT, PENDING (Khusus docType == MEDICAL)
+  isSensitive     Boolean   @default(false) // KTP, PASPOR, MEDICAL, VISA, PERJANJIAN_PENEMPATAN
+  requiredAtStage String    // PROSPECT, CPMI, READY, DEPLOYED
+  aiCheckStatus   String?   // MATCH, WARNING, UNCHECKED
+  aiCheckNotes    String?   // Catatan hasil bacaan AI (OCR asisten periksa awal)
+  verifiedBy      String?
+  verifiedAt      String?
+  fileUrl         String?
+  notes           String?
+  lastReminderTier Int?     // null, 60, 30, 14, 7, 0 (Mencegah spam notifikasi tiap malam)
+  updatedAt       DateTime  @updatedAt
+}
+
+model RenewalTask {
+  id           String    @id @default(cuid())
+  candidateId  String
+  candidate    Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  documentId   String
+  docType      String
+  title        String
+  dueDate      String    // Sama dengan tanggal kedaluwarsa dokumen
+  tierDays     Int       // 30, 14, 7, atau 0 (Expired)
+  assignedRole String    // STAF_DOKUMEN / ADMIN_PUSAT
+  status       String    // OPEN, IN_PROGRESS, COMPLETED
+  createdAt    DateTime  @default(now())
+  completedAt  String?
+  completedBy  String?
+}
+
+model AuditLog {
+  id          String     @id @default(cuid())
+  candidateId String?
+  candidate   Candidate? @relation(fields: [candidateId], references: [id], onDelete: SetNull)
+  actorName   String
+  actorRole   String
+  branchName  String
+  actionType  String     // STAGE_CHANGE, DOC_VERIFIED, SENSITIVE_DOC_VIEW, NIK_DUPLICATE_BLOCKED, RENEWAL_TASK, DATA_CREATED, SPECIAL_STATUS
+  summary     String
+  details     String?
+  timestamp   String
+}
