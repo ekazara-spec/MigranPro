@@ -151,7 +151,7 @@ function buildSvgDataUrl(svg: string): string {
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
-export const AVATAR_PRESETS: {
+const AVATAR_PRESETS: {
   id: string;
   label: string;
   gender: "P" | "L";
