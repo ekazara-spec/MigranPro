@@ -1749,6 +1749,16 @@ export default function PASMigranProCommandCenter() {
               </button>
             </div>
 
+            <a
+              href="/flowchart-pasmigranpro.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-sky-300 bg-sky-50 px-3 py-2 text-xs font-bold text-sky-900 shadow-xs transition hover:bg-sky-100"
+            >
+              <FolderKanban className="h-3.5 w-3.5 text-sky-700" />
+              🗺️ Flowchart Sistem (PDF)
+            </a>
+
             <button
               onClick={() => setShowBadilModal(true)}
               className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900 shadow-xs transition hover:bg-amber-100"

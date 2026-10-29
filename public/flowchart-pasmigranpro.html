@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>Flowchart Arsitektur & Alur Proses End-to-End PASMigranPro P3MI</title>
+  <style>
+    @page {
+      size: A3 portrait;
+      margin: 10mm;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 28px 32px;
+      width: 1560px;
+      margin: 0 auto;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 1.5px solid rgba(56, 189, 248, 0.35);
+      border-radius: 20px;
+      padding: 20px 28px;
+      margin-bottom: 22px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+    .logo-box {
+      width: 62px;
+      height: 62px;
+      border-radius: 14px;
+      background: #ffffff;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .logo-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .title-group h1 {
+      font-size: 23px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.3px;
+    }
+    .title-group p {
+      font-size: 13px;
+      color: #94a3b8;
+      margin-top: 4px;
+    }
+    .badge-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .badge-sky { background: rgba(14, 165, 233, 0.2); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.4); }
+    .badge-teal { background: rgba(20, 184, 166, 0.2); color: #5eead4; border: 1px solid rgba(45, 212, 191, 0.4); }
+    .badge-amber { background: rgba(245, 158, 11, 0.2); color: #fcd34d; border: 1px solid rgba(251, 191, 36, 0.4); }
+    .header-right {
+      text-align: right;
+      font-size: 12px;
+      color: #cbd5e1;
+      line-height: 1.6;
+    }
+    .header-right strong {
+      color: #38bdf8;
+    }
+
+    /* LEGEND BAR */
+    .legend-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(30, 41, 59, 0.75);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 14px;
+      padding: 10px 20px;
+      margin-bottom: 22px;
+      font-size: 11.5px;
+    }
+    .legend-items {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: #e2e8f0;
+      font-weight: 600;
+    }
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 4px;
+    }
+    .dot-auth { background: #38bdf8; }
+    .dot-master { background: #a855f7; }
+    .dot-journey { background: #14b8a6; }
+    .dot-finance { background: #10b981; }
+    .dot-badil { background: #f59e0b; }
+    .dot-alert { background: #f43f5e; }
+
+    /* SWIMLANE PHASE CONTAINER */
+    .phase-container {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .phase-row {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 16px;
+      background: rgba(30, 41, 59, 0.55);
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      border-radius: 18px;
+      padding: 16px 18px;
+      position: relative;
+    }
+    .phase-label {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      border-right: 2px dashed rgba(148, 163, 184, 0.25);
+      padding-right: 14px;
+    }
+    .phase-num {
+      font-size: 10.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 4px;
+    }
+    .phase-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.25;
+    }
+    .phase-desc {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 5px;
+      line-height: 1.4;
+    }
+
+    .flow-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      align-items: stretch;
+    }
+    .flow-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      align-items: stretch;
+    }
+    .flow-card {
+      background: #1e293b;
+      border-radius: 14px;
+      padding: 13px 15px;
+      border: 1.5px solid rgba(148, 163, 184, 0.25);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+    }
+    .flow-card.sky { border-color: #38bdf8; background: linear-gradient(180deg, rgba(14,165,233,0.14) 0%, #1e293b 100%); }
+    .flow-card.purple { border-color: #a855f7; background: linear-gradient(180deg, rgba(168,85,247,0.14) 0%, #1e293b 100%); }
+    .flow-card.teal { border-color: #14b8a6; background: linear-gradient(180deg, rgba(20,184,166,0.14) 0%, #1e293b 100%); }
+    .flow-card.emerald { border-color: #10b981; background: linear-gradient(180deg, rgba(16,185,129,0.16) 0%, #1e293b 100%); }
+    .flow-card.amber { border-color: #f59e0b; background: linear-gradient(180deg, rgba(245,158,11,0.16) 0%, #1e293b 100%); }
+    .flow-card.rose { border-color: #f43f5e; background: linear-gradient(180deg, rgba(244,63,94,0.16) 0%, #1e293b 100%); }
+
+    .step-tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    .step-tag span.pill {
+      padding: 2px 7px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.1);
+      color: #f8fafc;
+    }
+    .card-title {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 5px;
+      line-height: 1.3;
+    }
+    .card-body {
+      font-size: 11px;
+      color: #cbd5e1;
+      line-height: 1.45;
+    }
+    .card-body ul {
+      padding-left: 14px;
+      margin-top: 4px;
+    }
+    .card-body li {
+      margin-bottom: 2px;
+    }
+    .card-footer {
+      margin-top: 9px;
+      padding-top: 7px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      font-size: 10.5px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* CONNECTOR BANNER BETWEEN PHASES */
+    .connector-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      margin: -4px 0;
+      color: #38bdf8;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+
+    /* JOURNEY 8 STAGES BAR */
+    .journey-ribbon {
+      background: linear-gradient(90deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+      border: 1.5px solid rgba(45, 212, 191, 0.4);
+      border-radius: 16px;
+      padding: 12px 18px;
+      margin-bottom: 18px;
+    }
+    .journey-ribbon-title {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: #5eead4;
+      letter-spacing: 0.7px;
+      margin-bottom: 9px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .stages-track {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 8px;
+    }
+    .stage-node {
+      background: #0f172a;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: 10px;
+      padding: 8px 10px;
+      text-align: center;
+    }
+    .stage-node .idx {
+      font-size: 9.5px;
+      font-weight: 800;
+      color: #38bdf8;
+      display: block;
+    }
+    .stage-node .name {
+      font-size: 12px;
+      font-weight: 800;
+      color: #ffffff;
+      margin-top: 2px;
+      display: block;
+    }
+    .stage-node .sub {
+      font-size: 9.5px;
+      color: #94a3b8;
+      margin-top: 2px;
+      display: block;
+    }
+
+    /* FOOTER REVIEW MATRIX */
+    .review-footer {
+      margin-top: 20px;
+      background: linear-gradient(135deg, rgba(14, 165, 233, 0.12) 0%, rgba(20, 184, 166, 0.12) 100%);
+      border: 1.5px solid rgba(56, 189, 248, 0.35);
+      border-radius: 18px;
+      padding: 16px 22px;
+      display: grid;
+      grid-template-columns: 1.2fr 2fr;
+      gap: 20px;
+      align-items: center;
+    }
+    .review-footer h3 {
+      font-size: 15px;
+      font-weight: 800;
+      color: #38bdf8;
+      margin-bottom: 4px;
+    }
+    .review-footer p {
+      font-size: 11.5px;
+      color: #cbd5e1;
+      line-height: 1.45;
+    }
+    .next-modules-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .next-mod-box {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px dashed rgba(56, 189, 248, 0.45);
+      border-radius: 10px;
+      padding: 9px 12px;
+      font-size: 11px;
+    }
+    .next-mod-box strong {
+      color: #fcd34d;
+      display: block;
+      margin-bottom: 2px;
+    }
+    .next-mod-box span {
+      color: #cbd5e1;
+      font-size: 10.5px;
+    }
+    @media print {
+      body {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+    .print-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(90deg, #0ea5e9, #14b8a6);
+      color: #0f172a;
+      font-weight: 800;
+      font-size: 13px;
+      padding: 10px 18px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      margin-bottom: 8px;
+      box-shadow: 0 4px 15px rgba(14, 165, 233, 0.35);
+    }
+    .print-btn:hover {
+      opacity: 0.92;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <div class="logo-box">
+        <img src="logo-pas.png" alt="Logo PAS" />
+      </div>
+      <div class="title-group">
+        <h1>FLOWCHART ARSITEKTUR & ALUR PROSES END-TO-END · PASMigranPro P3MI</h1>
+        <p>PT Panca Banyu Ajisakti · Sistem Manajemen Operasional Penempatan Pekerja Migran Indonesia (Timur Tengah & Asia Pasifik)</p>
+        <div class="badge-row">
+          <span class="badge badge-sky">Multi-Tenant Enterprise v2.5</span>
+          <span class="badge badge-teal">Pelengkap SISKOP2MI & Musaned</span>
+          <span class="badge badge-amber">Kendali Badil & Termin Fee Sponsor</span>
+        </div>
+      </div>
+    </div>
+    <div class="header-right">
+      <button class="print-btn no-print" onclick="window.print()">🖨️ Cetak / Simpan sebagai PDF</button>
+      <div><strong>URL Live Demo:</strong> https://migran-pro.vercel.app</div>
+      <div><strong>Master Tenant:</strong> PT Panca Banyu Ajisakti (P3MI-ID-001)</div>
+      <div><strong>Dokumen:</strong> Blueprint Review Alur Sistem & Rencana Modul Lanjutan</div>
+    </div>
+  </div>
+
+  <!-- LEGEND BAR -->
+  <div class="legend-bar">
+    <div class="legend-items">
+      <div class="legend-item"><span class="dot dot-auth"></span> Autentikasi & RBAC</div>
+      <div class="legend-item"><span class="dot dot-master"></span> Master Data & Job Order</div>
+      <div class="legend-item"><span class="dot dot-journey"></span> Journey 8 Tahap & 10 Berkas (UU PDP)</div>
+      <div class="legend-item"><span class="dot dot-finance"></span> Keuangan: Termin Sponsor (DP1–DP3–Lunas) & HPP</div>
+      <div class="legend-item"><span class="dot dot-badil"></span> Alur Khusus Badil (بديل) Timur Tengah</div>
+      <div class="legend-item"><span class="dot dot-alert"></span> Gatekeeper / Blokir Otomatis / Kasus</div>
+    </div>
+    <div style="color:#94a3b8; font-weight:700;">Alur Membaca: Fase 1 (Atas) ➔ Fase 6 (Bawah)</div>
+  </div>
+
+  <!-- 8-STAGE JOURNEY ENGINE RIBBON -->
+  <div class="journey-ribbon">
+    <div class="journey-ribbon-title">
+      <span>⚡ PIPA UTAMA PERJALANAN KANDIDAT (8-STAGE JOURNEY ENGINE DENGAN VALIDASI SYARAT BERKAS OTOMATIS)</span>
+      <span>1 Berkas Digital Terhubung dari Lead sampai Purna/Alumni</span>
+    </div>
+    <div class="stages-track">
+      <div class="stage-node"><span class="idx">TAHAP 1</span><span class="name">1. LEAD</span><span class="sub">Pelamar Awal / PL (NIK Opsional)</span></div>
+      <div class="stage-node"><span class="idx">TAHAP 2</span><span class="name">2. PROSPECT</span><span class="sub">Lolos Cek NIK 16 Digit Unik</span></div>
+      <div class="stage-node"><span class="idx">TAHAP 3</span><span class="name">3. CPMI</span><span class="sub">KTP, KK, Akta, Ijazah, Izin Verified</span></div>
+      <div class="stage-node"><span class="idx">TAHAP 4</span><span class="name">4. READY</span><span class="sub">MCU FIT, Paspor, BLK, PK, Visa OK</span></div>
+      <div class="stage-node"><span class="idx">TAHAP 5</span><span class="name">5. DEPLOYED</span><span class="sub">BPJS, E-KTKLN & Tiket Terbang</span></div>
+      <div class="stage-node"><span class="idx">TAHAP 6</span><span class="name">6. ACTIVE WORKER</span><span class="sub">Bekerja di Negara Penempatan</span></div>
+      <div class="stage-node"><span class="idx">TAHAP 7</span><span class="name">7. RETURNED</span><span class="sub">Selesai Kontrak / Lapor Pulang</span></div>
+      <div class="stage-node"><span class="idx">TAHAP 8</span><span class="name">8. ALUMNI</span><span class="sub">Purna PMI / Siap Rehire</span></div>
+    </div>
+  </div>
+
+  <!-- MAIN SWIMLANE PHASES -->
+  <div class="phase-container">
+
+    <!-- FASE 1: START LOGIN & MASTER DATA -->
+    <div class="phase-row">
+      <div class="phase-label">
+        <span class="phase-num" style="color:#38bdf8;">FASE 1 · START & SETUP</span>
+        <div class="phase-title">Gerbang Login Superadmin & Master Ekosistem</div>
+        <div class="phase-desc">Otorisasi masuk ke Command Center & penyiapan database mitra P3MI sebelum rekrutmen.</div>
+      </div>
+      <div class="flow-grid">
+        <div class="flow-card sky">
+          <div>
+            <div class="step-tag"><span style="color:#38bdf8;">START · LANGKAH 1.1</span><span class="pill">Gerbang Login</span></div>
+            <div class="card-title">🔐 Portal Login Superadmin</div>
+            <div class="card-body">
+              <ul>
+                <li>Input Email (`superadmin@pasmigranpro.id`) & Sandi Otorisasi.</li>
+                <li>Validasi <strong>Master Tenant</strong> (`PT Panca Banyu Ajisakti`).</li>
+                <li>Mendukung Multi-User RBAC (Direktur, Admin Pusat, Staf Dokumen, Kepala Cabang, Sponsor).</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-footer" style="color:#7dd3fc;"><span>Sesi Terenkripsi</span><span>➔ Command Center</span></div>
+        </div>
+
+        <div class="flow-card purple">
+          <div>
+            <div class="step-tag"><span style="color:#c084fc;">LANGKAH 1.2</span><span class="pill">Modul Master Data</span></div>
+            <div class="card-title">🏢 Master Mitra & Agensi (Syarikah)</div>
+            <div class="card-body">
+              <ul>
+                <li><strong>Agensi Luar Negeri:</strong> SPSK Saudi, Tadbeer UAE, Kuwait, Oman, Yordania, Taiwan, Jepang, HK.</li>
+                <li><strong>Klinik Medical:</strong> Wafid/GAMCA GCC & Klinik Asia.</li>
+                <li><strong>Mitra BPJS & Bank KUR PMI</strong> + Jaringan Cabang.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-footer" style="color:#d8b4fe;"><span>Standar Wakalah & Garansi</span><span>➔ Siap Job Order</span></div>
+        </div>
+
+        <div class="flow-card purple">
+          <div>
+            <div class="step-tag"><span style="color:#c084fc;">LANGKAH 1.3</span><span class="pill">Modul Sponsor / PL</span></div>
+            <div class="card-title">🤝 Database Sponsor & Perekrut (PL)</div>
+            <div class="card-body">
+              <ul>
+                <li>Registrasi kode Sponsor/PL per wilayah cabang (Indramayu, Cirebon, Cilacap, Malang).</li>
+                <li>Penetapan plafon <strong>Komisi Fee Sponsor per CPMI</strong> & rekening pencairan.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-footer" style="color:#d8b4fe;"><span>Skema 4 Termin Otomatis</span><span>➔ Siap Rekrut</span></div>
+        </div>
+
+        <div class="flow-card sky">
+          <div>
+            <div class="step-tag"><span style="color:#38bdf8;">LANGKAH 1.4</span><span class="pill">Modul Lowongan</span></div>
+            <div class="card-title">📢 Publikasi Job Order / Vacancy</div>
+            <div class="card-body">
+              <ul>
+                <li>Input kuota lowongan, gaji kontrak mata uang asing, syarat usia/pendidikan & skema biaya.</li>
+                <li>Tayang di kanal lowongan publik untuk menjaring pelamar langsung menjadi <strong>LEAD</strong>.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-footer" style="color:#7dd3fc;"><span>Kuota Terpantau Real-Time</span><span>➔ Fase 2</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FASE 2: AKUISISI LEAD, REGISTRASI CPMI, AVATAR & CEK NIK 16 DIGIT -->
+    <div class="phase-row">
+      <div class="phase-label">
+        <span class="phase-num" style="color:#14b8a6;">FASE 2 · REKRUTMEN & BERKAS</span>
+        <div class="phase-title">Akuisisi Lead, Pas Foto, Anti-Duplikasi NIK & 10 Berkas Digital</div>
+        <div class="phase-desc">Pendaftaran kandidat baru, validasi keunikan NIK 16 digit, dan verifikasi fisik dokumen.</div>
+      </div>
+      <div class="flow-grid">
+        <div class="flow-card teal">
+          <div>
+            <div class="step-tag"><span style="color:#2dd4bf;">LANGKAH 2.1</span><span class="pill">Tahap 1: LEAD</span></div>
+            <div class="card-title">👤 Pendaftaran CPMI Baru & Pas Foto</div>
+            <div class="card-body">
+              <ul>
+                <li>Masuk dari <strong>Lamaran Lowongan Publik</strong> atau tombol <strong>+ Daftarkan CPMI / Lead</strong>.</li>
+                <li>Upload <strong>Pas Foto Resmi / Avatar CPMI</strong> (otomatis terhubung ke kartu e-KTP & Paspor).</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-footer" style="color:#5eead4;"><span>No. Reg P3MI Otomatis</span><span>➔ Cek NIK</span></div>
+        </div>
+
+        <div class="flow-card rose">
+          <div>
+            <div class="step-tag"><span style="color:#fb7185;">GATEKEEPER 1</span><span class="pill">Validasi NIK 16 Digit</span></div>
+            <div class="card-title">🛡️ Cek Duplikasi NIK Lintas Cabang</div>
+            <div class="card-body">
+              <ul>
+                <li>Saat naik ke <strong>PROSPECT</strong>, NIK 16 digit wajib unik di seluruh cabang P3MI.</li>
+                <li><strong>Jika NIK Ganda:</strong> Pendaftaran ditolak otomatis & dicatat di Audit Log (`NIK_DUPLICATE_BLOCKED`).</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-footer" style="color:#fda4af;"><span>Anti-Dobel Komisi PL</span><span>➔ Lolos ke Prospect</span></div>
+        </div>
+
+        <div class="flow-card teal">
+          <div>
+            <div class="step-tag"><span style="color:#2dd4bf;">LANGKAH 2.2</span><span class="pill">10 Berkas Digital</span></div>
+            <div class="card-title">📄 Matriks 10 Berkas & Scan Fisik</div>
+            <div class="card-body">
+              <ul>
+                <li>Verifikasi 5 berkas dasar: <strong>e-KTP, KK, Akta Lahir, Ijazah, Izin Keluarga</strong> ➔ Naik ke <strong>CPMI</strong>.</li>
+                <li>Fitur <strong>Lihat Fisik / Scan</strong> (e-KTP, Paspor, MCU, Visa) ber-watermark <strong>UU PDP</strong> & tercatat di Audit Log.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-footer" style="color:#5eead4;"><span>AI Check & Upload JPG/PDF</span><span>➔ Tahap 3: CPMI</span></div>
+        </div>
+
+        <div class="flow-card amber">
+          <div>
+            <div class="step-tag"><span style="color:#fbbf24;">GATEKEEPER 2</span><span class="pill">Kontrol Kedaluwarsa</span></div>
+            <div class="card-title">⏰ Pengingat 30/14/7 Hari & Expired</div>
+            <div class="card-body">
+              <ul>
+                <li>Peringatan bertingkat sekali per ambang (30, 14, 7 hari sebelum habis) ➔ Buat <strong>Tugas Perpanjangan</strong>.</li>
+                <li>Dokumen lewat tanggal otomatis berstatus <strong>EXPIRED</strong> & menghentikan kenaikan tahapan.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-footer" style="color:#fde68a;"><span>Anti-Gagal Terbang</span><span>➔ Fase 3</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FASE 3: PELATIHAN BLK, MEDICAL WAFID/ASIA & CABANG ALUR BADIL PRA-TERBANG -->
+    <div class="phase-row">
+      <div class="phase-label">
+        <span class="phase-num" style="color:#f59e0b;">FASE 3 · BLK, MCU & BADIL</span>
+        <div class="phase-title">Pelatihan BLK-LN, Medical Check-Up & Jalur Badil Pra-Terbang</div>
+        <div class="phase-desc">Uji kompetensi, pemeriksaan kesehatan (Wafid/Non-GCC), dan penanganan kandidat batal/Unfit.</div>
+      </div>
+      <div class="flow-grid">
+        <div class="flow-card teal">
+          <div>
+            <div class="step-tag"><span style="color:#2dd4bf;">LANGKAH 3.1</span><span class="pill">Modul Pelatihan</span></div>
+            <div class="card-title">🎓 Asrama BLK-LN & Uji Kompetensi</div>
+            <div class="card-body">
+              <ul>
+                <li>Pencatatan kehadiran asrama, jam pelajaran bahasa (Mandarin, Jepang, Arab, Inggris).</li>
+                <li>Uji Sertifikasi Kompetensi <strong>BNSP / SSW / Prometric</strong> hingga berstatus <strong>LULUS</strong>.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-footer" style="color:#5eead4;"><span>Sertifikat Terverifikasi</span><span>➔ Lanjut MCU</span></div>
+        </div>
+
+        <div class="flow-card sky">
+          <div>
+            <div class="step-tag"><span style="color:#38bdf8;">LANGKAH 3.2</span><span class="pill">Keputusan Medical</span></div>
+            <div class="card-title">🩺 Medical Check-Up (Wafid / Asia)</div>
+            <div class="card-body">
+              <ul>
+                <li>Pemeriksaan di Klinik Rekanan / Wafid GCC.</li>
+                <li><strong>Jika Hasil FIT:</strong> Lanjut terbit Paspor, Rekom ID SISKOP2MI & buka kunci <strong>DP 1 Sponsor (20%)</strong>.</li>
+                <li><strong>Jika Hasil UNFIT / Mengundurkan Diri:</strong> Masuk ke <strong>Alur Badil Pra-Terbang</strong>.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-footer" style="color:#7dd3fc;"><span>Wajib FIT untuk Ready</span><span>➔ FIT / Badil</span></div>
+        </div>
+
+        <div class="flow-card amber">
+          <div>
+            <div class="step-tag"><span style="color:#fbbf24;">CABANG KHUSUS TIMUR TENGAH</span><span class="pill">Badil Pra-Terbang</span></div>
+            <div class="card-title">🔄 Proses Badil (بديل) Pra-Terbang</div>
+            <div class="card-body">
+              <ul>
+                <li>Jika CPMI awal <strong>Unfit Wafid / Tolak Visa / Batal</strong>, slot Wakalah & Majikan dialihkan ke <strong>CPMI Pengganti (Badil)</strong>.</li>
+                <li>DP Sponsor kandidat awal otomatis di-<strong>Carry-Over</strong> ke kandidat pengganti (Sponsor tidak menerima dobel DP).</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-footer" style="color:#fde68a;"><span>Tercatat di Buku Besar Badil</span><span>➔ Slot Aman</span></div>
+        </div>
+
+        <div class="flow-card teal">
+          <div>
+            <div class="step-tag"><span style="color:#2dd4bf;">LANGKAH 3.3</span><span class="pill">Tahap 4: READY</span></div>
+            <div class="card-title">✈️ Paspor, PK, Visa & Siap Terbang</div>
+            <div class="card-body">
+              <ul>
+                <li>Paspor 48 Hal + Rekom ID SISKOP2MI terbit.</li>
+                <li>Perjanjian Kerja (PK) & Visa Kerja turun ➔ Seluruh 8 syarat utama lengkap & <strong>Medical FIT</strong> ➔ Naik ke <strong>READY</strong>.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-footer" style="color:#5eead4;"><span>Gatekeeper Ready Lolos</span><span>➔ Fase 4</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FASE 4: KEUANGAN BERTAHAP FEE SPONSOR (DP1, DP2, DP3, PELUNASAN) & HPP -->
+    <div class="phase-row">
+      <div class="phase-label">
+        <span class="phase-num" style="color:#10b981;">FASE 4 · KEUANGAN & HPP</span>
+        <div class="phase-title">Pencairan Bertahap Fee Sponsor (DP 1–3 & Lunas) + HPP</div>
+        <div class="phase-desc">Tabel ringkas skala besar untuk kontrol pencairan komisi PL sesuai progres tahapan CPMI.</div>
+      </div>
+      <div class="flow-grid">
+        <div class="flow-card emerald">
+          <div>
+            <div class="step-tag"><span style="color:#34d399;">TERMIN 1 & TERMIN 2</span><span class="pill">Tahap CPMI</span></div>
+            <div class="card-title">💳 DP 1 (20%) & DP 2 (25%)</div>
+            <div class="card-body">
+              <ul>
+                <li><strong>DP 1 (20%):</strong> Cair setelah lolos <strong>Medical FIT</strong> & berkas dasar lengkap.</li>
+                <li><strong>DP 2 (25%):</strong> Cair setelah <strong>Paspor & ID SISKOP2MI</strong> terbit (wajib DP 1 lunas dulu).</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-footer" style="color:#6ee7b7;"><span>Kwitansi Digital Otomatis</span><span>➔ 45% Terbayar</span></div>
+        </div>
+
+        <div class="flow-card emerald">
+          <div>
+            <div class="step-tag"><span style="color:#34d399;">TERMIN 3 & TERMIN 4</span><span class="pill">Tahap READY & DEPLOYED</span></div>
+            <div class="card-title">💳 DP 3 (25%) & Pelunasan (30%)</div>
+            <div class="card-body">
+              <ul>
+                <li><strong>DP 3 (25%):</strong> Cair saat <strong>Kontrak PK & Visa Kerja</strong> turun (Tahap <strong>READY</strong>).</li>
+                <li><strong>Pelunasan (30%):</strong> Cair setelah CPMI resmi terbang (Tahap <strong>DEPLOYED</strong>).</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-footer" style="color:#6ee7b7;"><span>Kontrol Anti-Boncos PL</span><span>➔ 100% Lunas</span></div>
+        </div>
+
+        <div class="flow-card sky">
+          <div>
+            <div class="step-tag"><span style="color:#38bdf8;">BUKU BESAR HPP</span><span class="pill">Per Kandidat</span></div>
+            <div class="card-title">📊 Kalkulasi HPP & Skema Pembiayaan</div>
+            <div class="card-body">
+              <ul>
+                <li>Rincian biaya proses per CPMI (MCU, Paspor, BLK, Visa, Tiket, BPJS) + Sunk Cost Badil.</li>
+                <li>Pilihan skema: <strong>Zero Cost Majikan (Timur Tengah)</strong>, <strong>KUR PMI Bank</strong>, atau <strong>Potong Gaji</strong>.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-footer" style="color:#7dd3fc;"><span>Hitung Margin Bersih P3MI</span><span>➔ Laporan Direksi</span></div>
+        </div>
+
+        <div class="flow-card teal">
+          <div>
+            <div class="step-tag"><span style="color:#2dd4bf;">LANGKAH 4.4</span><span class="pill">Tahap 5: DEPLOYED</span></div>
+            <div class="card-title">🛫 E-KTKLN, BPJS & Keberangkatan</div>
+            <div class="card-body">
+              <ul>
+                <li>Verifikasi <strong>BPJS Ketenagakerjaan PMI</strong> & <strong>Tiket Penerbangan + E-KTKLN</strong>.</li>
+                <li>Input Maskapai & Tanggal Terbang ➔ Status naik ke <strong>DEPLOYED (Telah Terbang)</strong>.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-footer" style="color:#5eead4;"><span>Monitoring Penerbangan</span><span>➔ Fase 5</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FASE 5: MASA KERJA LUAR NEGERI, PORTAL MANDIRI CPMI, KASUS & BADIL GARANSI 90 HARI -->
+    <div class="phase-row">
+      <div class="phase-label">
+        <span class="phase-num" style="color:#f43f5e;">FASE 5 · MONITORING & PURNA</span>
+        <div class="phase-title">Masa Kerja, Portal Mandiri, Penanganan Kasus, Badil Garansi & Alumni</div>
+        <div class="phase-desc">Perlindungan PMI selama bekerja di luar negeri hingga selesai kontrak dan kembali ke tanah air.</div>
+      </div>
+      <div class="flow-grid">
+        <div class="flow-card sky">
+          <div>
+            <div class="step-tag"><span style="color:#38bdf8;">PORTAL MANDIRI</span><span class="pill">Akses CPMI / PMI</span></div>
+            <div class="card-title">📱 Portal Mandiri CPMI/PMI (NIK + PIN)</div>
+            <div class="card-body">
+              <ul>
+                <li>CPMI/PMI dapat mengecek mandiri progres tahapan, kelengkapan 10 berkas, dan jadwal terbang.</li>
+                <li>Dilengkapi formulir <strong>Pengaduan / Bantuan Darurat</strong> langsung dari negara penempatan.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-footer" style="color:#7dd3fc;"><span>Transparansi & Perlindungan</span><span>➔ Tiket Kasus</span></div>
+        </div>
+
+        <div class="flow-card rose">
+          <div>
+            <div class="step-tag"><span style="color:#fb7185;">CASE MANAGEMENT</span><span class="pill">Perlindungan PMI</span></div>
+            <div class="card-title">🚨 Tiket Kasus, SLA & Eskalasi Perwakilan</div>
+            <div class="card-body">
+              <ul>
+                <li>Menangani kendala gaji terlambat, ketidaksesuaian kerja, sakit, atau pemulangan.</li>
+                <li>Dilengkapi <strong>Target SLA Penyelesaian</strong>, timeline tindak lanjut PIC & eskalasi ke <strong>KJRI / KBRI / KDEI</strong>.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-footer" style="color:#fda4af;"><span>Jejak Penanganan Lengkap</span><span>➔ Selesai / Badil</span></div>
+        </div>
+
+        <div class="flow-card amber">
+          <div>
+            <div class="step-tag"><span style="color:#fbbf24;">GARANSI SYARIKAH</span><span class="pill">Masa Kerja &lt; 90 Hari</span></div>
+            <div class="card-title">🔄 Badil Masa Garansi 90 Hari</div>
+            <div class="card-body">
+              <ul>
+                <li>Jika PMI pulang dini &lt; 90 hari, P3MI memproses <strong>Kandidat Badil Pengganti</strong> untuk Syarikah/Majikan.</li>
+                <li>Skema <strong>Free Replacement Warranty (Rp 0 Wakalah baru)</strong> & pencatatan otomatis beban kerugian (Sunk Cost).</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-footer" style="color:#fde68a;"><span>Akuntabilitas Keuangan P3MI</span><span>➔ Digantikan</span></div>
+        </div>
+
+        <div class="flow-card emerald">
+          <div>
+            <div class="step-tag"><span style="color:#34d399;">FINISH · TAHAP 7 & 8</span><span class="pill">RETURNED ➔ ALUMNI</span></div>
+            <div class="card-title">🏁 Kepulangan, Alumni & Rehire</div>
+            <div class="card-body">
+              <ul>
+                <li>PMI menyelesaikan kontrak kerja (2 tahun) ➔ Lapor kepulangan (<strong>RETURNED</strong>).</li>
+                <li>Menjadi <strong>ALUMNI P3MI</strong>. Jika mendaftar kembali, riwayat lama tetap utuh dengan penanda <strong>REHIRE</strong>.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card-footer" style="color:#6ee7b7;"><span>Siklus Penempatan Tuntas</span><span>✓ END PROCESS</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER: REKOMENDASI PENGEMBANGAN MODUL BERIKUTNYA UNTUK REVIEW -->
+  <div class="review-footer">
+    <div>
+      <h3>📌 Bahan Review: Kandidat Modul Lanjutan Berikutnya</h3>
+      <p>Seluruh 11 menu inti dari Start Login hingga Purna/Alumni di atas sudah aktif di <strong>PASMigranPro</strong>. Berikut adalah 6 kandidat modul lanjutan yang dapat dipilih untuk pengembangan tahap berikutnya:</p>
+    </div>
+    <div class="next-modules-grid">
+      <div class="next-mod-box">
+        <strong>1. Manajemen Tenant & Cabang (SaaS)</strong>
+        <span>Panel Superadmin untuk menambah/mengelola banyak perusahaan P3MI (Multi-Tenant penuh) & langganan.</span>
+      </div>
+      <div class="next-mod-box">
+        <strong>2. Cetak Dokumen Otomatis (PDF Generator)</strong>
+        <span>Generate surat pengantar paspor Imigrasi, surat rekomendasi desa, PK, dan biodata CV berformat standar Agensi Luar Negeri.</span>
+      </div>
+      <div class="next-mod-box">
+        <strong>3. Integrasi WhatsApp Gateway Otomatis</strong>
+        <span>Notifikasi WA otomatis ke HP CPMI & Sponsor saat tahapan naik, DP cair, atau masa berlaku paspor/MCU &lt; 30 hari.</span>
+      </div>
+      <div class="next-mod-box">
+        <strong>4. Modul Akuntansi & Arus Kas Bank/Kasbon</strong>
+        <span>Jurnal kas masuk/keluar kantor pusat & cabang, pencatatan pembayaran termin invoice Wakalah dari Syarikah/Agensi.</span>
+      </div>
+      <div class="next-mod-box">
+        <strong>5. Seleksi & Wawancara Majikan (Matching)</strong>
+        <span>Modul pengajuan CV kandidat ke Agensi/Majikan, jadwal interview video call, dan rekap hasil kelulusan interview.</span>
+      </div>
+      <div class="next-mod-box">
+        <strong>6. Database Permanen Cloud (PostgreSQL)</strong>
+        <span>Migrasi penyimpanan dari JSON ke PostgreSQL/Supabase agar data transaksi produksi tersimpan permanen lintas server.</span>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

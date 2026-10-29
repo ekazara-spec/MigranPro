@@ -1,0 +1,317 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1320" width="1600" height="1320" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="50%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="headerGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0284c7" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#0d9488" stop-opacity="0.22"/>
+    </linearGradient>
+    <marker id="arrowSky" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#38bdf8" />
+    </marker>
+    <marker id="arrowTeal" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#2dd4bf" />
+    </marker>
+    <marker id="arrowAmber" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#fbbf24" />
+    </marker>
+    <marker id="arrowEmerald" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#34d399" />
+    </marker>
+  </defs>
+
+  <!-- BACKGROUND -->
+  <rect width="1600" height="1320" fill="url(#bgGrad)"/>
+
+  <!-- HEADER BANNER -->
+  <rect x="30" y="24" width="1540" height="92" rx="18" fill="url(#headerGrad)" stroke="#38bdf8" stroke-width="1.5"/>
+  <text x="56" y="62" fill="#ffffff" font-size="24" font-weight="800">FLOWCHART ARSITEKTUR &amp; ALUR PROSES END-TO-END · PASMigranPro P3MI</text>
+  <text x="56" y="88" fill="#cbd5e1" font-size="13.5" font-weight="600">PT Panca Banyu Ajisakti · Dari Start Login Superadmin, Rekrutmen, 10 Berkas (UU PDP), Termin Fee Sponsor (DP1–DP3–Lunas), Badil Timur Tengah hingga Purna/Alumni</text>
+  <rect x="1310" y="44" width="235" height="50" rx="10" fill="#0f172a" stroke="#2dd4bf" stroke-width="1.2"/>
+  <text x="1427" y="66" fill="#5eead4" font-size="11.5" font-weight="800" text-anchor="middle">MULTI-TENANT CLOUD v2.5</text>
+  <text x="1427" y="83" fill="#94a3b8" font-size="10.5" font-weight="600" text-anchor="middle">migran-pro.vercel.app</text>
+
+  <!-- 8-STAGE JOURNEY RIBBON -->
+  <rect x="30" y="132" width="1540" height="84" rx="14" fill="#0f172a" stroke="#14b8a6" stroke-width="1.5"/>
+  <text x="50" y="153" fill="#5eead4" font-size="11.5" font-weight="800" letter-spacing="0.6">PIPA UTAMA 8 TAHAPAN PERJALANAN KANDIDAT (8-STAGE JOURNEY ENGINE DENGAN GATEKEEPER OTOMATIS):</text>
+
+  <!-- 8 Stage Boxes -->
+  <g transform="translate(50, 163)">
+    <rect x="0" y="0" width="172" height="40" rx="8" fill="#1e293b" stroke="#38bdf8"/>
+    <text x="86" y="17" fill="#38bdf8" font-size="10" font-weight="800" text-anchor="middle">1. LEAD</text>
+    <text x="86" y="31" fill="#cbd5e1" font-size="9.5" text-anchor="middle">Pelamar / PL (NIK Opsional)</text>
+
+    <rect x="188" y="0" width="172" height="40" rx="8" fill="#1e293b" stroke="#38bdf8"/>
+    <text x="274" y="17" fill="#38bdf8" font-size="10" font-weight="800" text-anchor="middle">2. PROSPECT</text>
+    <text x="274" y="31" fill="#cbd5e1" font-size="9.5" text-anchor="middle">NIK 16 Digit Unik Tervalidasi</text>
+
+    <rect x="376" y="0" width="172" height="40" rx="8" fill="#1e293b" stroke="#2dd4bf"/>
+    <text x="462" y="17" fill="#2dd4bf" font-size="10" font-weight="800" text-anchor="middle">3. CPMI</text>
+    <text x="462" y="31" fill="#cbd5e1" font-size="9.5" text-anchor="middle">5 Berkas Dasar Verified</text>
+
+    <rect x="564" y="0" width="172" height="40" rx="8" fill="#1e293b" stroke="#2dd4bf"/>
+    <text x="650" y="17" fill="#2dd4bf" font-size="10" font-weight="800" text-anchor="middle">4. READY (SIAP TERBANG)</text>
+    <text x="650" y="31" fill="#cbd5e1" font-size="9.5" text-anchor="middle">MCU FIT + Paspor + PK + Visa</text>
+
+    <rect x="752" y="0" width="172" height="40" rx="8" fill="#1e293b" stroke="#34d399"/>
+    <text x="838" y="17" fill="#34d399" font-size="10" font-weight="800" text-anchor="middle">5. DEPLOYED</text>
+    <text x="838" y="31" fill="#cbd5e1" font-size="9.5" text-anchor="middle">BPJS + E-KTKLN + Terbang</text>
+
+    <rect x="940" y="0" width="172" height="40" rx="8" fill="#1e293b" stroke="#34d399"/>
+    <text x="1026" y="17" fill="#34d399" font-size="10" font-weight="800" text-anchor="middle">6. ACTIVE WORKER</text>
+    <text x="1026" y="31" fill="#cbd5e1" font-size="9.5" text-anchor="middle">Bekerja di Luar Negeri</text>
+
+    <rect x="1128" y="0" width="172" height="40" rx="8" fill="#1e293b" stroke="#fbbf24"/>
+    <text x="1214" y="17" fill="#fbbf24" font-size="10" font-weight="800" text-anchor="middle">7. RETURNED</text>
+    <text x="1214" y="31" fill="#cbd5e1" font-size="9.5" text-anchor="middle">Selesai Kontrak / Pulang</text>
+
+    <rect x="1316" y="0" width="184" height="40" rx="8" fill="#1e293b" stroke="#a855f7"/>
+    <text x="1408" y="17" fill="#d8b4fe" font-size="10" font-weight="800" text-anchor="middle">8. ALUMNI / REHIRE</text>
+    <text x="1408" y="31" fill="#cbd5e1" font-size="9.5" text-anchor="middle">Purna PMI / Daftar Ulang</text>
+  </g>
+
+  <!-- ==================== FASE 1 ==================== -->
+  <rect x="30" y="234" width="1540" height="175" rx="16" fill="#1e293b" fill-opacity="0.6" stroke="#475569"/>
+  <text x="50" y="264" fill="#38bdf8" font-size="12" font-weight="800">FASE 1 · START LOGIN</text>
+  <text x="50" y="286" fill="#ffffff" font-size="15" font-weight="800">Gerbang Otorisasi</text>
+  <text x="50" y="305" fill="#ffffff" font-size="15" font-weight="800">&amp; Master Data Mitra</text>
+  <text x="50" y="328" fill="#94a3b8" font-size="11">Setup awal ekosistem P3MI</text>
+  <text x="50" y="344" fill="#94a3b8" font-size="11">sebelum pembukaan kuota.</text>
+  <line x1="235" y1="248" x2="235" y2="395" stroke="#475569" stroke-dasharray="5,5"/>
+
+  <!-- Cards Row 1 -->
+  <rect x="255" y="250" width="300" height="142" rx="12" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>
+  <text x="272" y="273" fill="#38bdf8" font-size="10.5" font-weight="800">START · LANGKAH 1.1</text>
+  <text x="272" y="294" fill="#ffffff" font-size="14" font-weight="800">1. Login Superadmin (Multi-Tenant)</text>
+  <text x="272" y="316" fill="#cbd5e1" font-size="11">• Akun: superadmin@pasmigranpro.id</text>
+  <text x="272" y="334" fill="#cbd5e1" font-size="11">• Validasi Master Tenant PT Panca Banyu Ajisakti</text>
+  <text x="272" y="352" fill="#cbd5e1" font-size="11">• Mendukung RBAC 5 Role (Pusat, Cabang, PL)</text>
+  <text x="272" y="378" fill="#7dd3fc" font-size="10.5" font-weight="700">➔ Masuk ke Command Center P3MI</text>
+
+  <line x1="555" y1="320" x2="578" y2="320" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrowSky)"/>
+
+  <rect x="582" y="250" width="300" height="142" rx="12" fill="#0f172a" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="599" y="273" fill="#c084fc" font-size="10.5" font-weight="800">LANGKAH 1.2 · MASTER MITRA</text>
+  <text x="599" y="294" fill="#ffffff" font-size="14" font-weight="800">2. Database Agensi, Klinik &amp; Bank</text>
+  <text x="599" y="316" fill="#cbd5e1" font-size="11">• Syarikah Timur Tengah (SPSK/Tadbeer) &amp; Asia</text>
+  <text x="599" y="334" fill="#cbd5e1" font-size="11">• Klinik Medical Wafid/GAMCA &amp; Non-GCC</text>
+  <text x="599" y="352" fill="#cbd5e1" font-size="11">• Mitra BPJS Ketenagakerjaan &amp; Bank KUR PMI</text>
+  <text x="599" y="378" fill="#d8b4fe" font-size="10.5" font-weight="700">➔ Standar Fee Wakalah &amp; Garansi 90 Hari</text>
+
+  <line x1="882" y1="320" x2="905" y2="320" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrowSky)"/>
+
+  <rect x="909" y="250" width="300" height="142" rx="12" fill="#0f172a" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="926" y="273" fill="#c084fc" font-size="10.5" font-weight="800">LANGKAH 1.3 · MASTER SPONSOR</text>
+  <text x="926" y="294" fill="#ffffff" font-size="14" font-weight="800">3. Registrasi Sponsor / PL &amp; Cabang</text>
+  <text x="926" y="316" fill="#cbd5e1" font-size="11">• Input Kantor Cabang Daerah &amp; BLK-LN</text>
+  <text x="926" y="334" fill="#cbd5e1" font-size="11">• Input Perekrut Lapangan (PL) &amp; No Rekening</text>
+  <text x="926" y="352" fill="#cbd5e1" font-size="11">• Set plafon Komisi Fee Sponsor per CPMI</text>
+  <text x="926" y="378" fill="#d8b4fe" font-size="10.5" font-weight="700">➔ Skema 4 Termin (DP1, DP2, DP3, Lunas)</text>
+
+  <line x1="1209" y1="320" x2="1232" y2="320" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrowSky)"/>
+
+  <rect x="1236" y="250" width="314" height="142" rx="12" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>
+  <text x="1253" y="273" fill="#38bdf8" font-size="10.5" font-weight="800">LANGKAH 1.4 · JOB ORDER</text>
+  <text x="1253" y="294" fill="#ffffff" font-size="14" font-weight="800">4. Publikasi Lowongan (Vacancy)</text>
+  <text x="1253" y="316" fill="#cbd5e1" font-size="11">• Negara: Saudi, UAE, Kuwait, Oman, Jordan</text>
+  <text x="1253" y="334" fill="#cbd5e1" font-size="11">• Asia: Taiwan, Jepang SSW, HK, Singapura</text>
+  <text x="1253" y="352" fill="#cbd5e1" font-size="11">• Buka Kuota Job Order &amp; Formulir Lamaran</text>
+  <text x="1253" y="378" fill="#7dd3fc" font-size="10.5" font-weight="700">➔ Menjaring Pelamar menjadi LEAD (Fase 2)</text>
+
+  <!-- ==================== FASE 2 ==================== -->
+  <rect x="30" y="425" width="1540" height="175" rx="16" fill="#1e293b" fill-opacity="0.6" stroke="#475569"/>
+  <text x="50" y="455" fill="#2dd4bf" font-size="12" font-weight="800">FASE 2 · AKUISISI &amp; BERKAS</text>
+  <text x="50" y="477" fill="#ffffff" font-size="15" font-weight="800">Pendaftaran CPMI,</text>
+  <text x="50" y="496" fill="#ffffff" font-size="15" font-weight="800">Pas Foto &amp; 10 Berkas</text>
+  <text x="50" y="519" fill="#94a3b8" font-size="11">Validasi NIK 16 digit unik,</text>
+  <text x="50" y="535" fill="#94a3b8" font-size="11">Scan Fisik UU PDP &amp; Expired.</text>
+  <line x1="235" y1="439" x2="235" y2="586" stroke="#475569" stroke-dasharray="5,5"/>
+
+  <rect x="255" y="441" width="300" height="142" rx="12" fill="#0f172a" stroke="#2dd4bf" stroke-width="1.5"/>
+  <text x="272" y="464" fill="#2dd4bf" font-size="10.5" font-weight="800">LANGKAH 2.1 · TAHAP LEAD</text>
+  <text x="272" y="485" fill="#ffffff" font-size="14" font-weight="800">5. Registrasi CPMI &amp; Pas Foto Resmi</text>
+  <text x="272" y="507" fill="#cbd5e1" font-size="11">• Masuk dari Lowongan atau + Daftarkan CPMI</text>
+  <text x="272" y="525" fill="#cbd5e1" font-size="11">• Pilih / Upload Pas Foto Resmi (Avatar CPMI)</text>
+  <text x="272" y="543" fill="#cbd5e1" font-size="11">• Pas foto otomatis sinkron ke e-KTP &amp; Paspor</text>
+  <text x="272" y="569" fill="#5eead4" font-size="10.5" font-weight="700">➔ Terbit No. Reg P3MI &amp; PIN Portal Mandiri</text>
+
+  <line x1="555" y1="511" x2="578" y2="511" stroke="#2dd4bf" stroke-width="2" marker-end="url(#arrowTeal)"/>
+
+  <rect x="582" y="441" width="300" height="142" rx="12" fill="#0f172a" stroke="#f43f5e" stroke-width="1.5"/>
+  <text x="599" y="464" fill="#fb7185" font-size="10.5" font-weight="800">GATEKEEPER 1 · ANTI-DUPLIKASI</text>
+  <text x="599" y="485" fill="#ffffff" font-size="14" font-weight="800">6. Cek Keunikan NIK 16 Digit</text>
+  <text x="599" y="507" fill="#cbd5e1" font-size="11">• Wajib NIK 16 digit saat naik ke PROSPECT</text>
+  <text x="599" y="525" fill="#cbd5e1" font-size="11">• Jika NIK sudah ada di cabang lain: DITOLAK!</text>
+  <text x="599" y="543" fill="#cbd5e1" font-size="11">• Mencegah pembayaran komisi dobel ke PL</text>
+  <text x="599" y="569" fill="#fda4af" font-size="10.5" font-weight="700">➔ Lolos Unik: Naik ke Tahap 2 (PROSPECT)</text>
+
+  <line x1="882" y1="511" x2="905" y2="511" stroke="#2dd4bf" stroke-width="2" marker-end="url(#arrowTeal)"/>
+
+  <rect x="909" y="441" width="300" height="142" rx="12" fill="#0f172a" stroke="#2dd4bf" stroke-width="1.5"/>
+  <text x="926" y="464" fill="#2dd4bf" font-size="10.5" font-weight="800">LANGKAH 2.3 · 10 BERKAS &amp; SCAN</text>
+  <text x="926" y="485" fill="#ffffff" font-size="14" font-weight="800">7. Verifikasi Berkas &amp; Lihat Fisik</text>
+  <text x="926" y="507" fill="#cbd5e1" font-size="11">• 5 Berkas Dasar: KTP, KK, Akta, Ijazah, Izin</text>
+  <text x="926" y="525" fill="#cbd5e1" font-size="11">• Viewer Scan Fisik e-KTP, Paspor, MCU, Visa</text>
+  <text x="926" y="543" fill="#cbd5e1" font-size="11">• Dilindungi Watermark UU PDP &amp; Audit Log</text>
+  <text x="926" y="569" fill="#5eead4" font-size="10.5" font-weight="700">➔ 5 Berkas Verified: Naik ke Tahap 3 (CPMI)</text>
+
+  <line x1="1209" y1="511" x2="1232" y2="511" stroke="#2dd4bf" stroke-width="2" marker-end="url(#arrowTeal)"/>
+
+  <rect x="1236" y="441" width="314" height="142" rx="12" fill="#0f172a" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="1253" y="464" fill="#fbbf24" font-size="10.5" font-weight="800">GATEKEEPER 2 · MASA BERLAKU</text>
+  <text x="1253" y="485" fill="#ffffff" font-size="14" font-weight="800">8. Pengingat 30/14/7 Hari &amp; Expired</text>
+  <text x="1253" y="507" fill="#cbd5e1" font-size="11">• Peringatan otomatis sekali per ambang hari</text>
+  <text x="1253" y="525" fill="#cbd5e1" font-size="11">• Buat Tugas Perpanjangan (Paspor/MCU/Visa)</text>
+  <text x="1253" y="543" fill="#cbd5e1" font-size="11">• Jika lewat tanggal: Status jadi EXPIRED</text>
+  <text x="1253" y="569" fill="#fde68a" font-size="10.5" font-weight="700">➔ Dokumen Expired Memblokir Tahap Ready</text>
+
+  <!-- ==================== FASE 3 ==================== -->
+  <rect x="30" y="616" width="1540" height="175" rx="16" fill="#1e293b" fill-opacity="0.6" stroke="#475569"/>
+  <text x="50" y="646" fill="#fbbf24" font-size="12" font-weight="800">FASE 3 · BLK, MCU &amp; BADIL</text>
+  <text x="50" y="668" fill="#ffffff" font-size="15" font-weight="800">Pelatihan BLK-LN,</text>
+  <text x="50" y="687" fill="#ffffff" font-size="15" font-weight="800">Medical &amp; Badil Awal</text>
+  <text x="50" y="710" fill="#94a3b8" font-size="11">Uji kompetensi, MCU Wafid,</text>
+  <text x="50" y="726" fill="#94a3b8" font-size="11">&amp; pergantian kandidat batal.</text>
+  <line x1="235" y1="630" x2="235" y2="777" stroke="#475569" stroke-dasharray="5,5"/>
+
+  <rect x="255" y="632" width="300" height="142" rx="12" fill="#0f172a" stroke="#2dd4bf" stroke-width="1.5"/>
+  <text x="272" y="655" fill="#2dd4bf" font-size="10.5" font-weight="800">LANGKAH 3.1 · ASRAMA BLK-LN</text>
+  <text x="272" y="676" fill="#ffffff" font-size="14" font-weight="800">9. Pelatihan Bahasa &amp; Sertifikasi</text>
+  <text x="272" y="698" fill="#cbd5e1" font-size="11">• Presensi asrama &amp; nilai kurikulum bahasa</text>
+  <text x="272" y="716" fill="#cbd5e1" font-size="11">• Uji Kompetensi BNSP / SSW / Prometric</text>
+  <text x="272" y="734" fill="#cbd5e1" font-size="11">• Terbit Sertifikat Kompetensi Terverifikasi</text>
+  <text x="272" y="760" fill="#5eead4" font-size="10.5" font-weight="700">➔ Syarat Kompetensi Terpenuhi</text>
+
+  <line x1="555" y1="702" x2="578" y2="702" stroke="#fbbf24" stroke-width="2" marker-end="url(#arrowAmber)"/>
+
+  <rect x="582" y="632" width="300" height="142" rx="12" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>
+  <text x="599" y="655" fill="#38bdf8" font-size="10.5" font-weight="800">LANGKAH 3.2 · KEPUTUSAN MEDICAL</text>
+  <text x="599" y="676" fill="#ffffff" font-size="14" font-weight="800">10. Pemeriksaan MCU (Wafid / Asia)</text>
+  <text x="599" y="698" fill="#cbd5e1" font-size="11">• Hasil FIT: Buka syarat DP 1 Sponsor (20%)</text>
+  <text x="599" y="716" fill="#cbd5e1" font-size="11">• Hasil UNFIT: Blokir kenaikan ke tahap READY</text>
+  <text x="599" y="734" fill="#cbd5e1" font-size="11">• Jika Unfit/Batal di Timur Tengah ➔ Proses Badil</text>
+  <text x="599" y="760" fill="#7dd3fc" font-size="10.5" font-weight="700">➔ Cabang Keputusan: FIT atau BADIL</text>
+
+  <line x1="882" y1="702" x2="905" y2="702" stroke="#fbbf24" stroke-width="2" marker-end="url(#arrowAmber)"/>
+
+  <rect x="909" y="632" width="300" height="142" rx="12" fill="#0f172a" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="926" y="655" fill="#fbbf24" font-size="10.5" font-weight="800">CABANG KHUSUS · BADIL PRA-TERBANG</text>
+  <text x="926" y="676" fill="#ffffff" font-size="14" font-weight="800">11. Pergantian Badil (بديل) Pra-Terbang</text>
+  <text x="926" y="698" fill="#cbd5e1" font-size="11">• CPMI Awal (Unfit/Batal) ➔ Status REPLACED_OUT</text>
+  <text x="926" y="716" fill="#cbd5e1" font-size="11">• CPMI Pengganti mewarisi slot Majikan/Wakalah</text>
+  <text x="926" y="734" fill="#cbd5e1" font-size="11">• DP Sponsor otomatis Carry-Over ke Pengganti</text>
+  <text x="926" y="760" fill="#fde68a" font-size="10.5" font-weight="700">➔ Tercatat di Buku Besar Badil &amp; HPP</text>
+
+  <line x1="1209" y1="702" x2="1232" y2="702" stroke="#2dd4bf" stroke-width="2" marker-end="url(#arrowTeal)"/>
+
+  <rect x="1236" y="632" width="314" height="142" rx="12" fill="#0f172a" stroke="#2dd4bf" stroke-width="1.5"/>
+  <text x="1253" y="655" fill="#2dd4bf" font-size="10.5" font-weight="800">LANGKAH 3.3 · TAHAP 4 (READY)</text>
+  <text x="1253" y="676" fill="#ffffff" font-size="14" font-weight="800">12. Paspor, Rekom ID, PK &amp; Visa Turun</text>
+  <text x="1253" y="698" fill="#cbd5e1" font-size="11">• Paspor 48 Hal &amp; ID SISKOP2MI Terbit</text>
+  <text x="1253" y="716" fill="#cbd5e1" font-size="11">• Perjanjian Kerja (PK) &amp; Visa Kerja Verified</text>
+  <text x="1253" y="734" fill="#cbd5e1" font-size="11">• Seluruh 8 dokumen syarat Ready aktif &amp; FIT</text>
+  <text x="1253" y="760" fill="#5eead4" font-size="10.5" font-weight="700">➔ Naik ke Tahap 4: READY (Siap Terbang)</text>
+
+  <!-- ==================== FASE 4 ==================== -->
+  <rect x="30" y="807" width="1540" height="175" rx="16" fill="#1e293b" fill-opacity="0.6" stroke="#475569"/>
+  <text x="50" y="837" fill="#34d399" font-size="12" font-weight="800">FASE 4 · KEUANGAN &amp; TERBANG</text>
+  <text x="50" y="859" fill="#ffffff" font-size="15" font-weight="800">Termin Fee Sponsor</text>
+  <text x="50" y="878" fill="#ffffff" font-size="15" font-weight="800">(DP1–3 &amp; Lunas) + HPP</text>
+  <text x="50" y="901" fill="#94a3b8" font-size="11">Tabel ringkas pencairan komisi</text>
+  <text x="50" y="917" fill="#94a3b8" font-size="11">berurutan &amp; keberangkatan.</text>
+  <line x1="235" y1="821" x2="235" y2="968" stroke="#475569" stroke-dasharray="5,5"/>
+
+  <rect x="255" y="823" width="300" height="142" rx="12" fill="#0f172a" stroke="#10b981" stroke-width="1.5"/>
+  <text x="272" y="846" fill="#34d399" font-size="10.5" font-weight="800">KEUANGAN TERMIN 1 &amp; 2</text>
+  <text x="272" y="867" fill="#ffffff" font-size="14" font-weight="800">13. Pencairan DP 1 (20%) &amp; DP 2 (25%)</text>
+  <text x="272" y="889" fill="#cbd5e1" font-size="11">• DP 1 (20%): Cair saat lolos Medical FIT</text>
+  <text x="272" y="907" fill="#cbd5e1" font-size="11">• DP 2 (25%): Cair saat Paspor &amp; ID SISKOP2MI</text>
+  <text x="272" y="925" fill="#cbd5e1" font-size="11">• Kunci berurutan (DP 2 terkunci jika DP 1 belum)</text>
+  <text x="272" y="951" fill="#6ee7b7" font-size="10.5" font-weight="700">➔ Terbit Kwitansi Digital (45% Cair)</text>
+
+  <line x1="555" y1="893" x2="578" y2="893" stroke="#34d399" stroke-width="2" marker-end="url(#arrowEmerald)"/>
+
+  <rect x="582" y="823" width="300" height="142" rx="12" fill="#0f172a" stroke="#10b981" stroke-width="1.5"/>
+  <text x="599" y="846" fill="#34d399" font-size="10.5" font-weight="800">KEUANGAN TERMIN 3 &amp; 4</text>
+  <text x="599" y="867" fill="#ffffff" font-size="14" font-weight="800">14. Pencairan DP 3 (25%) &amp; Lunas (30%)</text>
+  <text x="599" y="889" fill="#cbd5e1" font-size="11">• DP 3 (25%): Cair saat PK &amp; Visa Turun (READY)</text>
+  <text x="599" y="907" fill="#cbd5e1" font-size="11">• Pelunasan (30%): Cair saat Terbang (DEPLOYED)</text>
+  <text x="599" y="925" fill="#cbd5e1" font-size="11">• Ditampilkan dalam Tabel Ringkas Skala Besar</text>
+  <text x="599" y="951" fill="#6ee7b7" font-size="10.5" font-weight="700">➔ Komisi Sponsor Lunas 100% Tanpa Boncos</text>
+
+  <line x1="882" y1="893" x2="905" y2="893" stroke="#34d399" stroke-width="2" marker-end="url(#arrowEmerald)"/>
+
+  <rect x="909" y="823" width="300" height="142" rx="12" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>
+  <text x="926" y="846" fill="#38bdf8" font-size="10.5" font-weight="800">BUKU BESAR HPP &amp; PEMBIAYAAN</text>
+  <text x="926" y="867" fill="#ffffff" font-size="14" font-weight="800">15. Rincian HPP, KUR PMI &amp; Margin</text>
+  <text x="926" y="889" fill="#cbd5e1" font-size="11">• Catat komponen biaya proses per kandidat</text>
+  <text x="926" y="907" fill="#cbd5e1" font-size="11">• Skema: Zero Cost Majikan / KUR Bank / Cicilan</text>
+  <text x="926" y="925" fill="#cbd5e1" font-size="11">• Kalkulasi otomatis Estimasi Margin Bersih P3MI</text>
+  <text x="926" y="951" fill="#7dd3fc" font-size="10.5" font-weight="700">➔ Transparansi Laba Rugi per CPMI</text>
+
+  <line x1="1209" y1="893" x2="1232" y2="893" stroke="#34d399" stroke-width="2" marker-end="url(#arrowEmerald)"/>
+
+  <rect x="1236" y="823" width="314" height="142" rx="12" fill="#0f172a" stroke="#2dd4bf" stroke-width="1.5"/>
+  <text x="1253" y="846" fill="#2dd4bf" font-size="10.5" font-weight="800">LANGKAH 4.4 · TAHAP 5 (DEPLOYED)</text>
+  <text x="1253" y="867" fill="#ffffff" font-size="14" font-weight="800">16. BPJS, Tiket, E-KTKLN &amp; Terbang</text>
+  <text x="1253" y="889" fill="#cbd5e1" font-size="11">• Bukti BPJS Ketenagakerjaan &amp; Tiket Verified</text>
+  <text x="1253" y="907" fill="#cbd5e1" font-size="11">• Input Nomor Penerbangan &amp; Tanggal Terbang</text>
+  <text x="1253" y="925" fill="#cbd5e1" font-size="11">• Status naik ke DEPLOYED ➔ Buka Pelunasan PL</text>
+  <text x="1253" y="951" fill="#5eead4" font-size="10.5" font-weight="700">➔ Berangkat ke Negara Penempatan (Fase 5)</text>
+
+  <!-- ==================== FASE 5 ==================== -->
+  <rect x="30" y="998" width="1540" height="175" rx="16" fill="#1e293b" fill-opacity="0.6" stroke="#475569"/>
+  <text x="50" y="1028" fill="#fb7185" font-size="12" font-weight="800">FASE 5 · MASA KERJA &amp; FINISH</text>
+  <text x="50" y="1050" fill="#ffffff" font-size="15" font-weight="800">Portal Mandiri, Kasus,</text>
+  <text x="50" y="1069" fill="#ffffff" font-size="15" font-weight="800">Badil Garansi &amp; Alumni</text>
+  <text x="50" y="1092" fill="#94a3b8" font-size="11">Perlindungan PMI bekerja</text>
+  <text x="50" y="1108" fill="#94a3b8" font-size="11">sampai selesai kontrak.</text>
+  <line x1="235" y1="1012" x2="235" y2="1159" stroke="#475569" stroke-dasharray="5,5"/>
+
+  <rect x="255" y="1014" width="300" height="142" rx="12" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>
+  <text x="272" y="1037" fill="#38bdf8" font-size="10.5" font-weight="800">PORTAL MANDIRI CPMI / PMI</text>
+  <text x="272" y="1058" fill="#ffffff" font-size="14" font-weight="800">17. Cek Status &amp; Lapor Mandiri</text>
+  <text x="272" y="1080" fill="#cbd5e1" font-size="11">• Login menggunakan NIK 16 Digit + PIN 6 Digit</text>
+  <text x="272" y="1098" fill="#cbd5e1" font-size="11">• Pantau tahapan &amp; kelengkapan berkas mandiri</text>
+  <text x="272" y="1116" fill="#cbd5e1" font-size="11">• Kirim laporan pengaduan darurat dari luar negeri</text>
+  <text x="272" y="1142" fill="#7dd3fc" font-size="10.5" font-weight="700">➔ Otomatis Membuat Tiket Kasus Baru</text>
+
+  <line x1="555" y1="1084" x2="578" y2="1084" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrowSky)"/>
+
+  <rect x="582" y="1014" width="300" height="142" rx="12" fill="#0f172a" stroke="#f43f5e" stroke-width="1.5"/>
+  <text x="599" y="1037" fill="#fb7185" font-size="10.5" font-weight="800">MODUL CASE MANAGEMENT</text>
+  <text x="599" y="1058" fill="#ffffff" font-size="14" font-weight="800">18. Penanganan Kasus &amp; Eskalasi</text>
+  <text x="599" y="1080" fill="#cbd5e1" font-size="11">• Tiket pengaduan gaji, majikan, sakit, asuransi</text>
+  <text x="599" y="1098" fill="#cbd5e1" font-size="11">• Pantau Target SLA &amp; jejak kronologi PIC</text>
+  <text x="599" y="1116" fill="#cbd5e1" font-size="11">• Eskalasi resmi ke KJRI / KBRI / KDEI / BP2MI</text>
+  <text x="599" y="1142" fill="#fda4af" font-size="10.5" font-weight="700">➔ Kasus Selesai (RESOLVED) atau Badil</text>
+
+  <line x1="882" y1="1084" x2="905" y2="1084" stroke="#fbbf24" stroke-width="2" marker-end="url(#arrowAmber)"/>
+
+  <rect x="909" y="1014" width="300" height="142" rx="12" fill="#0f172a" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="926" y="1037" fill="#fbbf24" font-size="10.5" font-weight="800">KLAIM GARANSI SYARIKAH (&lt; 90 HARI)</text>
+  <text x="926" y="1058" fill="#ffffff" font-size="14" font-weight="800">19. Badil Masa Garansi 90 Hari</text>
+  <text x="926" y="1080" fill="#cbd5e1" font-size="11">• Jika PMI pulang dini &lt; 90 hari masa garansi</text>
+  <text x="926" y="1098" fill="#cbd5e1" font-size="11">• Kirim Kandidat Badil Pengganti (Rp 0 Wakalah)</text>
+  <text x="926" y="1116" fill="#cbd5e1" font-size="11">• Catat Sunk Cost kandidat awal secara akurat</text>
+  <text x="926" y="1142" fill="#fde68a" font-size="10.5" font-weight="700">➔ Reputasi P3MI &amp; Kuota Syarikah Terjaga</text>
+
+  <line x1="1209" y1="1084" x2="1232" y2="1084" stroke="#34d399" stroke-width="2" marker-end="url(#arrowEmerald)"/>
+
+  <rect x="1236" y="1014" width="314" height="142" rx="12" fill="#0f172a" stroke="#10b981" stroke-width="2"/>
+  <text x="1253" y="1037" fill="#34d399" font-size="10.5" font-weight="800">FINISH · TAHAP 7 &amp; 8 (PURNA)</text>
+  <text x="1253" y="1058" fill="#ffffff" font-size="14" font-weight="800">20. Kepulangan (RETURNED) &amp; ALUMNI</text>
+  <text x="1253" y="1080" fill="#cbd5e1" font-size="11">• Kontrak selesai ➔ Lapor Kepulangan PMI</text>
+  <text x="1253" y="1098" fill="#cbd5e1" font-size="11">• Masuk database ALUMNI P3MI</text>
+  <text x="1253" y="1116" fill="#cbd5e1" font-size="11">• Siap diproses REHIRE untuk kontrak berikutnya</text>
+  <text x="1253" y="1142" fill="#6ee7b7" font-size="11" font-weight="800">✓ SIKLUS PENEMPATAN SELESAI (END)</text>
+
+  <!-- FOOTER ROADMAP FOR NEXT MODULES -->
+  <rect x="30" y="1190" width="1540" height="104" rx="14" fill="#0f172a" stroke="#38bdf8" stroke-width="1.2"/>
+  <text x="50" y="1218" fill="#fcd34d" font-size="13" font-weight="800">📌 DAFTAR KANDIDAT MODUL LANJUTAN (BAHAN REVIEW PENGEMBANGAN BERIKUTNYA):</text>
+  <text x="50" y="1244" fill="#e2e8f0" font-size="12" font-weight="600">1. Manajemen Multi-Tenant SaaS (Kelola Banyak PT P3MI)   |   2. Cetak Dokumen &amp; CV Standar Agensi Otomatis (PDF Generator)   |   3. Integrasi WhatsApp Gateway Otomatis (Notifikasi CPMI &amp; PL)</text>
+  <text x="50" y="1268" fill="#e2e8f0" font-size="12" font-weight="600">4. Modul Seleksi &amp; Wawancara Majikan (Job Matching &amp; Video Interview)   |   5. Buku Kas/Bank &amp; Invoice Tagihan Wakalah Agensi   |   6. Migrasi Database Cloud Permanen (PostgreSQL / Supabase)</text>
+</svg>
