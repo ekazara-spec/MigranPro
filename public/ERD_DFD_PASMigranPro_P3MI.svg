@@ -1,0 +1,404 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1420" width="1600" height="1420" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="50%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="hdrGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0284c7" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0.25"/>
+    </linearGradient>
+    <marker id="arrSky" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#38bdf8" />
+    </marker>
+    <marker id="arrTeal" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#2dd4bf" />
+    </marker>
+    <marker id="arrAmber" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#fbbf24" />
+    </marker>
+    <marker id="arrEmerald" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#34d399" />
+    </marker>
+    <marker id="arrRose" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#fb7185" />
+    </marker>
+  </defs>
+
+  <!-- BACKGROUND -->
+  <rect width="1600" height="1420" fill="url(#bgGrad)"/>
+
+  <!-- HEADER -->
+  <rect x="28" y="22" width="1544" height="86" rx="16" fill="url(#hdrGrad)" stroke="#38bdf8" stroke-width="1.5"/>
+  <text x="52" y="57" fill="#ffffff" font-size="23" font-weight="800">ENTITY RELATIONSHIP DIAGRAM (ERD) &amp; DATA FLOW DIAGRAM (DFD) · PASMigranPro P3MI</text>
+  <text x="52" y="83" fill="#cbd5e1" font-size="13" font-weight="600">PT Panca Banyu Ajisakti · Arsitektur Relasi Tabel Database (15 Entitas Inti) &amp; Aliran Data Sistem (DFD Level 0 &amp; Level 1)</text>
+  <rect x="1310" y="38" width="240" height="52" rx="10" fill="#0f172a" stroke="#a855f7" stroke-width="1.2"/>
+  <text x="1430" y="60" fill="#d8b4fe" font-size="11.5" font-weight="800" text-anchor="middle">DOKUMEN ARSITEKTUR DATA</text>
+  <text x="1430" y="78" fill="#94a3b8" font-size="10.5" font-weight="600" text-anchor="middle">Siap Migrasi PostgreSQL / Prisma</text>
+
+  <!-- =========================================================================
+       BAGIAN 1: ENTITY RELATIONSHIP DIAGRAM (ERD) - 15 ENTITAS INTI P3MI
+       ========================================================================= -->
+  <rect x="28" y="124" width="1544" height="680" rx="18" fill="#0f172a" fill-opacity="0.7" stroke="#334155" stroke-width="1.5"/>
+  <rect x="28" y="124" width="1544" height="38" rx="18" fill="#1e293b"/>
+  <text x="50" y="148" fill="#38bdf8" font-size="13.5" font-weight="800" letter-spacing="0.5">BAGIAN A · ENTITY RELATIONSHIP DIAGRAM (ERD) — SKEMA RELASI DATABASE MULTI-TENANT P3MI</text>
+  <text x="1550" y="148" fill="#94a3b8" font-size="11.5" font-weight="700" text-anchor="end">PK = Primary Key  |  FK = Foreign Key  |  UK = Unique Key (NIK 16 Digit)</text>
+
+  <!-- KOLOM KIRI ERD: MASTER ORGANISASI, AGENSI, LOWONGAN, SPONSOR -->
+  <!-- 1. BRANCH -->
+  <g transform="translate(48, 178)">
+    <rect width="270" height="130" rx="10" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
+    <rect width="270" height="28" rx="10" fill="#0284c7"/>
+    <text x="12" y="19" fill="#ffffff" font-size="12" font-weight="800">BRANCH (Kantor Cabang &amp; BLK)</text>
+    <text x="12" y="46" fill="#fde68a" font-size="11" font-family="Consolas, monospace">PK id : string (br-idm, br-crb)</text>
+    <text x="12" y="64" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">UK code : string (IDM-01)</text>
+    <text x="12" y="82" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   name, city : string</text>
+    <text x="12" y="100" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   headName, phone : string</text>
+    <text x="12" y="118" fill="#7dd3fc" font-size="10" font-weight="700">1 Cabang ➔ N CPMI, N Staf, N Sponsor</text>
+  </g>
+
+  <!-- 2. STAFF_ACCOUNT -->
+  <g transform="translate(48, 326)">
+    <rect width="270" height="130" rx="10" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
+    <rect width="270" height="28" rx="10" fill="#0284c7"/>
+    <text x="12" y="19" fill="#ffffff" font-size="12" font-weight="800">STAFF_ACCOUNT (User &amp; RBAC)</text>
+    <text x="12" y="46" fill="#fde68a" font-size="11" font-family="Consolas, monospace">PK id : string</text>
+    <text x="12" y="64" fill="#38bdf8" font-size="11" font-family="Consolas, monospace">FK branchId : string (ALL/br-*)</text>
+    <text x="12" y="82" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">UK email, pinCode : string</text>
+    <text x="12" y="100" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   role : UserRole (DIREKTUR..)</text>
+    <text x="12" y="118" fill="#7dd3fc" font-size="10" font-weight="700">1 Staf ➔ N AuditLog, N Verifikasi</text>
+  </g>
+
+  <!-- 3. SPONSOR (PL) -->
+  <g transform="translate(48, 474)">
+    <rect width="270" height="142" rx="10" fill="#1e293b" stroke="#a855f7" stroke-width="1.5"/>
+    <rect width="270" height="28" rx="10" fill="#7e22ce"/>
+    <text x="12" y="19" fill="#ffffff" font-size="12" font-weight="800">SPONSOR (Perekrut Lapangan/PL)</text>
+    <text x="12" y="46" fill="#fde68a" font-size="11" font-family="Consolas, monospace">PK id : string (sp-1..)</text>
+    <text x="12" y="64" fill="#c084fc" font-size="11" font-family="Consolas, monospace">FK branchId : string</text>
+    <text x="12" y="82" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">UK code : string (PL-IDM-001)</text>
+    <text x="12" y="100" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   name, area, phone : string</text>
+    <text x="12" y="118" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   paidAmount, payableAmount: int</text>
+    <text x="12" y="134" fill="#d8b4fe" font-size="10" font-weight="700">1 Sponsor ➔ N CPMI, N Termin DP</text>
+  </g>
+
+  <!-- 4. FOREIGN_AGENCY & JOB_VACANCY -->
+  <g transform="translate(48, 632)">
+    <rect width="270" height="154" rx="10" fill="#1e293b" stroke="#a855f7" stroke-width="1.5"/>
+    <rect width="270" height="28" rx="10" fill="#7e22ce"/>
+    <text x="12" y="19" fill="#ffffff" font-size="12" font-weight="800">FOREIGN_AGENCY &amp; JOB_VACANCY</text>
+    <text x="12" y="46" fill="#fde68a" font-size="11" font-family="Consolas, monospace">PK id : string (ag-1 / vac-1)</text>
+    <text x="12" y="64" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   country : DestinationCountry</text>
+    <text x="12" y="82" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   scheme : SPSK/Tadbeer/G2G/P2P</text>
+    <text x="12" y="100" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   defaultAgencyFeeIdr : int</text>
+    <text x="12" y="118" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   warrantyDays : int (90 Hari)</text>
+    <text x="12" y="136" fill="#d8b4fe" font-size="10" font-weight="700">1 Agensi ➔ N Lowongan ➔ N CPMI</text>
+  </g>
+
+  <!-- KOLOM TENGAH ERD: TABEL PUSAT CANDIDATE (CPMI / PMI) & BADIL -->
+  <!-- 5. CANDIDATE (CENTRAL ENTITY) -->
+  <g transform="translate(380, 178)">
+    <rect width="365" height="390" rx="14" fill="#0f172a" stroke="#2dd4bf" stroke-width="2.5"/>
+    <rect width="365" height="34" rx="14" fill="#0d9488"/>
+    <text x="16" y="22" fill="#ffffff" font-size="13.5" font-weight="800">★ CANDIDATE (Master Satu Berkas CPMI/PMI)</text>
+    <text x="16" y="54" fill="#fde68a" font-size="11.5" font-family="Consolas, monospace" font-weight="700">PK id : string (cpmi-1..)</text>
+    <text x="16" y="74" fill="#fb7185" font-size="11.5" font-family="Consolas, monospace" font-weight="700">UK nik : string(16) [UNIK LINTAS CABANG]</text>
+    <text x="16" y="94" fill="#5eead4" font-size="11.5" font-family="Consolas, monospace" font-weight="700">UK regNumber : string (P3MI-2026-XXXX)</text>
+    <text x="16" y="114" fill="#38bdf8" font-size="11" font-family="Consolas, monospace">FK branchId : string ➔ BRANCH.id</text>
+    <text x="16" y="132" fill="#c084fc" font-size="11" font-family="Consolas, monospace">FK sponsorId : string ➔ SPONSOR.id</text>
+    <text x="16" y="150" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   fullName, gender, birthPlace, birthDate</text>
+    <text x="16" y="168" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   avatarUrl : string (Pas Foto / DataURL)</text>
+    <text x="16" y="186" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   phone, address, education, maritalStatus</text>
+    <text x="16" y="204" fill="#2dd4bf" font-size="11" font-family="Consolas, monospace" font-weight="700">   stage : JourneyStage (LEAD..ALUMNI)</text>
+    <text x="16" y="222" fill="#fbbf24" font-size="11" font-family="Consolas, monospace" font-weight="700">   specialStatus : NORMAL | REHIRE |</text>
+    <text x="16" y="238" fill="#fbbf24" font-size="11" font-family="Consolas, monospace" font-weight="700">     BADIL_REPLACEMENT | REPLACED_OUT</text>
+    <text x="16" y="256" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   destinationCountry, jobSector</text>
+    <text x="16" y="274" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   employerName, agencyPartner : string</text>
+    <text x="16" y="292" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   placementFee, sponsorCommission : int</text>
+    <text x="16" y="310" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   siskop2miId, flightInfo, departureDate</text>
+    <text x="16" y="328" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   portalPin : string(6) [Login Mandiri]</text>
+    <text x="16" y="348" fill="#fbbf24" font-size="11" font-family="Consolas, monospace">FK replacedByCandidateId ➔ CANDIDATE.id</text>
+    <text x="16" y="366" fill="#fbbf24" font-size="11" font-family="Consolas, monospace">FK replacesCandidateId   ➔ CANDIDATE.id</text>
+  </g>
+
+  <!-- 6. BADIL_RECORD (SELF-JOIN BRIDGE) -->
+  <g transform="translate(380, 586)">
+    <rect width="365" height="200" rx="12" fill="#1e293b" stroke="#f59e0b" stroke-width="2"/>
+    <rect width="365" height="28" rx="12" fill="#d97706"/>
+    <text x="14" y="19" fill="#0f172a" font-size="12" font-weight="800">BADIL_RECORD (Buku Besar Pergantian Slot)</text>
+    <text x="14" y="46" fill="#fde68a" font-size="11" font-family="Consolas, monospace">PK id, UK code : string (BDL-2026-XXX)</text>
+    <text x="14" y="64" fill="#fb7185" font-size="11" font-family="Consolas, monospace">FK originalCandidateId ➔ CANDIDATE.id</text>
+    <text x="14" y="82" fill="#2dd4bf" font-size="11" font-family="Consolas, monospace">FK replacementCandidateId ➔ CANDIDATE.id</text>
+    <text x="14" y="100" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   badilType : PRA_TERBANG | GARANSI_90_HARI</text>
+    <text x="14" y="118" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   reason : UNFIT_WAFID | PULANG_DINI_GARANSI..</text>
+    <text x="14" y="136" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   sponsorDpTreatment : CARRY_OVER | CLAWBACK</text>
+    <text x="14" y="154" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   transferredSponsorDpAmount, sunkCostAmount</text>
+    <text x="14" y="172" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   wakalahFeeScheme : FULL | FREE_WARRANTY</text>
+    <text x="14" y="190" fill="#fde68a" font-size="10" font-weight="700">Relasi 1-ke-1 Antara Kandidat Awal &amp; Pengganti</text>
+  </g>
+
+  <!-- KOLOM KANAN ATAS ERD: DOKUMEN, TUGAS PERPANJANGAN, PELATIHAN -->
+  <!-- 7. CPMI_DOCUMENT -->
+  <g transform="translate(810, 178)">
+    <rect width="355" height="195" rx="10" fill="#1e293b" stroke="#2dd4bf" stroke-width="1.5"/>
+    <rect width="355" height="28" rx="10" fill="#0f766e"/>
+    <text x="12" y="19" fill="#ffffff" font-size="12" font-weight="800">CPMI_DOCUMENT (10 Berkas &amp; Scan Fisik)</text>
+    <text x="12" y="46" fill="#fde68a" font-size="11" font-family="Consolas, monospace">PK id : string</text>
+    <text x="12" y="64" fill="#2dd4bf" font-size="11" font-family="Consolas, monospace">FK candidateId ➔ CANDIDATE.id (1 : 10)</text>
+    <text x="12" y="82" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   docType : KTP | KK | PASPOR | MEDICAL | VISA..</text>
+    <text x="12" y="100" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   status : MISSING|UPLOADED|VERIFIED|EXPIRED</text>
+    <text x="12" y="118" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   docNumber, issuedBy, issueDate, expiryDate</text>
+    <text x="12" y="136" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   medicalResult : FIT | UNFIT | PENDING</text>
+    <text x="12" y="154" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   fileDataUrl, fileName (Scan Fisik JPG/PDF)</text>
+    <text x="12" y="172" fill="#fb7185" font-size="11" font-family="Consolas, monospace">   isSensitive : boolean (Pelindung UU PDP)</text>
+    <text x="12" y="187" fill="#5eead4" font-size="10" font-weight="700">1 Kandidat ➔ 10 Dokumen Wajib Tahapan</text>
+  </g>
+
+  <!-- 8. RENEWAL_TASK -->
+  <g transform="translate(810, 390)">
+    <rect width="355" height="125" rx="10" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/>
+    <rect width="355" height="28" rx="10" fill="#b45309"/>
+    <text x="12" y="19" fill="#ffffff" font-size="12" font-weight="800">RENEWAL_TASK (Tugas Perpanjangan 30/14/7 Hr)</text>
+    <text x="12" y="46" fill="#fde68a" font-size="11" font-family="Consolas, monospace">PK id : string</text>
+    <text x="12" y="64" fill="#2dd4bf" font-size="11" font-family="Consolas, monospace">FK candidateId, FK documentId</text>
+    <text x="12" y="82" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   tierLabel : 30_HARI | 14_HARI | 7_HARI | EXPIRED</text>
+    <text x="12" y="100" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   dueDate, daysLeft, status : OPEN | COMPLETED</text>
+    <text x="12" y="116" fill="#fde68a" font-size="10" font-weight="700">Dibuat Sekali per Ambang (Bukan Spam Harian)</text>
+  </g>
+
+  <!-- 9. TRAINING_RECORD -->
+  <g transform="translate(810, 532)">
+    <rect width="355" height="115" rx="10" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
+    <rect width="355" height="28" rx="10" fill="#0369a1"/>
+    <text x="12" y="19" fill="#ffffff" font-size="12" font-weight="800">TRAINING_RECORD (Asrama BLK-LN &amp; BNSP)</text>
+    <text x="12" y="46" fill="#2dd4bf" font-size="11" font-family="Consolas, monospace">FK candidateId ➔ CANDIDATE.id (1 : 1)</text>
+    <text x="12" y="64" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   blkLocation,dormitoryRoom,languageCourse</text>
+    <text x="12" y="82" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   attendanceRate, completedHours, examScore</text>
+    <text x="12" y="100" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   competencyStatus : LULUS | BELUM_UJIAN..</text>
+  </g>
+
+  <!-- 10. AUDIT_LOG -->
+  <g transform="translate(810, 662)">
+    <rect width="355" height="124" rx="10" fill="#1e293b" stroke="#fb7185" stroke-width="1.5"/>
+    <rect width="355" height="28" rx="10" fill="#be123c"/>
+    <text x="12" y="19" fill="#ffffff" font-size="12" font-weight="800">AUDIT_LOG (Jejak Audit Permanen &amp; UU PDP)</text>
+    <text x="12" y="46" fill="#fde68a" font-size="11" font-family="Consolas, monospace">PK id : string, timestamp : ISOString</text>
+    <text x="12" y="64" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   actorName, actorRole, branchName : string</text>
+    <text x="12" y="82" fill="#fb7185" font-size="11" font-family="Consolas, monospace">   actionType : SENSITIVE_DOC_VIEW | STAGE..</text>
+    <text x="12" y="100" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   candidateName, summary, details : string</text>
+    <text x="12" y="116" fill="#fda4af" font-size="10" font-weight="700">Append-Only (Tidak Dapat Dihapus / Diubah)</text>
+  </g>
+
+  <!-- KOLOM PALING KANAN ERD: KEUANGAN (TERMIN SPONSOR & HPP) + CASE MANAGEMENT -->
+  <!-- 11. CANDIDATE_FINANCE -->
+  <g transform="translate(1210, 178)">
+    <rect width="340" height="145" rx="10" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/>
+    <rect width="340" height="28" rx="10" fill="#047857"/>
+    <text x="12" y="19" fill="#ffffff" font-size="12" font-weight="800">CANDIDATE_FINANCE (Buku Besar CPMI)</text>
+    <text x="12" y="46" fill="#2dd4bf" font-size="11" font-family="Consolas, monospace">FK candidateId ➔ CANDIDATE.id (1 : 1)</text>
+    <text x="12" y="64" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   fundingScheme : ZERO_COST | KUR_PMI..</text>
+    <text x="12" y="82" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   kurBankName, kurAmount, kurStatus</text>
+    <text x="12" y="100" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   agencyFeeRevenue, totalSponsorFee : int</text>
+    <text x="12" y="118" fill="#6ee7b7" font-size="10" font-weight="700">1 Finance ➔ 4 SponsorInstallment + N CostItem</text>
+  </g>
+
+  <!-- 12. SPONSOR_INSTALLMENT (DP1, DP2, DP3, PELUNASAN) -->
+  <g transform="translate(1210, 340)">
+    <rect width="340" height="150" rx="10" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/>
+    <rect width="340" height="28" rx="10" fill="#059669"/>
+    <text x="12" y="19" fill="#ffffff" font-size="12" font-weight="800">SPONSOR_INSTALLMENT (Termin DP1–Lunas)</text>
+    <text x="12" y="46" fill="#fde68a" font-size="11" font-family="Consolas, monospace">PK id : string</text>
+    <text x="12" y="64" fill="#2dd4bf" font-size="11" font-family="Consolas, monospace">FK candidateId ➔ CANDIDATE.id (1 : 4)</text>
+    <text x="12" y="82" fill="#34d399" font-size="11" font-family="Consolas, monospace">   terminKey : DP1(20%)|DP2(25%)|DP3|PELUNASAN</text>
+    <text x="12" y="100" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   requiredStage : CPMI | READY | DEPLOYED</text>
+    <text x="12" y="118" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   amount, status(UNPAID/PAID), receiptNumber</text>
+    <text x="12" y="136" fill="#6ee7b7" font-size="10" font-weight="700">Dikunci Berurutan Sesuai Progres Tahapan</text>
+  </g>
+
+  <!-- 13. PLACEMENT_COST_ITEM (HPP) -->
+  <g transform="translate(1210, 506)">
+    <rect width="340" height="118" rx="10" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/>
+    <rect width="340" height="28" rx="10" fill="#047857"/>
+    <text x="12" y="19" fill="#ffffff" font-size="12" font-weight="800">PLACEMENT_COST_ITEM (Komponen HPP)</text>
+    <text x="12" y="46" fill="#fde68a" font-size="11" font-family="Consolas, monospace">PK id : string, FK candidateId</text>
+    <text x="12" y="64" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   category : MEDICAL | PASPOR | BLK | VISA..</text>
+    <text x="12" y="82" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   title, amount, borneBy, status(PAID/PENDING)</text>
+    <text x="12" y="102" fill="#6ee7b7" font-size="10" font-weight="700">1 Kandidat ➔ N Komponen Biaya HPP</text>
+  </g>
+
+  <!-- 14. CASE_TICKET & TIMELINE -->
+  <g transform="translate(1210, 640)">
+    <rect width="340" height="146" rx="10" fill="#1e293b" stroke="#f43f5e" stroke-width="1.5"/>
+    <rect width="340" height="28" rx="10" fill="#e11d48"/>
+    <text x="12" y="19" fill="#ffffff" font-size="12" font-weight="800">CASE_TICKET &amp; CASE_TIMELINE (Pengaduan)</text>
+    <text x="12" y="46" fill="#fde68a" font-size="11" font-family="Consolas, monospace">PK id, UK ticketNumber (CASE-2026-XXX)</text>
+    <text x="12" y="64" fill="#2dd4bf" font-size="11" font-family="Consolas, monospace">FK candidateId ➔ CANDIDATE.id (1 : N)</text>
+    <text x="12" y="82" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   category, priority, status(OPEN..RESOLVED)</text>
+    <text x="12" y="100" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   picName, escalatedTo(KJRI/KDEI), targetSLA</text>
+    <text x="12" y="118" fill="#cbd5e1" font-size="11" font-family="Consolas, monospace">   timeline[] : CaseTimelineItem (1 : N)</text>
+    <text x="12" y="136" fill="#fda4af" font-size="10" font-weight="700">Terhubung ke Portal Pengaduan Mandiri PMI</text>
+  </g>
+
+  <!-- ERD RELATIONSHIP LINES -->
+  <line x1="318" y1="240" x2="380" y2="240" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrSky)"/>
+  <line x1="318" y1="530" x2="380" y2="310" stroke="#a855f7" stroke-width="2" marker-end="url(#arrSky)"/>
+  <line x1="318" y1="690" x2="380" y2="440" stroke="#a855f7" stroke-width="2" marker-end="url(#arrSky)"/>
+  <line x1="562" y1="568" x2="562" y2="586" stroke="#fbbf24" stroke-width="2.5" marker-end="url(#arrAmber)"/>
+  <line x1="745" y1="260" x2="810" y2="260" stroke="#2dd4bf" stroke-width="2" marker-end="url(#arrTeal)"/>
+  <line x1="745" y1="350" x2="810" y2="440" stroke="#fbbf24" stroke-width="2" marker-end="url(#arrAmber)"/>
+  <line x1="745" y1="420" x2="810" y2="580" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrSky)"/>
+  <line x1="1165" y1="240" x2="1210" y2="240" stroke="#34d399" stroke-width="2" marker-end="url(#arrEmerald)"/>
+  <line x1="1165" y1="310" x2="1210" y2="410" stroke="#34d399" stroke-width="2" marker-end="url(#arrEmerald)"/>
+  <line x1="1165" y1="480" x2="1210" y2="700" stroke="#fb7185" stroke-width="2" marker-end="url(#arrRose)"/>
+
+  <!-- =========================================================================
+       BAGIAN 2: DATA FLOW DIAGRAM (DFD LEVEL 0 & LEVEL 1)
+       ========================================================================= -->
+  <rect x="28" y="822" width="1544" height="572" rx="18" fill="#0f172a" fill-opacity="0.7" stroke="#334155" stroke-width="1.5"/>
+  <rect x="28" y="822" width="1544" height="38" rx="18" fill="#1e293b"/>
+  <text x="50" y="846" fill="#2dd4bf" font-size="13.5" font-weight="800" letter-spacing="0.5">BAGIAN B · DATA FLOW DIAGRAM (DFD LEVEL 0 KONTEKS &amp; DFD LEVEL 1 ARSITEKTUR PROSES INTI)</text>
+  <text x="1550" y="846" fill="#94a3b8" font-size="11.5" font-weight="700" text-anchor="end">Entitas Eksternal ➔ 6 Proses Utama (P1–P6) ➔ 6 Data Store (D1–D6)</text>
+
+  <!-- KOLOM KIRI DFD: 5 ENTITAS EKSTERNAL (EXTERNAL ENTITIES) -->
+  <text x="52" y="886" fill="#38bdf8" font-size="11.5" font-weight="800">ENTITAS EKSTERNAL (PENGGUNA / MITRA):</text>
+
+  <rect x="48" y="900" width="245" height="76" rx="10" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
+  <text x="64" y="924" fill="#ffffff" font-size="12.5" font-weight="800">E1. Superadmin &amp; Direksi P3MI</text>
+  <text x="64" y="943" fill="#cbd5e1" font-size="10.5">Input: Otorisasi, Kebijakan, Override Kasbon</text>
+  <text x="64" y="960" fill="#7dd3fc" font-size="10.5">Output: KPI Eksekutif, Laba Rugi, Audit Log</text>
+
+  <rect x="48" y="990" width="245" height="76" rx="10" fill="#1e293b" stroke="#2dd4bf" stroke-width="1.5"/>
+  <text x="64" y="1014" fill="#ffffff" font-size="12.5" font-weight="800">E2. Staf Dokumen, Cabang &amp; BLK</text>
+  <text x="64" y="1033" fill="#cbd5e1" font-size="10.5">Input: Berkas CPMI, Scan KTP/Paspor, Nilai BLK</text>
+  <text x="64" y="1050" fill="#5eead4" font-size="10.5">Output: Alert Expired 30/14/7 Hr, Status Tahap</text>
+
+  <rect x="48" y="1080" width="245" height="76" rx="10" fill="#1e293b" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="64" y="1104" fill="#ffffff" font-size="12.5" font-weight="800">E3. Sponsor / Perekrut (PL)</text>
+  <text x="64" y="1123" fill="#cbd5e1" font-size="10.5">Input: Data Lead Kandidat Baru</text>
+  <text x="64" y="1140" fill="#d8b4fe" font-size="10.5">Output: Pencairan DP1–DP3–Pelunasan &amp; Kwitansi</text>
+
+  <rect x="48" y="1170" width="245" height="76" rx="10" fill="#1e293b" stroke="#fbbf24" stroke-width="1.5"/>
+  <text x="64" y="1194" fill="#ffffff" font-size="12.5" font-weight="800">E4. Kandidat CPMI / PMI</text>
+  <text x="64" y="1213" fill="#cbd5e1" font-size="10.5">Input: Lamaran, Dokumen, Pengaduan Mandiri</text>
+  <text x="64" y="1230" fill="#fde68a" font-size="10.5">Output: PIN Portal, Status Berkas, Tindak Lanjut</text>
+
+  <rect x="48" y="1260" width="245" height="86" rx="10" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+  <text x="64" y="1284" fill="#ffffff" font-size="12.5" font-weight="800">E5. Syarikah/Agensi, Klinik &amp; KJRI</text>
+  <text x="64" y="1303" fill="#cbd5e1" font-size="10.5">Input: Job Order/Wakalah, Hasil MCU, Klaim Badil</text>
+  <text x="64" y="1320" fill="#6ee7b7" font-size="10.5">Output: Kandidat Siap Terbang, Pengganti Badil</text>
+
+  <!-- KOLOM TENGAH DFD: 6 PROSES INTI (PROCESSES P1 - P6) -->
+  <text x="360" y="886" fill="#2dd4bf" font-size="11.5" font-weight="800">PROSES UTAMA SISTEM (DFD LEVEL 1 PROCESSES):</text>
+
+  <!-- P1 -->
+  <rect x="360" y="900" width="350" height="132" rx="22" fill="#0f172a" stroke="#38bdf8" stroke-width="2"/>
+  <text x="382" y="925" fill="#38bdf8" font-size="11" font-weight="800">PROSES 1.0 · AUTENTIKASI, RBAC &amp; MASTER MITRA</text>
+  <text x="382" y="946" fill="#ffffff" font-size="13.5" font-weight="800">Validasi Login Superadmin &amp; Kelola Mitra</text>
+  <text x="382" y="968" fill="#cbd5e1" font-size="11">• Verifikasi sesi Superadmin &amp; isolasi cabang RBAC</text>
+  <text x="382" y="986" fill="#cbd5e1" font-size="11">• Kelola Agensi/Syarikah, Sponsor, Klinik Wafid, BPJS</text>
+  <text x="382" y="1004" fill="#cbd5e1" font-size="11">• Publikasi Job Order (Timur Tengah &amp; Asia Pasifik)</text>
+
+  <!-- P2 -->
+  <rect x="360" y="1048" width="350" height="132" rx="22" fill="#0f172a" stroke="#2dd4bf" stroke-width="2"/>
+  <text x="382" y="1073" fill="#2dd4bf" font-size="11" font-weight="800">PROSES 2.0 · REGISTRASI, CEK NIK &amp; 10 BERKAS</text>
+  <text x="382" y="1094" fill="#ffffff" font-size="13.5" font-weight="800">Akuisisi CPMI, Pas Foto &amp; Scan Fisik UU PDP</text>
+  <text x="382" y="1116" fill="#cbd5e1" font-size="11">• Simpan biodata &amp; Pas Foto Resmi (Avatar CPMI)</text>
+  <text x="382" y="1134" fill="#cbd5e1" font-size="11">• Gatekeeper blokir otomatis jika NIK 16 digit ganda</text>
+  <text x="382" y="1152" fill="#cbd5e1" font-size="11">• Verifikasi 10 berkas, Scan Fisik &amp; catat Audit Log</text>
+
+  <!-- P3 -->
+  <rect x="360" y="1196" width="350" height="150" rx="22" fill="#0f172a" stroke="#f59e0b" stroke-width="2"/>
+  <text x="382" y="1221" fill="#fbbf24" font-size="11" font-weight="800">PROSES 3.0 · JOURNEY ENGINE 8 TAHAP &amp; EXPIRED</text>
+  <text x="382" y="1242" fill="#ffffff" font-size="13.5" font-weight="800">Validasi Kenaikan Tahap &amp; Pengingat 30/14/7 Hr</text>
+  <text x="382" y="1264" fill="#cbd5e1" font-size="11">• Evaluasi otomatis syarat berkas per tahapan</text>
+  <text x="382" y="1282" fill="#cbd5e1" font-size="11">• Deteksi dokumen &lt;= 30/14/7 hari ➔ Buat RenewalTask</text>
+  <text x="382" y="1300" fill="#cbd5e1" font-size="11">• Ubah otomatis status EXPIRED &amp; tahan tahap Ready</text>
+
+  <!-- P4 -->
+  <rect x="750" y="900" width="355" height="132" rx="22" fill="#0f172a" stroke="#10b981" stroke-width="2"/>
+  <text x="772" y="925" fill="#34d399" font-size="11" font-weight="800">PROSES 4.0 · KEUANGAN TERMIN SPONSOR &amp; HPP</text>
+  <text x="772" y="946" fill="#ffffff" font-size="13.5" font-weight="800">Pencairan DP1–DP3–Pelunasan &amp; Kalkulasi HPP</text>
+  <text x="772" y="968" fill="#cbd5e1" font-size="11">• Validasi syarat tahapan sebelum cairkan DP1/DP2/DP3/Lunas</text>
+  <text x="772" y="986" fill="#cbd5e1" font-size="11">• Terbitkan Kwitansi Digital &amp; update saldo Sponsor</text>
+  <text x="772" y="1004" fill="#cbd5e1" font-size="11">• Hitung komponen HPP, KUR PMI &amp; Margin Bersih P3MI</text>
+
+  <!-- P5 -->
+  <rect x="750" y="1048" width="355" height="132" rx="22" fill="#0f172a" stroke="#f59e0b" stroke-width="2"/>
+  <text x="772" y="1073" fill="#fbbf24" font-size="11" font-weight="800">PROSES 5.0 · KENDALI BADIL (بديل) TIMUR TENGAH</text>
+  <text x="772" y="1094" fill="#ffffff" font-size="13.5" font-weight="800">Peralihan Slot Kandidat &amp; Carry-Over DP</text>
+  <text x="772" y="1116" fill="#cbd5e1" font-size="11">• Nonaktifkan kandidat awal (REPLACED_OUT)</text>
+  <text x="772" y="1134" fill="#cbd5e1" font-size="11">• Alihkan Majikan, Syarikah &amp; Carry-Over DP ke Pengganti</text>
+  <text x="772" y="1152" fill="#cbd5e1" font-size="11">• Catat Sunk Cost &amp; skema Free Warranty (&lt; 90 Hari)</text>
+
+  <!-- P6 -->
+  <rect x="750" y="1196" width="355" height="150" rx="22" fill="#0f172a" stroke="#f43f5e" stroke-width="2"/>
+  <text x="772" y="1221" fill="#fb7185" font-size="11" font-weight="800">PROSES 6.0 · PORTAL MANDIRI &amp; CASE MANAGEMENT</text>
+  <text x="772" y="1242" fill="#ffffff" font-size="13.5" font-weight="800">Layanan Mandiri PMI &amp; Tiket Pengaduan Kasus</text>
+  <text x="772" y="1264" fill="#cbd5e1" font-size="11">• Autentikasi NIK + PIN 6 digit pada Portal Mandiri</text>
+  <text x="772" y="1282" fill="#cbd5e1" font-size="11">• Konversi laporan darurat PMI menjadi Tiket Kasus</text>
+  <text x="772" y="1300" fill="#cbd5e1" font-size="11">• Pantau SLA penanganan PIC &amp; eskalasi KJRI/KDEI</text>
+
+  <!-- KOLOM KANAN DFD: 6 DATA STORES (D1 - D6) -->
+  <text x="1165" y="886" fill="#fcd34d" font-size="11.5" font-weight="800">PENYIMPANAN DATA (DATA STORES):</text>
+
+  <g transform="translate(1165, 900)">
+    <rect width="380" height="64" rx="8" fill="#1e293b" stroke="#a855f7" stroke-width="1.5"/>
+    <rect width="54" height="64" rx="8" fill="#7e22ce"/>
+    <text x="27" y="38" fill="#ffffff" font-size="14" font-weight="800" text-anchor="middle">D1</text>
+    <text x="70" y="26" fill="#ffffff" font-size="12.5" font-weight="800">Master Mitra, Cabang, Staf &amp; Job Order</text>
+    <text x="70" y="46" fill="#cbd5e1" font-size="10.5">branches, staffAccounts, sponsors, foreignAgencies, vacancies</text>
+  </g>
+
+  <g transform="translate(1165, 976)">
+    <rect width="380" height="64" rx="8" fill="#1e293b" stroke="#2dd4bf" stroke-width="1.5"/>
+    <rect width="54" height="64" rx="8" fill="#0d9488"/>
+    <text x="27" y="38" fill="#ffffff" font-size="14" font-weight="800" text-anchor="middle">D2</text>
+    <text x="70" y="26" fill="#ffffff" font-size="12.5" font-weight="800">Master Kandidat CPMI/PMI &amp; Pas Foto</text>
+    <text x="70" y="46" fill="#cbd5e1" font-size="10.5">candidates (biodata, NIK 16 digit unik, avatarUrl, stage)</text>
+  </g>
+
+  <g transform="translate(1165, 1052)">
+    <rect width="380" height="64" rx="8" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
+    <rect width="54" height="64" rx="8" fill="#0284c7"/>
+    <text x="27" y="38" fill="#ffffff" font-size="14" font-weight="800" text-anchor="middle">D3</text>
+    <text x="70" y="26" fill="#ffffff" font-size="12.5" font-weight="800">10 Berkas Digital, Scan Fisik &amp; Tugas Expired</text>
+    <text x="70" y="46" fill="#cbd5e1" font-size="10.5">documents[], fileDataUrl, renewalTasks[], trainingRecord</text>
+  </g>
+
+  <g transform="translate(1165, 1128)">
+    <rect width="380" height="64" rx="8" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/>
+    <rect width="54" height="64" rx="8" fill="#059669"/>
+    <text x="27" y="38" fill="#ffffff" font-size="14" font-weight="800" text-anchor="middle">D4</text>
+    <text x="70" y="26" fill="#ffffff" font-size="12.5" font-weight="800">Buku Besar Keuangan, Termin DP &amp; HPP</text>
+    <text x="70" y="46" fill="#cbd5e1" font-size="10.5">finance, sponsorInstallments (DP1–Lunas), costItems[]</text>
+  </g>
+
+  <g transform="translate(1165, 1204)">
+    <rect width="380" height="64" rx="8" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/>
+    <rect width="54" height="64" rx="8" fill="#d97706"/>
+    <text x="27" y="38" fill="#0f172a" font-size="14" font-weight="800" text-anchor="middle">D5</text>
+    <text x="70" y="26" fill="#ffffff" font-size="12.5" font-weight="800">Buku Besar Kendali Badil Timur Tengah</text>
+    <text x="70" y="46" fill="#cbd5e1" font-size="10.5">badilRecords[] (Pra-Terbang &amp; Klaim Garansi 90 Hari)</text>
+  </g>
+
+  <g transform="translate(1165, 1280)">
+    <rect width="380" height="66" rx="8" fill="#1e293b" stroke="#f43f5e" stroke-width="1.5"/>
+    <rect width="54" height="66" rx="8" fill="#e11d48"/>
+    <text x="27" y="38" fill="#ffffff" font-size="14" font-weight="800" text-anchor="middle">D6</text>
+    <text x="70" y="26" fill="#ffffff" font-size="12.5" font-weight="800">Tiket Kasus PMI &amp; Jejak Audit UU PDP</text>
+    <text x="70" y="46" fill="#cbd5e1" font-size="10.5">cases[], timeline[], auditLogs[] (Append-Only)</text>
+  </g>
+
+  <!-- DFD CONNECTORS -->
+  <line x1="293" y1="938" x2="360" y2="938" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrSky)"/>
+  <line x1="293" y1="1028" x2="360" y2="1095" stroke="#2dd4bf" stroke-width="2" marker-end="url(#arrTeal)"/>
+  <line x1="293" y1="1118" x2="360" y2="1125" stroke="#a855f7" stroke-width="2" marker-end="url(#arrSky)"/>
+  <line x1="293" y1="1208" x2="360" y2="1245" stroke="#fbbf24" stroke-width="2" marker-end="url(#arrAmber)"/>
+  <line x1="293" y1="1300" x2="360" y2="1285" stroke="#34d399" stroke-width="2" marker-end="url(#arrEmerald)"/>
+
+  <line x1="1105" y1="940" x2="1165" y2="932" stroke="#34d399" stroke-width="2" marker-end="url(#arrEmerald)"/>
+  <line x1="1105" y1="980" x2="1165" y2="1158" stroke="#34d399" stroke-width="2" marker-end="url(#arrEmerald)"/>
+  <line x1="1105" y1="1115" x2="1165" y2="1235" stroke="#fbbf24" stroke-width="2" marker-end="url(#arrAmber)"/>
+  <line x1="1105" y1="1265" x2="1165" y2="1310" stroke="#fb7185" stroke-width="2" marker-end="url(#arrRose)"/>
+</svg>

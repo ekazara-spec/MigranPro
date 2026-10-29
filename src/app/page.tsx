@@ -1756,7 +1756,17 @@ export default function PASMigranProCommandCenter() {
               className="inline-flex items-center gap-1.5 rounded-lg border border-sky-300 bg-sky-50 px-3 py-2 text-xs font-bold text-sky-900 shadow-xs transition hover:bg-sky-100"
             >
               <FolderKanban className="h-3.5 w-3.5 text-sky-700" />
-              🗺️ Flowchart Sistem (PDF)
+              🗺️ Flowchart (PDF)
+            </a>
+
+            <a
+              href="/erd-dfd-pasmigranpro.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-purple-300 bg-purple-50 px-3 py-2 text-xs font-bold text-purple-900 shadow-xs transition hover:bg-purple-100"
+            >
+              <FolderKanban className="h-3.5 w-3.5 text-purple-700" />
+              🗄️ ERD & DFD (PDF)
             </a>
 
             <button

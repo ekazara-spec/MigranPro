@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>ERD & DFD Arsitektur Data · PASMigranPro P3MI</title>
+  <style>
+    @page {
+      size: A3 portrait;
+      margin: 8mm;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 20px;
+      text-align: center;
+    }
+    .toolbar {
+      max-width: 1600px;
+      margin: 0 auto 16px auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #1e293b;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      padding: 12px 22px;
+      border-radius: 14px;
+    }
+    .nav-links {
+      display: flex;
+      gap: 10px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 16px;
+      border-radius: 10px;
+      font-size: 12.5px;
+      font-weight: 800;
+      text-decoration: none;
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #e2e8f0;
+      background: #0f172a;
+      cursor: pointer;
+    }
+    .btn.active {
+      background: #0284c7;
+      border-color: #38bdf8;
+      color: #ffffff;
+    }
+    .btn-print {
+      background: linear-gradient(90deg, #0ea5e9, #14b8a6);
+      color: #0f172a;
+      border: none;
+    }
+    .poster-wrap {
+      max-width: 1600px;
+      margin: 0 auto;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    }
+    .poster-wrap img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+      body {
+        padding: 0;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar no-print">
+    <div class="nav-links">
+      <a href="/flowchart-pasmigranpro.html" class="btn">🗺️ 1. Flowchart End-to-End</a>
+      <a href="/erd-dfd-pasmigranpro.html" class="btn active">🗄️ 2. Diagram ERD &amp; DFD (Database &amp; Aliran Data)</a>
+      <a href="/" class="btn">⬅️ Kembali ke Command Center</a>
+    </div>
+    <button class="btn btn-print" onclick="window.print()">🖨️ Cetak / Simpan sebagai PDF (A3/A4)</button>
+  </div>
+
+  <div class="poster-wrap">
+    <img src="/ERD_DFD_PASMigranPro_P3MI.svg" alt="ERD & DFD PASMigranPro P3MI" />
+  </div>
+</body>
+</html>
