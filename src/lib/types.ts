@@ -384,6 +384,97 @@ export interface AuditLog {
   timestamp: string;
 }
 
+export type DocHandoverType = "NONE" | "ASLI" | "COPY";
+export type LangSkillLevel = "NONE" | "BAIK" | "CUKUP" | "BURUK";
+
+export interface OfficialRegistrationForm {
+  nickname: string; // Nama Panggilan
+  heightCm: number; // Tinggi Badan (Cm)
+  weightKg: number; // Berat Badan (Kg)
+  religion: string; // Agama
+  postalCode: string; // Kode Pos
+  graduationYear: string; // Lulus Tahun
+  ktpOrPassportNo: string; // No. KTP / Paspor
+  fatherName: string; // Nama Bapak
+  fatherAge: number; // Umur Bapak (Th)
+  motherName: string; // Nama Ibu
+  motherAge: number; // Umur Ibu (Th)
+  spouseOrGuardianName: string; // Nama Suami / Istri / Wali
+  spouseAge: number; // Umur Suami / Istri / Wali (Th)
+  spouseOccupation: string; // Pekerjaan Suami / Istri / Wali
+  boysCountAndAges: string; // Jumlah dan umur anak Laki-laki
+  girlsCountAndAges: string; // Jumlah dan umur anak Perempuan
+  childOrder: number; // Saya anak ke
+  siblingsCount: number; // dari ... Bersaudara
+  emergencyContactName: string; // Nama Keluarga yang mudah dihubungi
+  emergencyContactRelation: string; // Hubungan
+  emergencyContactPhone: string; // Nomor Telp / Hp keluarga yang mudah dihubungi
+  workExperience1: string; // Pengalaman Kerja 1
+  workExperience2: string; // Pengalaman Kerja 2
+  desiredJobCleaner: boolean;
+  desiredJobFactory: boolean;
+  desiredJobNurse: boolean;
+  desiredJobHospitality: boolean;
+  desiredJobOther: boolean;
+  desiredJobOtherText: string;
+  docHandover: {
+    ktp: DocHandoverType;
+    kk: DocHandoverType;
+    akteKelahiran: DocHandoverType;
+    izinKeluarga: DocHandoverType;
+    sttbIjazah: DocHandoverType;
+    skck: DocHandoverType;
+    paspor: DocHandoverType;
+    otherDoc8Name: string;
+    otherDoc8Status: DocHandoverType;
+    otherDoc9Name: string;
+    otherDoc9Status: DocHandoverType;
+  };
+  languageSkills: {
+    english: LangSkillLevel;
+    mandarin: LangSkillLevel;
+    arabic: LangSkillLevel;
+    otherLanguageName: string;
+    otherLanguageLevel: LangSkillLevel;
+  };
+  candidateNotes: string; // Catatan berkas
+  sponsorOfficerName: string; // Nama Petugas Lapangan / Petugas Rekrut / Sponsor
+  sponsorOfficerPhone: string; // Nomor Telp / Hp Sponsor
+  sponsorNotes: string; // Catatan Sponsor
+  receivedByPtOfficer: string; // Yang menerima CPMI (Petugas PT)
+  formSignedDate: string; // Tanggal tanda tangan formulir
+}
+
+export interface SponsorFormSubmission {
+  id: string;
+  submissionCode: string;
+  submittedAt: string;
+  sponsorId: string;
+  sponsorName: string;
+  sponsorPhone: string;
+  branchId: string;
+  status: "MENUNGGU_DATA_ENTRY" | "SUDAH_DIINPUT";
+  sourceMethod: "SCAN_FORM_FISIK" | "FORM_DIGITAL_SPONSOR" | "PARSE_WA_SPONSOR";
+  physicalFormImageUrl?: string;
+  processedCandidateId?: string;
+  processedRegNumber?: string;
+  processedBy?: string;
+  processedAt?: string;
+  fullName: string;
+  nik?: string;
+  gender: "P" | "L";
+  avatarUrl?: string;
+  birthPlace: string;
+  birthDate: string;
+  phone: string;
+  address: string;
+  maritalStatus: string;
+  education: string;
+  destinationCountry: DestinationCountry;
+  jobSector: string;
+  registrationForm: OfficialRegistrationForm;
+}
+
 export interface Candidate {
   id: string;
   regNumber: string;
@@ -421,6 +512,7 @@ export interface Candidate {
   finance?: CandidateFinance;
   training?: TrainingRecord;
   badilInfo?: BadilInfo;
+  registrationForm?: OfficialRegistrationForm;
 }
 
 export const JOURNEY_STAGES: {

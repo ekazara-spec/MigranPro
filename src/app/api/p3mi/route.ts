@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   buildDefaultFinanceForCandidate,
+  buildDefaultRegistrationFormForCandidate,
   buildDefaultTrainingForCandidate,
   getDaysRemaining,
   readDb,
@@ -27,7 +28,9 @@ import {
   JobVacancy,
   JourneyStage,
   MedicalClinicPartner,
+  OfficialRegistrationForm,
   Sponsor,
+  SponsorFormSubmission,
   StaffAccount,
   UserRole,
 } from "@/lib/types";
@@ -671,6 +674,8 @@ export async function POST(req: NextRequest) {
         branchId,
         sponsorId,
         placementFee = 32000000,
+        registrationForm,
+        sponsorSubmissionId,
       } = body.payload;
 
       const cleanNik = nik ? String(nik).trim() : undefined;
@@ -759,20 +764,61 @@ export async function POST(req: NextRequest) {
         portalPin: cleanNik ? cleanNik.slice(-6) : "123456",
         createdAt: today,
         updatedAt: today,
-        documents: DOC_TEMPLATE_CONFIG.map((tpl, idx) => ({
-          id: `doc-${id}-${idx + 1}`,
-          candidateId: id,
-          docType: tpl.docType,
-          title: tpl.title,
-          isSensitive: tpl.isSensitive,
-          requiredAtStage: tpl.requiredAtStage,
-          status: "MISSING",
-          aiCheckStatus: "UNCHECKED",
-          lastReminderTier: null,
-        })),
+        documents: DOC_TEMPLATE_CONFIG.map((tpl, idx) => {
+          const hand = (registrationForm as OfficialRegistrationForm | undefined)?.docHandover;
+          let handoverVal: "NONE" | "ASLI" | "COPY" = "NONE";
+          if (hand) {
+            if (tpl.docType === "KTP") handoverVal = hand.ktp;
+            else if (tpl.docType === "KK") handoverVal = hand.kk;
+            else if (tpl.docType === "AKTA_IJAZAH")
+              handoverVal =
+                hand.akteKelahiran !== "NONE" ? hand.akteKelahiran : hand.sttbIjazah;
+            else if (tpl.docType === "IZIN_KELUARGA") handoverVal = hand.izinKeluarga;
+            else if (tpl.docType === "PASPOR") handoverVal = hand.paspor;
+          }
+          const isHandedOver = handoverVal === "ASLI" || handoverVal === "COPY";
+          return {
+            id: `doc-${id}-${idx + 1}`,
+            candidateId: id,
+            docType: tpl.docType,
+            title: tpl.title,
+            isSensitive: tpl.isSensitive,
+            requiredAtStage: tpl.requiredAtStage,
+            status: (isHandedOver ? "UPLOADED" : "MISSING") as "UPLOADED" | "MISSING",
+            docNumber:
+              tpl.docType === "KTP" && cleanNik
+                ? cleanNik
+                : isHandedOver
+                ? `FISIK-${handoverVal}`
+                : undefined,
+            issuedBy: isHandedOver
+              ? `Diserahkan Fisik (${handoverVal}) via Formulir Pendaftaran`
+              : undefined,
+            issueDate: isHandedOver ? today : undefined,
+            aiCheckStatus: (isHandedOver ? "MATCH" : "UNCHECKED") as "MATCH" | "UNCHECKED",
+            aiCheckNotes: isHandedOver
+              ? `Tercatat pada Formulir Pendaftaran PT Panca Banyu Ajisakti sebagai dokumen ${handoverVal}.`
+              : undefined,
+            lastReminderTier: null,
+          };
+        }),
       };
       newCandidate.finance = buildDefaultFinanceForCandidate(newCandidate);
       newCandidate.training = buildDefaultTrainingForCandidate(newCandidate);
+      newCandidate.registrationForm = registrationForm
+        ? (registrationForm as OfficialRegistrationForm)
+        : buildDefaultRegistrationFormForCandidate(newCandidate, db.sponsors);
+
+      if (sponsorSubmissionId && db.sponsorSubmissions) {
+        const sub = db.sponsorSubmissions.find((s) => s.id === sponsorSubmissionId);
+        if (sub) {
+          sub.status = "SUDAH_DIINPUT";
+          sub.processedCandidateId = newCandidate.id;
+          sub.processedRegNumber = newCandidate.regNumber;
+          sub.processedBy = actorName;
+          sub.processedAt = nowTimestamp();
+        }
+      }
 
       db.candidates.unshift(newCandidate);
       db.auditLogs.unshift({
@@ -783,15 +829,68 @@ export async function POST(req: NextRequest) {
         actorRole: actorRole as UserRole,
         branchName,
         actionType: "CANDIDATE_CREATED",
-        summary: `Mendaftarkan berkas baru ${newCandidate.fullName} (${newCandidate.regNumber}) pada tahap ${newCandidate.stage}`,
+        summary: `Mendaftarkan Formulir CPMI/CTKI baru ${newCandidate.fullName} (${newCandidate.regNumber}) pada tahap ${newCandidate.stage}`,
         details: cleanNik
-          ? `NIK 16 digit tervalidasi unik: ${cleanNik}. Tujuan: ${newCandidate.destinationCountry}.`
-          : `Terdaftar sebagai Lead lapangan (Nama & Kontak dulu, NIK menyusul).`,
+          ? `Formulir Pendaftaran PT Panca Banyu Ajisakti lengkap. NIK 16 digit: ${cleanNik}. Tujuan: ${newCandidate.destinationCountry}.`
+          : `Terdaftar via Formulir Pendaftaran PT Panca Banyu Ajisakti sebagai Lead lapangan.`,
         timestamp: nowTimestamp(),
       });
 
       writeDb(db);
       return NextResponse.json({ ok: true, candidate: newCandidate, db });
+    }
+
+    if (action === "CREATE_SPONSOR_SUBMISSION") {
+      const {
+        sponsorId,
+        branchId,
+        sourceMethod = "FORM_DIGITAL_SPONSOR",
+        physicalFormImageUrl = "/form-pendaftaran-asli.jpg",
+        fullName,
+        nik,
+        gender = "P",
+        avatarUrl,
+        birthPlace = "",
+        birthDate = "",
+        phone = "",
+        address = "",
+        maritalStatus = "Belum Kawin",
+        education = "SMA/SMK",
+        destinationCountry = "Arab Saudi",
+        jobSector = "Housekeeping & Caregiver",
+        registrationForm,
+      } = body.payload;
+
+      const spObj = db.sponsors.find((s) => s.id === sponsorId) || db.sponsors[0];
+      if (!db.sponsorSubmissions) db.sponsorSubmissions = [];
+      const newSub: SponsorFormSubmission = {
+        id: `sub-form-${Date.now()}`,
+        submissionCode: `FORM-SP/2026/040${db.sponsorSubmissions.length + 1}`,
+        submittedAt: nowTimestamp(),
+        sponsorId: spObj?.id || "sp-1",
+        sponsorName: spObj ? `${spObj.name} (${spObj.code})` : "Sponsor Lapangan",
+        sponsorPhone: spObj?.phone || "0812-0000-0000",
+        branchId: branchId || spObj?.branchId || "br-idm",
+        status: "MENUNGGU_DATA_ENTRY",
+        sourceMethod,
+        physicalFormImageUrl,
+        fullName: String(fullName || "Calon PMI Baru").trim(),
+        nik: nik ? String(nik).trim() : undefined,
+        gender,
+        avatarUrl,
+        birthPlace,
+        birthDate,
+        phone,
+        address,
+        maritalStatus,
+        education,
+        destinationCountry: destinationCountry as DestinationCountry,
+        jobSector,
+        registrationForm: registrationForm as OfficialRegistrationForm,
+      };
+      db.sponsorSubmissions.unshift(newSub);
+      writeDb(db);
+      return NextResponse.json({ ok: true, submission: newSub, db });
     }
 
     if (action === "UPDATE_CANDIDATE") {

@@ -58,16 +58,20 @@ import {
   CpmiDocument,
   DestinationCountry,
   DOC_TEMPLATE_CONFIG,
+  DocHandoverType,
   ForeignAgency,
   FundingScheme,
   JOURNEY_STAGES,
   JobVacancy,
   JourneyStage,
+  LangSkillLevel,
   MedicalClinicPartner,
+  OfficialRegistrationForm,
   PlacementCostItem,
   RenewalTask,
   SpecialStatus,
   Sponsor,
+  SponsorFormSubmission,
   SponsorInstallment,
   StaffAccount,
   UserRole,
@@ -86,6 +90,7 @@ interface DbPayload {
   foreignAgencies?: ForeignAgency[];
   medicalClinics?: MedicalClinicPartner[];
   bpjsFinancingPartners?: BpjsFinancingPartner[];
+  sponsorSubmissions?: SponsorFormSubmission[];
 }
 
 const ROLE_PERMISSIONS: Record<
@@ -371,8 +376,48 @@ export default function PASMigranProCommandCenter() {
     details?: string[];
   } | null>(null);
 
-  // Modal Tambah CPMI / Lead Baru
+  // Modal Tambah CPMI / Lead Baru (Formulir Pendaftaran Resmi PT Panca Banyu Ajisakti)
   const [showAddModal, setShowAddModal] = useState(false);
+  const [regModalTab, setRegModalTab] = useState<
+    "INBOX_SPONSOR" | "SCAN_DAN_WA" | "FORM_LENGKAP"
+  >("INBOX_SPONSOR");
+  const [activeSponsorSubmissionId, setActiveSponsorSubmissionId] = useState<string | null>(null);
+  const [physicalFormScanUrl, setPhysicalFormScanUrl] = useState<string>(
+    "/form-pendaftaran-asli.jpg"
+  );
+  const [physicalFormZoom, setPhysicalFormZoom] = useState<number>(100);
+  const [waRawText, setWaRawText] = useState<string>(
+    `FORMULIR PENDAFTARAN CPMI PT PANCA BANYU AJISAKTI
+Nama Lengkap: Siti Munawaroh Binti H. Karim
+Nama Panggilan: Muna
+NIK: 3212156804990007
+TTL: Indramayu, 1999-04-28
+JK: P
+Tinggi/Berat: 160 cm / 53 kg
+Agama: Islam
+Status: Kawin
+Pendidikan: SMA/SMK (Lulus: 2017)
+Alamat: Blok Karanganyar RT 003/001 Kec. Karangampel, Indramayu (Kode Pos: 45283)
+HP: 0812-9988-4412
+Nama Bapak: H. Karim (59 Th)
+Nama Ibu: Hj. Maryam (54 Th)
+Suami/Wali: Dadan Ramdani (33 Th - Wiraswasta)
+Anak Laki: 1 Orang (5 Th) | Anak Perempuan: -
+Anak Ke: 2 dari 4 Bersaudara
+Kontak Darurat: Dadan Ramdani (Suami) - 0813-8877-2219
+Pengalaman 1: 2020-2023 Caregiver & Housekeeping di Hong Kong (Selesai Kontrak)
+Pengalaman 2: 2023-2025 Asisten Perawat Klinik Medika Cirebon
+Negara Tujuan: Arab Saudi
+Pekerjaan: Cleaner, Nurse
+Dokumen Asli: KTP, KK, AKTE, IZIN KELUARGA, IJAZAH, PASPOR
+Dokumen Copy: SKCK
+Bahasa: Inggris CUKUP, Mandarin BAIK, Arab BAIK
+Sponsor: Kang Dedi Kusnadi (PL-IDM-001) - 0812-2301-4455
+Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
+  );
+  const [printingRegFormCandidate, setPrintingRegFormCandidate] = useState<Candidate | null>(
+    null
+  );
   const [duplicateNikAlert, setDuplicateNikAlert] = useState<{
     candidate: Candidate;
     branchName: string;
@@ -390,12 +435,69 @@ export default function PASMigranProCommandCenter() {
     address: "",
     education: "SMA/SMK",
     maritalStatus: "Belum Kawin",
-    destinationCountry: "Taiwan",
-    jobSector: "Caregiver (Perawat Lansia)",
+    destinationCountry: "Arab Saudi",
+    jobSector: "Housekeeping & Caregiver (SPSK Syarikah)",
     employerName: "",
     agencyPartner: "",
     branchId: "br-idm",
     sponsorId: "sp-1",
+  });
+  const [regForm, setRegForm] = useState<OfficialRegistrationForm>({
+    nickname: "",
+    heightCm: 158,
+    weightKg: 52,
+    religion: "Islam",
+    postalCode: "45282",
+    graduationYear: "2018",
+    ktpOrPassportNo: "",
+    fatherName: "",
+    fatherAge: 55,
+    motherName: "",
+    motherAge: 50,
+    spouseOrGuardianName: "",
+    spouseAge: 32,
+    spouseOccupation: "Wiraswasta",
+    boysCountAndAges: "-",
+    girlsCountAndAges: "-",
+    childOrder: 1,
+    siblingsCount: 3,
+    emergencyContactName: "",
+    emergencyContactRelation: "Suami / Orang Tua",
+    emergencyContactPhone: "",
+    workExperience1: "",
+    workExperience2: "",
+    desiredJobCleaner: true,
+    desiredJobFactory: false,
+    desiredJobNurse: true,
+    desiredJobHospitality: false,
+    desiredJobOther: false,
+    desiredJobOtherText: "",
+    docHandover: {
+      ktp: "ASLI",
+      kk: "ASLI",
+      akteKelahiran: "ASLI",
+      izinKeluarga: "ASLI",
+      sttbIjazah: "ASLI",
+      skck: "COPY",
+      paspor: "NONE",
+      otherDoc8Name: "Buku Nikah / Akte Cerai",
+      otherDoc8Status: "ASLI",
+      otherDoc9Name: "Pas Foto 4x6 (6 Lembar)",
+      otherDoc9Status: "ASLI",
+    },
+    languageSkills: {
+      english: "CUKUP",
+      mandarin: "BURUK",
+      arabic: "BAIK",
+      otherLanguageName: "",
+      otherLanguageLevel: "NONE",
+    },
+    candidateNotes: "",
+    sponsorOfficerName: "Kang Dedi Kusnadi (PL-IDM-001)",
+    sponsorOfficerPhone: "0812-2301-4455",
+    sponsorNotes: "",
+    receivedByPtOfficer: "Rina Kartika (Staf Data Entry PT Panca Banyu Ajisakti)",
+    formSignedDate: new Date().toISOString().slice(0, 10),
   });
 
   // Modal Edit / Verifikasi Dokumen & Pratinjau Fisik / Scan Berkas
@@ -990,12 +1092,273 @@ export default function PASMigranProCommandCenter() {
     }
   }
 
-  // Handler Tambah Kandidat Baru (dengan Pencegahan NIK Ganda)
+  // Handler Salin Draft Formulir dari Antrean Sponsor ke Form Data Entry
+  function handleApplySponsorSubmission(sub: SponsorFormSubmission) {
+    setActiveSponsorSubmissionId(sub.id);
+    setPhysicalFormScanUrl(sub.physicalFormImageUrl || "/form-pendaftaran-asli.jpg");
+    setNewForm({
+      stage: sub.nik && sub.nik.length === 16 ? "PROSPECT" : "LEAD",
+      nik: sub.nik || "",
+      fullName: sub.fullName,
+      gender: sub.gender,
+      avatarUrl: sub.avatarUrl || "",
+      birthPlace: sub.birthPlace,
+      birthDate: sub.birthDate,
+      phone: sub.phone,
+      address: sub.address,
+      education: sub.education,
+      maritalStatus: sub.maritalStatus,
+      destinationCountry: sub.destinationCountry,
+      jobSector: sub.jobSector,
+      employerName: "",
+      agencyPartner: "",
+      branchId: sub.branchId,
+      sponsorId: sub.sponsorId,
+    });
+    setRegForm({
+      ...sub.registrationForm,
+      receivedByPtOfficer:
+        loggedInStaff?.name || "Rina Kartika (Staf Data Entry PT Panca Banyu Ajisakti)",
+    });
+    setRegModalTab("FORM_LENGKAP");
+    setToast({
+      type: "success",
+      title: `Draft Formulir "${sub.fullName}" (${sub.submissionCode}) Disalin ke Form Data Entry`,
+      details: [
+        `Pengirim: ${sub.sponsorName} · Seluruh 35+ kolom formulir fisik PT Panca Banyu Ajisakti telah terisi otomatis.`,
+        "Silakan periksa kembali checklist dokumen ASLI/COPY lalu klik 'Simpan Formulir & Daftarkan ke Sistem'.",
+      ],
+    });
+  }
+
+  // Handler AI OCR Ekstraksi Otomatis dari Foto Lembar Kertas Formulir Pendaftaran
+  function handleRunFormOcrSimulation() {
+    setNewForm({
+      stage: "PROSPECT",
+      nik: "3212156205970004",
+      fullName: "Titi Sari Binti Kartono",
+      gender: "P",
+      avatarUrl: AVATAR_PRESETS[0].url,
+      birthPlace: "Indramayu",
+      birthDate: "1997-05-22",
+      phone: "0813-9455-2210",
+      address: "Blok Desa RT 004/002 Desa Juntinyuat, Kec. Juntinyuat, Kab. Indramayu",
+      education: "SMA/SMK",
+      maritalStatus: "Kawin",
+      destinationCountry: "Arab Saudi",
+      jobSector: "Housekeeping & Caregiver (SPSK Syarikah)",
+      employerName: "",
+      agencyPartner: "",
+      branchId: "br-idm",
+      sponsorId: "sp-1",
+    });
+    setRegForm({
+      nickname: "Titi",
+      heightCm: 159,
+      weightKg: 54,
+      religion: "Islam",
+      postalCode: "45282",
+      graduationYear: "2015",
+      ktpOrPassportNo: "3212156205970004",
+      fatherName: "Kartono",
+      fatherAge: 58,
+      motherName: "Rasminah",
+      motherAge: 53,
+      spouseOrGuardianName: "Hendrik Setiawan",
+      spouseAge: 32,
+      spouseOccupation: "Nelayan / Wiraswasta",
+      boysCountAndAges: "1 Orang (6 Th)",
+      girlsCountAndAges: "-",
+      childOrder: 1,
+      siblingsCount: 3,
+      emergencyContactName: "Hendrik Setiawan",
+      emergencyContactRelation: "Suami Kandung",
+      emergencyContactPhone: "0852-2411-9088",
+      workExperience1: "2019 - 2023 : Asisten Rumah Tangga & Babysitter di Jakarta (4 Tahun)",
+      workExperience2: "2023 - 2025 : Eks-PMI Arab Saudi (Riyadh) - Selesai Kontrak 2 Tahun Baik",
+      desiredJobCleaner: true,
+      desiredJobFactory: false,
+      desiredJobNurse: true,
+      desiredJobHospitality: false,
+      desiredJobOther: false,
+      desiredJobOtherText: "",
+      docHandover: {
+        ktp: "ASLI",
+        kk: "ASLI",
+        akteKelahiran: "ASLI",
+        izinKeluarga: "ASLI",
+        sttbIjazah: "ASLI",
+        skck: "COPY",
+        paspor: "ASLI",
+        otherDoc8Name: "Buku Nikah Asli",
+        otherDoc8Status: "ASLI",
+        otherDoc9Name: "Paspor Lama Eks-Riyadh",
+        otherDoc9Status: "ASLI",
+      },
+      languageSkills: {
+        english: "CUKUP",
+        mandarin: "BURUK",
+        arabic: "BAIK",
+        otherLanguageName: "",
+        otherLanguageLevel: "NONE",
+      },
+      candidateNotes: "Hasil bacaan AI OCR dari foto lembar Formulir Pendaftaran fisik.",
+      sponsorOfficerName: "Kang Dedi Kusnadi (PL-IDM-001)",
+      sponsorOfficerPhone: "0812-2301-4455",
+      sponsorNotes: "Dokumen fisik asli KTP, KK, Akte, Ijazah, Buku Nikah & Izin Suami lengkap.",
+      receivedByPtOfficer:
+        loggedInStaff?.name || "Rina Kartika (Staf Data Entry PT Panca Banyu Ajisakti)",
+      formSignedDate: new Date().toISOString().slice(0, 10),
+    });
+    setToast({
+      type: "success",
+      title: "✨ AI OCR Berhasil Mengekstrak Isi Foto Formulir Fisik!",
+      details: [
+        "Biodata, Tinggi/Berat Badan, Data Orang Tua/Suami, Pengalaman Kerja, Checklist Dokumen ASLI/COPY, dan Bahasa berhasil disalin ke formulir.",
+      ],
+    });
+  }
+
+  // Handler Smart Parser Format Chat WhatsApp dari Sponsor Lapangan
+  function handleParseWhatsAppText() {
+    const lines = waRawText.split("\n");
+    const getVal = (keyPattern: RegExp): string => {
+      const found = lines.find((l) => keyPattern.test(l));
+      if (!found) return "";
+      const idx = found.indexOf(":");
+      return idx >= 0 ? found.slice(idx + 1).trim() : "";
+    };
+
+    const fullName = getVal(/nama lengkap/i) || "Siti Munawaroh Binti H. Karim";
+    const nickname = getVal(/nama panggilan/i) || fullName.split(" ")[0] || "Muna";
+    const nikRaw = getVal(/^nik/i).replace(/\D/g, "").slice(0, 16);
+    const ttlRaw = getVal(/ttl|tempat/i);
+    const [birthPlacePart, birthDatePart] = ttlRaw.includes(",")
+      ? ttlRaw.split(",").map((s) => s.trim())
+      : ["Indramayu", "1999-04-28"];
+    const jkRaw = getVal(/^jk|jenis kelamin/i).toUpperCase();
+    const gender: "P" | "L" = jkRaw.startsWith("L") ? "L" : "P";
+    const tbBbRaw = getVal(/tinggi/i);
+    const tbMatch = tbBbRaw.match(/(\d{3})/);
+    const bbMatch = tbBbRaw.match(/\/\s*(\d{2,3})/);
+    const religion = getVal(/agama/i) || "Islam";
+    const maritalStatus = getVal(/^status/i) || "Kawin";
+    const eduRaw = getVal(/pendidikan/i);
+    const gradMatch = eduRaw.match(/(\d{4})/);
+    const addrRaw = getVal(/alamat/i);
+    const postalMatch = addrRaw.match(/(\d{5})/);
+    const phone = getVal(/^hp|telp/i) || "0812-9988-4412";
+    const fatherRaw = getVal(/nama bapak/i);
+    const fatherAgeMatch = fatherRaw.match(/(\d{2})/);
+    const motherRaw = getVal(/nama ibu/i);
+    const motherAgeMatch = motherRaw.match(/(\d{2})/);
+    const spouseRaw = getVal(/suami|istri|wali/i);
+    const spouseAgeMatch = spouseRaw.match(/(\d{2})/);
+    const emergRaw = getVal(/kontak darurat/i);
+    const exp1 = getVal(/pengalaman 1/i);
+    const exp2 = getVal(/pengalaman 2/i);
+    const dest = getVal(/negara tujuan/i) || "Arab Saudi";
+    const jobRaw = getVal(/pekerjaan/i);
+    const docAsliRaw = getVal(/dokumen asli/i).toUpperCase();
+    const docCopyRaw = getVal(/dokumen copy/i).toUpperCase();
+    const sponsorRaw = getVal(/^sponsor/i);
+    const sponsorNotes = getVal(/catatan sponsor/i);
+
+    const resolveDoc = (keyword: string): DocHandoverType => {
+      if (docAsliRaw.includes(keyword)) return "ASLI";
+      if (docCopyRaw.includes(keyword)) return "COPY";
+      return "NONE";
+    };
+
+    setNewForm((prev) => ({
+      ...prev,
+      stage: nikRaw.length === 16 ? "PROSPECT" : "LEAD",
+      nik: nikRaw,
+      fullName,
+      gender,
+      avatarUrl: gender === "L" ? AVATAR_PRESETS[3].url : AVATAR_PRESETS[0].url,
+      birthPlace: birthPlacePart || "Indramayu",
+      birthDate: birthDatePart || "1999-04-28",
+      phone,
+      address: addrRaw.replace(/\(Kode Pos:.*?\)/i, "").trim() || prev.address,
+      education: eduRaw.split("(")[0].trim() || "SMA/SMK",
+      maritalStatus,
+      destinationCountry: dest,
+      jobSector: jobRaw || "Housekeeping & Caregiver",
+    }));
+
+    setRegForm((prev) => ({
+      ...prev,
+      nickname,
+      heightCm: tbMatch ? Number(tbMatch[1]) : 160,
+      weightKg: bbMatch ? Number(bbMatch[1]) : 53,
+      religion,
+      postalCode: postalMatch ? postalMatch[1] : "45283",
+      graduationYear: gradMatch ? gradMatch[1] : "2017",
+      ktpOrPassportNo: nikRaw,
+      fatherName: fatherRaw.split("(")[0].trim() || "H. Karim",
+      fatherAge: fatherAgeMatch ? Number(fatherAgeMatch[1]) : 59,
+      motherName: motherRaw.split("(")[0].trim() || "Hj. Maryam",
+      motherAge: motherAgeMatch ? Number(motherAgeMatch[1]) : 54,
+      spouseOrGuardianName: spouseRaw.split("(")[0].trim() || "Dadan Ramdani",
+      spouseAge: spouseAgeMatch ? Number(spouseAgeMatch[1]) : 33,
+      emergencyContactName: emergRaw.split("(")[0].trim() || "Dadan Ramdani",
+      emergencyContactRelation: "Suami / Keluarga",
+      emergencyContactPhone: (emergRaw.split("-").pop() || "").trim() || phone,
+      workExperience1: exp1 || prev.workExperience1,
+      workExperience2: exp2 || prev.workExperience2,
+      desiredJobCleaner: /clean/i.test(jobRaw),
+      desiredJobFactory: /pabrik|factory/i.test(jobRaw),
+      desiredJobNurse: /nurse|perawat|caregiver/i.test(jobRaw),
+      desiredJobHospitality: /hotel|hospitality/i.test(jobRaw),
+      docHandover: {
+        ...prev.docHandover,
+        ktp: resolveDoc("KTP"),
+        kk: resolveDoc("KK"),
+        akteKelahiran: resolveDoc("AKTE"),
+        izinKeluarga: resolveDoc("IZIN"),
+        sttbIjazah: resolveDoc("IJAZAH"),
+        skck: resolveDoc("SKCK"),
+        paspor: resolveDoc("PASPOR"),
+      },
+      sponsorOfficerName: sponsorRaw.split("-")[0].trim() || prev.sponsorOfficerName,
+      sponsorOfficerPhone: (sponsorRaw.split("-").slice(1).join("-") || "").trim() || prev.sponsorOfficerPhone,
+      sponsorNotes: sponsorNotes || prev.sponsorNotes,
+    }));
+
+    setRegModalTab("FORM_LENGKAP");
+    setToast({
+      type: "success",
+      title: `📲 Chat WhatsApp Sponsor Berhasil Dikonversi ke Formulir (${fullName})`,
+      details: [
+        "Seluruh atribut biodata, keluarga, pengalaman kerja, dan status dokumen ASLI/COPY otomatis masuk ke kolom formulir.",
+      ],
+    });
+  }
+
+  // Handler Tambah Kandidat Baru (dengan Formulir Lengkap PT Panca Banyu Ajisakti & Pencegahan NIK Ganda)
   async function handleCreateCandidate(e: React.FormEvent) {
     e.preventDefault();
     setDuplicateNikAlert(null);
 
-    const { status, data } = await callApi("CREATE_CANDIDATE", newForm);
+    const spObj = db?.sponsors.find((s) => s.id === newForm.sponsorId);
+    const enrichedRegForm: OfficialRegistrationForm = {
+      ...regForm,
+      ktpOrPassportNo: regForm.ktpOrPassportNo || newForm.nik || "Menyusul",
+      sponsorOfficerName:
+        regForm.sponsorOfficerName || (spObj ? `${spObj.name} (${spObj.code})` : "Petugas Rekrut"),
+      sponsorOfficerPhone: regForm.sponsorOfficerPhone || spObj?.phone || "",
+      receivedByPtOfficer:
+        regForm.receivedByPtOfficer ||
+        loggedInStaff?.name ||
+        "Rina Kartika (Staf Data Entry PT Panca Banyu Ajisakti)",
+    };
+
+    const { status, data } = await callApi("CREATE_CANDIDATE", {
+      ...newForm,
+      registrationForm: enrichedRegForm,
+      sponsorSubmissionId: activeSponsorSubmissionId || undefined,
+    });
     if (status === 409 && data.duplicateNik) {
       setDuplicateNikAlert({
         candidate: data.existingCandidate,
@@ -1015,15 +1378,16 @@ export default function PASMigranProCommandCenter() {
     }
 
     setShowAddModal(false);
+    setActiveSponsorSubmissionId(null);
     setSelectedCandidateId(data.candidate.id);
     setActiveNav("cpmi");
     setToast({
       type: "success",
-      title: `Berkas ${data.candidate.fullName} (${data.candidate.regNumber}) Berhasil Dibuat`,
+      title: `Formulir Pendaftaran ${data.candidate.fullName} (${data.candidate.regNumber}) Tersimpan!`,
       details: [
         data.candidate.nik
-          ? `NIK ${data.candidate.nik} tervalidasi unik di seluruh cabang.`
-          : "Terdaftar sebagai Lead lapangan. NIK & dokumen wajib dapat dilengkapi menyusul.",
+          ? `NIK ${data.candidate.nik} tervalidasi unik. Checklist dokumen fisik (ASLI/COPY) otomatis disinkronkan ke Satu Berkas Digital.`
+          : "Terdaftar melalui Formulir Pendaftaran PT Panca Banyu Ajisakti.",
       ],
     });
   }
@@ -1780,12 +2144,24 @@ export default function PASMigranProCommandCenter() {
             <button
               onClick={() => {
                 setDuplicateNikAlert(null);
+                setRegModalTab("INBOX_SPONSOR");
                 setShowAddModal(true);
               }}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-slate-800"
+              className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-slate-800"
             >
               <UserPlus className="h-3.5 w-3.5 text-sky-400" />
-              + Daftarkan CPMI / Lead
+              <span>+ Formulir Pendaftaran CPMI</span>
+              {(db.sponsorSubmissions?.filter((s) => s.status === "MENUNGGU_DATA_ENTRY")
+                .length || 0) > 0 && (
+                <span className="rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-extrabold text-slate-950">
+                  {
+                    db.sponsorSubmissions?.filter(
+                      (s) => s.status === "MENUNGGU_DATA_ENTRY"
+                    ).length
+                  }{" "}
+                  Draft Sponsor
+                </span>
+              )}
             </button>
 
             <button
@@ -2646,6 +3022,14 @@ export default function PASMigranProCommandCenter() {
 
                         <div className="flex flex-col items-end gap-2">
                           <div className="flex flex-wrap items-center gap-2">
+                            <button
+                              onClick={() => setPrintingRegFormCandidate(selectedCandidate)}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-sky-300 bg-sky-50 px-3 py-1.5 text-xs font-bold text-sky-900 shadow-xs hover:bg-sky-100"
+                            >
+                              <Printer className="h-3.5 w-3.5 text-sky-700" />
+                              🖨️ Formulir Pendaftaran Resmi (Cetak)
+                            </button>
+
                             <button
                               onClick={() => {
                                 const fallbackRepl =
@@ -6799,127 +7183,436 @@ export default function PASMigranProCommandCenter() {
       )}
 
       {/* =========================================================
-          MODAL DAFTARKAN CPMI / LEAD BARU + DETEKSI NIK GANDA
+          MODAL FORMULIR PENDAFTARAN CPMI/CTKI RESMI PT PANCA BANYU AJISAKTI
+          (MENCAKUP IDE 1: SPLIT-SCREEN AI OCR & WA PARSER, IDE 2: INBOX SERAH-TERIMA SPONSOR, IDE 3: FORMULIR LENGKAP & CETAK FISIK)
          ========================================================= */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-          <div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-              <div>
-                <h3 className="text-lg font-bold text-slate-900">
-                  Daftarkan Berkas CPMI / Lead Baru
-                </h3>
-                <p className="text-xs text-slate-500">
-                  NIK 16 digit dijaga unik di seluruh cabang. Untuk tahap <strong>Lead</strong>, cukup Nama & Kontak dulu.
-                </p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-3 sm:p-5 backdrop-blur-sm">
+          <div className="flex max-h-[94vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+            {/* HEADER RESMI PT PANCA BANYU AJISAKTI */}
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-slate-900 px-6 py-4 text-white">
+              <div className="flex items-center gap-3.5">
+                <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl border-2 border-rose-500 bg-white text-rose-600 shadow-sm">
+                  <span className="text-lg font-black leading-none">▲</span>
+                  <span className="text-[8px] font-black tracking-tighter text-slate-900">
+                    PBA
+                  </span>
+                </div>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded bg-sky-500 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-white">
+                      FORMULIR PENDAFTARAN CPMI/CTKI RESMI
+                    </span>
+                    <span className="text-xs font-bold text-amber-300">
+                      PT. PANCA BANYU AJISAKTI — Indonesia Manpower Service
+                    </span>
+                  </div>
+                  <h3 className="mt-0.5 text-base sm:text-lg font-bold text-white">
+                    Pusat Akuisisi Formulir Sponsor & Input Data Entry Terpadu
+                  </h3>
+                  <p className="text-[11px] text-slate-300">
+                    Jl. Kayu Manis No. 51, Kel. Balekambang, Kec. Kramatjati, Jakarta Timur · NIK 16 Digit Dijaga Unik Lintas Cabang
+                  </p>
+                </div>
               </div>
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100"
-              >
-                <X className="h-5 w-5" />
-              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const tempCand: Candidate = {
+                      id: "temp-preview",
+                      regNumber: `P3MI-2026-${String((db.candidates?.length || 11) + 101).padStart(
+                        4,
+                        "0"
+                      )}`,
+                      nik: newForm.nik || regForm.ktpOrPassportNo || "",
+                      fullName: newForm.fullName || "........................................",
+                      gender: newForm.gender,
+                      avatarUrl: newForm.avatarUrl || AVATAR_PRESETS[0].url,
+                      birthPlace: newForm.birthPlace || "............",
+                      birthDate: newForm.birthDate || "1998-08-14",
+                      phone: newForm.phone || "..................",
+                      address: newForm.address || "........................................................",
+                      maritalStatus: newForm.maritalStatus,
+                      education: newForm.education,
+                      destinationCountry: newForm.destinationCountry as DestinationCountry,
+                      jobSector: newForm.jobSector,
+                      employerName: newForm.employerName,
+                      agencyPartner: newForm.agencyPartner,
+                      stage: newForm.stage,
+                      specialStatus: "NORMAL",
+                      placementFee: 32000000,
+                      costIncurred: 0,
+                      sponsorCommission: 4500000,
+                      commissionPaid: false,
+                      branchId: newForm.branchId,
+                      sponsorId: newForm.sponsorId,
+                      createdAt: new Date().toISOString().slice(0, 10),
+                      updatedAt: new Date().toISOString().slice(0, 10),
+                      documents: [],
+                      registrationForm: regForm,
+                    };
+                    setPrintingRegFormCandidate(tempCand);
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-amber-400/50 bg-amber-500/20 px-3.5 py-2 text-xs font-bold text-amber-200 hover:bg-amber-500/30"
+                >
+                  <Printer className="h-4 w-4 text-amber-300" />
+                  🖨️ Pratinjau & Cetak Lembar Fisik (Ide 3)
+                </button>
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="rounded-lg bg-white/10 p-1.5 text-slate-300 hover:bg-white/20 hover:text-white"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
             </div>
 
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-sky-200 bg-sky-50/70 p-3 text-xs">
-              <span className="text-sky-900">
-                💡 <strong>Ingin menguji pencegahan NIK ganda?</strong> Klik tombol di samping untuk mengisi NIK Sri Wahyuni yang sudah terdaftar:
-              </span>
+            {/* 3 TAB MODE PENYALINAN DATA SPONSOR -> USER DATA ENTRY */}
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-slate-100 px-6 py-2.5">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setRegModalTab("INBOX_SPONSOR")}
+                  className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition ${
+                    regModalTab === "INBOX_SPONSOR"
+                      ? "bg-slate-900 text-white shadow-sm"
+                      : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
+                  }`}
+                >
+                  <span>📥 1. Antrean Draft Formulir dari Sponsor</span>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold ${
+                      regModalTab === "INBOX_SPONSOR"
+                        ? "bg-emerald-400 text-slate-950"
+                        : "bg-emerald-100 text-emerald-800"
+                    }`}
+                  >
+                    {db.sponsorSubmissions?.filter((s) => s.status === "MENUNGGU_DATA_ENTRY")
+                      .length || 0}{" "}
+                    Menunggu
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setRegModalTab("SCAN_DAN_WA")}
+                  className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition ${
+                    regModalTab === "SCAN_DAN_WA"
+                      ? "bg-sky-700 text-white shadow-sm"
+                      : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
+                  }`}
+                >
+                  <span>📸 2. Scan Foto Kertas Formulir & Tempel WA Sponsor (Auto-Fill)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setRegModalTab("FORM_LENGKAP")}
+                  className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition ${
+                    regModalTab === "FORM_LENGKAP"
+                      ? "bg-teal-700 text-white shadow-sm"
+                      : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
+                  }`}
+                >
+                  <span>📝 3. Formulir Lengkap PT Panca Banyu Ajisakti (Verifikasi Data Entry)</span>
+                </button>
+              </div>
+
               <button
                 type="button"
-                onClick={() =>
+                onClick={() => {
+                  setRegModalTab("FORM_LENGKAP");
                   setNewForm((prev) => ({
                     ...prev,
                     stage: "PROSPECT",
                     nik: "3212155408980001",
                     fullName: "Sri Wahyuni (Input Ulang Cabang Lain)",
                     phone: "0812-8821-3301",
-                  }))
-                }
-                className="rounded-lg bg-sky-600 px-3 py-1.5 font-semibold text-white hover:bg-sky-700"
+                  }));
+                }}
+                className="rounded-lg border border-sky-300 bg-sky-50 px-2.5 py-1.5 text-[11px] font-bold text-sky-800 hover:bg-sky-100"
               >
-                Simulasikan NIK Ganda
+                💡 Uji Blokir NIK Ganda
               </button>
             </div>
 
-            {duplicateNikAlert && (
-              <div className="mt-4 rounded-xl border-2 border-rose-500 bg-rose-50 p-4">
-                <div className="flex items-start gap-3">
-                  <ShieldAlert className="h-6 w-6 shrink-0 text-rose-600" />
-                  <div className="flex-1">
-                    <p className="text-sm font-bold text-rose-900">
-                      Pendaftaran Ditolak: NIK 16 Digit Sudah Terdaftar!
-                    </p>
-                    <p className="mt-1 text-xs text-rose-800">{duplicateNikAlert.message}</p>
-                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-rose-200 bg-white p-3">
-                      <div className="text-xs">
-                        <p className="font-bold text-slate-900">
-                          {duplicateNikAlert.candidate.fullName} (
-                          {duplicateNikAlert.candidate.regNumber})
-                        </p>
-                        <p className="text-slate-500">
-                          Cabang: {duplicateNikAlert.branchName} · Tahap Saat Ini:{" "}
-                          <strong>{duplicateNikAlert.candidate.stage}</strong>
-                        </p>
+            {/* BODY KONTEN MODAL */}
+            <div className="flex-1 overflow-y-auto p-6">
+              {duplicateNikAlert && (
+                <div className="mb-5 rounded-xl border-2 border-rose-500 bg-rose-50 p-4">
+                  <div className="flex items-start gap-3">
+                    <ShieldAlert className="h-6 w-6 shrink-0 text-rose-600" />
+                    <div className="flex-1">
+                      <p className="text-sm font-bold text-rose-900">
+                        Pendaftaran Ditolak: NIK 16 Digit Sudah Terdaftar!
+                      </p>
+                      <p className="mt-1 text-xs text-rose-800">{duplicateNikAlert.message}</p>
+                      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-rose-200 bg-white p-3">
+                        <div className="text-xs">
+                          <p className="font-bold text-slate-900">
+                            {duplicateNikAlert.candidate.fullName} (
+                            {duplicateNikAlert.candidate.regNumber})
+                          </p>
+                          <p className="text-slate-500">
+                            Cabang: {duplicateNikAlert.branchName} · Tahap Saat Ini:{" "}
+                            <strong>{duplicateNikAlert.candidate.stage}</strong>
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedCandidateId(duplicateNikAlert.candidate.id);
+                            setShowAddModal(false);
+                            setActiveNav("cpmi");
+                          }}
+                          className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-800"
+                        >
+                          Buka Berkas yang Sudah Ada →
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedCandidateId(duplicateNikAlert.candidate.id);
-                          setShowAddModal(false);
-                          setActiveNav("cpmi");
-                        }}
-                        className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-800"
-                      >
-                        Buka Berkas yang Sudah Ada →
-                      </button>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            <form onSubmit={handleCreateCandidate} className="mt-4 space-y-4 text-xs">
-              {/* PILIHAN PAS FOTO / AVATAR CPMI BARU */}
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5">
-                <label className="font-bold text-slate-800 block mb-2">
-                  📷 Pas Foto Resmi / Avatar CPMI (Tampil di Profil, e-KTP & Biodata Paspor)
-                </label>
-                <div className="flex flex-wrap items-center gap-4">
-                  <img
-                    src={newForm.avatarUrl || AVATAR_PRESETS[0].url}
-                    alt="Pratinjau Pas Foto CPMI"
-                    className="h-20 w-16 shrink-0 rounded-xl border-2 border-slate-300 bg-white object-cover shadow-sm"
-                  />
-                  <div className="flex-1 space-y-2">
-                    <div className="flex flex-wrap gap-1.5">
-                      {AVATAR_PRESETS.map((preset) => {
-                        const isSelected =
-                          (newForm.avatarUrl || AVATAR_PRESETS[0].url) === preset.url;
-                        return (
+              {/* =========================================================
+                  TAB 1: ANTREAN SERAH-TERIMA DRAFT FORMULIR SPONSOR -> DATA ENTRY (IDE 2)
+                 ========================================================= */}
+              {regModalTab === "INBOX_SPONSOR" && (
+                <div className="space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4">
+                    <div>
+                      <span className="rounded bg-emerald-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+                        ALUR SERAH-TERIMA SPONSOR LAPANGAN ➔ USER DATA ENTRY
+                      </span>
+                      <h4 className="mt-1 text-sm font-bold text-slate-900">
+                        Daftar Formulir Pendaftaran CPMI yang Dikirim oleh Sponsor (Siap Disalin 1-Klik)
+                      </h4>
+                      <p className="text-xs text-slate-600">
+                        Sponsor mengisi/mengunggah formulir dari lapangan. User Data Entry cukup klik{" "}
+                        <strong>&ldquo;⚡ Salin ke Form Data Entry&rdquo;</strong> tanpa perlu mengetik ulang puluhan kolom dari awal.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const randNum = Math.floor(1000 + Math.random() * 8999);
+                        const { data } = await callApi("CREATE_SPONSOR_SUBMISSION", {
+                          sponsorId: "sp-1",
+                          branchId: "br-idm",
+                          sourceMethod: "FORM_DIGITAL_SPONSOR",
+                          physicalFormImageUrl: "/form-pendaftaran-asli.jpg",
+                          fullName: `Nengsih Rahayu (${randNum})`,
+                          nik: `321215580998${randNum}`,
+                          gender: "P",
+                          avatarUrl: AVATAR_PRESETS[1].url,
+                          birthPlace: "Indramayu",
+                          birthDate: "1998-09-18",
+                          phone: `0812-8844-${randNum}`,
+                          address: "Desa Karangampel Kidul RT 005/002 Kec. Karangampel, Indramayu",
+                          maritalStatus: "Kawin",
+                          education: "SMA/SMK",
+                          destinationCountry: "Arab Saudi",
+                          jobSector: "Housekeeping & Caregiver (SPSK)",
+                          registrationForm: {
+                            ...regForm,
+                            nickname: "Nengsih",
+                            heightCm: 158,
+                            weightKg: 52,
+                            ktpOrPassportNo: `321215580998${randNum}`,
+                            fatherName: "H. 워노 (Wono)",
+                            fatherAge: 57,
+                            motherName: "Hj. রোহিত (Rohimah)",
+                            motherAge: 52,
+                            spouseOrGuardianName: "Asep Saepudin",
+                            spouseAge: 34,
+                            spouseOccupation: "Wiraswasta",
+                            workExperience1:
+                              "2021 - 2024 : Asisten Rumah Tangga & Lansia di Jakarta",
+                            workExperience2: "2024 - 2025 : Pelatihan Bahasa Arab & Caregiving",
+                            sponsorOfficerName: "Kang Dedi Kusnadi (PL-IDM-001)",
+                            sponsorOfficerPhone: "0812-2301-4455",
+                            sponsorNotes:
+                              "Formulir fisik dan berkas ASLI KTP, KK, Akte, Ijazah, Buku Nikah diserahkan ke meja Data Entry.",
+                          },
+                        });
+                        if (data.ok) {
+                          setToast({
+                            type: "success",
+                            title: `Simulasi Kiriman Formulir Sponsor (${data.submission.submissionCode}) Masuk ke Antrean!`,
+                          });
+                        }
+                      }}
+                      className="rounded-xl bg-emerald-700 px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-800"
+                    >
+                      + Simulasikan Sponsor Kirim Formulir Baru
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                    {(db.sponsorSubmissions || []).map((sub) => {
+                      const isPending = sub.status === "MENUNGGU_DATA_ENTRY";
+                      const rf = sub.registrationForm;
+                      const asliDocs = Object.entries(rf.docHandover)
+                        .filter(
+                          ([k, v]) =>
+                            v === "ASLI" && !["otherDoc8Name", "otherDoc9Name"].includes(k)
+                        )
+                        .map(([k]) => k.toUpperCase());
+
+                      return (
+                        <div
+                          key={sub.id}
+                          className={`flex flex-col justify-between rounded-2xl border p-4 shadow-xs transition ${
+                            isPending
+                              ? "border-sky-200 bg-white hover:border-sky-400"
+                              : "border-slate-200 bg-slate-50/80 opacity-85"
+                          }`}
+                        >
+                          <div>
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="rounded bg-slate-100 px-2 py-0.5 font-mono text-[10px] font-bold text-slate-700">
+                                {sub.submissionCode}
+                              </span>
+                              <span
+                                className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold ${
+                                  isPending
+                                    ? "bg-amber-100 text-amber-900"
+                                    : "bg-emerald-100 text-emerald-800"
+                                }`}
+                              >
+                                {isPending
+                                  ? "⏳ MENUNGGU DATA ENTRY"
+                                  : `✓ SUDAH DIINPUT (${sub.processedRegNumber || "TERDAFTAR"})`}
+                              </span>
+                            </div>
+
+                            <div className="mt-3 flex items-center gap-3">
+                              <img
+                                src={sub.avatarUrl || AVATAR_PRESETS[0].url}
+                                alt={sub.fullName}
+                                className="h-14 w-11 shrink-0 rounded-lg border border-slate-300 object-cover"
+                              />
+                              <div>
+                                <h5 className="text-sm font-bold text-slate-900">
+                                  {sub.fullName}{" "}
+                                  <span className="text-xs font-normal text-slate-500">
+                                    ({rf.nickname})
+                                  </span>
+                                </h5>
+                                <p className="font-mono text-[11px] font-semibold text-teal-700">
+                                  NIK: {sub.nik || "Menyusul"}
+                                </p>
+                                <p className="text-[11px] text-slate-600">
+                                  Tujuan: <strong>{sub.destinationCountry}</strong> · {sub.jobSector}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="mt-3 space-y-1.5 rounded-xl bg-slate-50 p-3 text-[11px] text-slate-600 border border-slate-100">
+                              <div className="flex justify-between">
+                                <span>Sponsor Pengirim:</span>
+                                <strong className="text-slate-900">{sub.sponsorName}</strong>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>Tinggi / Berat & TTL:</span>
+                                <strong className="text-slate-900">
+                                  {rf.heightCm} cm / {rf.weightKg} kg · {sub.birthPlace},{" "}
+                                  {sub.birthDate}
+                                </strong>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>Orang Tua & Wali:</span>
+                                <strong className="text-slate-900">
+                                  Bpk. {rf.fatherName} ({rf.fatherAge}Th) / {rf.spouseOrGuardianName}
+                                </strong>
+                              </div>
+                              <div>
+                                <span className="block text-slate-500">
+                                  Dokumen Fisik Diserahkan (ASLI):
+                                </span>
+                                <div className="mt-1 flex flex-wrap gap-1">
+                                  {asliDocs.map((d) => (
+                                    <span
+                                      key={d}
+                                      className="rounded bg-teal-100 px-1.5 py-0.5 text-[9px] font-bold text-teal-900"
+                                    >
+                                      ✓ {d} ASLI
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                              <p className="italic text-slate-500 pt-1">
+                                &ldquo;{rf.sponsorNotes}&rdquo;
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="mt-4 flex flex-col gap-2 border-t border-slate-100 pt-3">
+                            <button
+                              type="button"
+                              onClick={() => handleApplySponsorSubmission(sub)}
+                              className="w-full rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-slate-800"
+                            >
+                              ⚡ Salin Isi ke Form Data Entry & Verifikasi →
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleApplySponsorSubmission(sub);
+                                setRegModalTab("SCAN_DAN_WA");
+                              }}
+                              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-50"
+                            >
+                              📸 Bandingkan dengan Scan Formulir Kertas
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* =========================================================
+                  TAB 2: SPLIT-SCREEN SCAN FOTO FORMULIR KERTAS & SMART WA PARSER (IDE 1 & 2)
+                 ========================================================= */}
+              {regModalTab === "SCAN_DAN_WA" && (
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+                  {/* KOLOM KIRI: PRATINJAU FOTO / SCAN FORMULIR KERTAS FISIK DARI SPONSOR */}
+                  <div className="space-y-3 lg:col-span-6">
+                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-900 p-3 text-white">
+                      <div>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-sky-300 block">
+                          IDE 1 · SPLIT-SCREEN SCAN FORMULIR FISIK
+                        </span>
+                        <h4 className="text-xs font-bold">
+                          Lembar Kertas &ldquo;FORMULIR PENDAFTARAN CPMI/CTKI&rdquo; dari Sponsor
+                        </h4>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        {[100, 125, 150].map((zm) => (
                           <button
-                            key={preset.id}
+                            key={zm}
                             type="button"
-                            onClick={() => setNewForm({ ...newForm, avatarUrl: preset.url })}
-                            className={`inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] font-semibold transition ${
-                              isSelected
-                                ? "border-sky-600 bg-sky-600 text-white shadow-xs"
-                                : "border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
+                            onClick={() => setPhysicalFormZoom(zm)}
+                            className={`rounded px-2 py-1 text-[10px] font-bold ${
+                              physicalFormZoom === zm
+                                ? "bg-sky-500 text-white"
+                                : "bg-white/10 text-slate-300 hover:bg-white/20"
                             }`}
                           >
-                            <img
-                              src={preset.url}
-                              alt={preset.label}
-                              className="h-5 w-4 rounded-xs object-cover"
-                            />
-                            {preset.label}
+                            {zm}%
                           </button>
-                        );
-                      })}
+                        ))}
+                      </div>
                     </div>
-                    <div className="flex flex-wrap items-center gap-2 pt-1">
-                      <label className="cursor-pointer inline-flex items-center gap-1.5 rounded-lg border border-sky-300 bg-white px-3 py-1.5 text-[11px] font-bold text-sky-700 hover:bg-sky-50">
-                        📤 Upload Pas Foto Asli (JPG/PNG) dari Komputer
+
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <label className="cursor-pointer inline-flex items-center gap-1.5 rounded-xl border border-sky-300 bg-sky-50 px-3 py-2 text-xs font-bold text-sky-900 hover:bg-sky-100">
+                        <span>📤 Upload Foto Formulir Kertas dari HP Sponsor (JPG/PNG)</span>
                         <input
                           type="file"
                           accept="image/*"
@@ -6929,176 +7622,1889 @@ export default function PASMigranProCommandCenter() {
                             if (!file) return;
                             const reader = new FileReader();
                             reader.onload = () => {
-                              setNewForm((prev) => ({
-                                ...prev,
-                                avatarUrl: String(reader.result || ""),
-                              }));
+                              setPhysicalFormScanUrl(String(reader.result || ""));
+                              setToast({
+                                type: "success",
+                                title: `Foto Formulir Kertas "${file.name}" Berhasil Dimuat`,
+                                details: [
+                                  "Klik tombol '✨ Ekstrak Isi Foto Formulir Otomatis (AI OCR)' untuk menyalin isinya ke form Data Entry.",
+                                ],
+                              });
                             };
                             reader.readAsDataURL(file);
                           }}
                         />
                       </label>
-                      {newForm.avatarUrl && (
-                        <span className="text-[11px] font-semibold text-teal-700">
-                          ✓ Pas foto siap disimpan
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleRunFormOcrSimulation();
+                          setRegModalTab("FORM_LENGKAP");
+                        }}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-sky-600 to-teal-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm hover:from-sky-700 hover:to-teal-700"
+                      >
+                        <Sparkles className="h-4 w-4" />
+                        ✨ Ekstrak Isi Foto Formulir Otomatis (AI OCR)
+                      </button>
+                    </div>
+
+                    <div className="max-h-[480px] overflow-auto rounded-2xl border-2 border-slate-300 bg-slate-200 p-3 shadow-inner">
+                      <div
+                        style={{
+                          transform: `scale(${physicalFormZoom / 100})`,
+                          transformOrigin: "top left",
+                        }}
+                        className="transition-transform"
+                      >
+                        <img
+                          src={physicalFormScanUrl}
+                          alt="Scan Formulir Pendaftaran CPMI PT Panca Banyu Ajisakti"
+                          className="mx-auto w-full rounded-lg bg-white shadow-md"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* KOLOM KANAN: SMART WHATSAPP PARSER SPONSOR & RINGKASAN HASIL SALIN */}
+                  <div className="space-y-4 lg:col-span-6">
+                    <div className="rounded-2xl border border-teal-200 bg-teal-50/60 p-4 space-y-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <span className="rounded bg-teal-700 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+                            SMART WHATSAPP PARSER SPONSOR ➔ DATA ENTRY
+                          </span>
+                          <h4 className="mt-1 text-sm font-bold text-slate-900">
+                            Tempel Chat WhatsApp dari Sponsor Lapangan ➔ Auto-Fill 35+ Kolom
+                          </h4>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (typeof navigator !== "undefined" && navigator.clipboard) {
+                              navigator.clipboard.writeText(waRawText);
+                            }
+                            setToast({
+                              type: "success",
+                              title: "Template Format WA Sponsor Disalin ke Clipboard!",
+                              details: [
+                                "Kirimkan format ini ke grup WhatsApp Sponsor Lapangan agar mereka mudah mengirim data sesuai urutan formulir PT Panca Banyu Ajisakti.",
+                              ],
+                            });
+                          }}
+                          className="rounded-lg border border-teal-300 bg-white px-2.5 py-1.5 text-[11px] font-bold text-teal-800 hover:bg-teal-100"
+                        >
+                          📋 Copy Template WA untuk Sponsor
+                        </button>
+                      </div>
+
+                      <textarea
+                        rows={11}
+                        value={waRawText}
+                        onChange={(e) => setWaRawText(e.target.value)}
+                        placeholder="Tempel (Paste) pesan WhatsApp berisi biodata CPMI dari Sponsor di sini..."
+                        className="w-full rounded-xl border border-slate-300 bg-white p-3 font-mono text-[11px] leading-relaxed text-slate-800"
+                      />
+
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-[11px] text-slate-600">
+                          Otomatis mengenali Biodata, Tinggi/Berat, Orang Tua, Suami/Wali, Pengalaman, Dokumen ASLI/COPY & Bahasa.
                         </span>
-                      )}
+                        <button
+                          type="button"
+                          onClick={handleParseWhatsAppText}
+                          className="inline-flex items-center gap-1.5 rounded-xl bg-teal-700 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-teal-800"
+                        >
+                          ⚡ Konversi Chat WA ke Formulir Lengkap →
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Ringkasan Cepat Data yang Sudah Masuk ke Memori Formulir */}
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4 text-xs space-y-2">
+                      <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                        <strong className="text-slate-900">
+                          Status Data di Memori Formulir Saat Ini:
+                        </strong>
+                        <button
+                          type="button"
+                          onClick={() => setRegModalTab("FORM_LENGKAP")}
+                          className="font-bold text-sky-700 hover:underline"
+                        >
+                          Buka Formulir Lengkap (35+ Kolom) →
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-[11px]">
+                        <div>
+                          <span className="text-slate-400 block">Nama Lengkap & Panggilan:</span>
+                          <strong className="text-slate-900">
+                            {newForm.fullName || "(Belum diisi)"}{" "}
+                            {regForm.nickname ? `(${regForm.nickname})` : ""}
+                          </strong>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 block">NIK / No. KTP:</span>
+                          <strong className="font-mono text-teal-700">
+                            {newForm.nik || "(Belum diisi)"}
+                          </strong>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 block">Tinggi / Berat & Tujuan:</span>
+                          <strong className="text-slate-900">
+                            {regForm.heightCm} cm / {regForm.weightKg} kg ·{" "}
+                            {newForm.destinationCountry}
+                          </strong>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 block">Sponsor Pengirim:</span>
+                          <strong className="text-slate-900">{regForm.sponsorOfficerName}</strong>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
+              )}
+
+              {/* =========================================================
+                  TAB 3: FORMULIR LENGKAP PT PANCA BANYU AJISAKTI (100% MEWAKILI KERTAS FISIK)
+                 ========================================================= */}
+              {regModalTab === "FORM_LENGKAP" && (
+                <form onSubmit={handleCreateCandidate} className="space-y-6 text-xs">
+                  {activeSponsorSubmissionId && (
+                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-xs text-emerald-950">
+                      <div>
+                        <strong>✓ Mode Verifikasi Serah-Terima Sponsor Aktif:</strong> Data di bawah disalin otomatis dari draft Sponsor. Setelah Anda klik{" "}
+                        <strong>Simpan Formulir</strong>, status kiriman Sponsor otomatis berubah menjadi{" "}
+                        <code className="rounded bg-emerald-200 px-1.5 py-0.5 font-bold">
+                          SUDAH_DIINPUT
+                        </code>
+                        .
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setActiveSponsorSubmissionId(null)}
+                        className="text-[11px] font-bold text-rose-700 hover:underline"
+                      >
+                        Reset Mode Draft
+                      </button>
+                    </div>
+                  )}
+
+                  {/* BAGIAN A: PAS FOTO 4x6 & IDENTITAS PRIBADI + FISIK (SESUAI BARIS ATAS FORMULIR) */}
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-2.5">
+                      <div>
+                        <span className="rounded bg-slate-900 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+                          BAGIAN 1 · IDENTITAS PRIBADI & FISIK CPMI/CTKI
+                        </span>
+                        <h4 className="mt-1 text-sm font-bold text-slate-900">
+                          Biodata Diri, Tinggi/Berat Badan, Pendidikan & Nomor KTP/Paspor
+                        </h4>
+                      </div>
+                      <span className="font-mono text-xs font-bold text-sky-800 bg-sky-100 px-2.5 py-1 rounded-lg">
+                        No. Pendaftaran Otomatis: P3MI-2026-
+                        {String((db.candidates?.length || 11) + 101).padStart(4, "0")}
+                      </span>
+                    </div>
+
+                    {/* Pilihan Pas Foto 4x6 */}
+                    <div className="flex flex-wrap items-center gap-4 rounded-xl border border-slate-200 bg-white p-3">
+                      <img
+                        src={newForm.avatarUrl || AVATAR_PRESETS[0].url}
+                        alt="Pas Foto 4x6"
+                        className="h-20 w-16 shrink-0 rounded-lg border-2 border-blue-700 object-cover shadow-xs"
+                      />
+                      <div className="flex-1 space-y-2">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="font-bold text-slate-800">
+                            📷 Kotak Pas Foto Resmi 4x6 (Tampil di Sudut Kanan Atas Formulir Cetak, e-KTP & Paspor)
+                          </span>
+                          <label className="cursor-pointer inline-flex items-center gap-1 rounded-lg border border-sky-300 bg-sky-50 px-2.5 py-1 text-[11px] font-bold text-sky-800 hover:bg-sky-100">
+                            📤 Upload Foto Asli
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                const reader = new FileReader();
+                                reader.onload = () => {
+                                  setNewForm((prev) => ({
+                                    ...prev,
+                                    avatarUrl: String(reader.result || ""),
+                                  }));
+                                };
+                                reader.readAsDataURL(file);
+                              }}
+                            />
+                          </label>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {AVATAR_PRESETS.map((preset) => {
+                            const isSelected =
+                              (newForm.avatarUrl || AVATAR_PRESETS[0].url) === preset.url;
+                            return (
+                              <button
+                                key={preset.id}
+                                type="button"
+                                onClick={() => setNewForm({ ...newForm, avatarUrl: preset.url })}
+                                className={`inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] font-semibold transition ${
+                                  isSelected
+                                    ? "border-sky-600 bg-sky-600 text-white"
+                                    : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
+                                }`}
+                              >
+                                <img
+                                  src={preset.url}
+                                  alt={preset.label}
+                                  className="h-4 w-3.5 rounded-xs object-cover"
+                                />
+                                {preset.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+                      <div className="lg:col-span-2">
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Nama Lengkap (Sesuai KTP) *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={newForm.fullName}
+                          onChange={(e) => setNewForm({ ...newForm, fullName: e.target.value })}
+                          placeholder="Nama lengkap sesuai lembar formulir"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-bold text-slate-900"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Nama Panggilan
+                        </label>
+                        <input
+                          type="text"
+                          value={regForm.nickname}
+                          onChange={(e) => setRegForm({ ...regForm, nickname: e.target.value })}
+                          placeholder="Nama panggilan"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Tahap Awal Sistem
+                        </label>
+                        <select
+                          value={newForm.stage}
+                          onChange={(e) =>
+                            setNewForm({ ...newForm, stage: e.target.value as JourneyStage })
+                          }
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-semibold"
+                        >
+                          <option value="LEAD">Lead (NIK Boleh Menyusul)</option>
+                          <option value="PROSPECT">Prospect (NIK 16 Digit Wajib)</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Tempat Lahir
+                        </label>
+                        <input
+                          type="text"
+                          value={newForm.birthPlace}
+                          onChange={(e) => setNewForm({ ...newForm, birthPlace: e.target.value })}
+                          placeholder="Contoh: Indramayu"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Tanggal Lahir (DD-MM-YYYY)
+                        </label>
+                        <input
+                          type="date"
+                          value={newForm.birthDate}
+                          onChange={(e) => setNewForm({ ...newForm, birthDate: e.target.value })}
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Tinggi Badan (Cm)
+                        </label>
+                        <input
+                          type="number"
+                          value={regForm.heightCm || ""}
+                          onChange={(e) =>
+                            setRegForm({ ...regForm, heightCm: Number(e.target.value) })
+                          }
+                          placeholder="158"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Berat Badan (Kg)
+                        </label>
+                        <input
+                          type="number"
+                          value={regForm.weightKg || ""}
+                          onChange={(e) =>
+                            setRegForm({ ...regForm, weightKg: Number(e.target.value) })
+                          }
+                          placeholder="52"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">Agama</label>
+                        <select
+                          value={regForm.religion}
+                          onChange={(e) => setRegForm({ ...regForm, religion: e.target.value })}
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                        >
+                          <option value="Islam">Islam</option>
+                          <option value="Kristen">Kristen</option>
+                          <option value="Katolik">Katolik</option>
+                          <option value="Hindu">Hindu</option>
+                          <option value="Buddha">Buddha</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Jenis Kelamin
+                        </label>
+                        <select
+                          value={newForm.gender}
+                          onChange={(e) =>
+                            setNewForm({ ...newForm, gender: e.target.value as "P" | "L" })
+                          }
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                        >
+                          <option value="P">Perempuan (P)</option>
+                          <option value="L">Laki-Laki (L)</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Status Perkawinan
+                        </label>
+                        <select
+                          value={newForm.maritalStatus}
+                          onChange={(e) =>
+                            setNewForm({ ...newForm, maritalStatus: e.target.value })
+                          }
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                        >
+                          <option value="Belum Kawin">Belum Kawin</option>
+                          <option value="Kawin">Kawin</option>
+                          <option value="Cerai Hidup">Cerai Hidup</option>
+                          <option value="Cerai Mati">Cerai Mati</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Telp / HP Aktif *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={newForm.phone}
+                          onChange={(e) => setNewForm({ ...newForm, phone: e.target.value })}
+                          placeholder="0812-xxxx-xxxx"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono"
+                        />
+                      </div>
+
+                      <div className="lg:col-span-3">
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Alamat Lengkap (Sesuai KTP / Formulir)
+                        </label>
+                        <input
+                          type="text"
+                          value={newForm.address}
+                          onChange={(e) => setNewForm({ ...newForm, address: e.target.value })}
+                          placeholder="Nama Jalan/Blok, RT/RW, Desa/Kelurahan, Kecamatan, Kabupaten"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">Kode Pos</label>
+                        <input
+                          type="text"
+                          value={regForm.postalCode}
+                          onChange={(e) => setRegForm({ ...regForm, postalCode: e.target.value })}
+                          placeholder="45282"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Pendidikan Terakhir
+                        </label>
+                        <select
+                          value={newForm.education}
+                          onChange={(e) => setNewForm({ ...newForm, education: e.target.value })}
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                        >
+                          <option value="SD">SD / Sederajat</option>
+                          <option value="SMP">SMP / MTs</option>
+                          <option value="SMA/SMK">SMA / SMK / MA</option>
+                          <option value="D3/S1">Diploma / Sarjana (D3/S1)</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Lulus Tahun
+                        </label>
+                        <input
+                          type="text"
+                          value={regForm.graduationYear}
+                          onChange={(e) =>
+                            setRegForm({ ...regForm, graduationYear: e.target.value })
+                          }
+                          placeholder="2018"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono"
+                        />
+                      </div>
+
+                      <div className="lg:col-span-2">
+                        <label className="font-bold text-slate-700 block mb-1">
+                          No. KTP (NIK 16 Digit Unik) / Paspor{" "}
+                          {newForm.stage === "LEAD" ? "(Opsional di Tahap Lead)" : "*"}
+                        </label>
+                        <input
+                          type="text"
+                          maxLength={16}
+                          value={newForm.nik}
+                          onChange={(e) => {
+                            setNewForm({ ...newForm, nik: e.target.value });
+                            setRegForm({ ...regForm, ktpOrPassportNo: e.target.value });
+                          }}
+                          placeholder="Contoh: 3212155408980001"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono font-bold text-teal-800"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* BAGIAN B: DATA KELUARGA (BAPAK, IBU, SUAMI/ISTRI/WALI, ANAK, BERSAUDARA & KONTAK DARURAT) */}
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 space-y-4">
+                    <div className="border-b border-slate-200 pb-2">
+                      <span className="rounded bg-slate-900 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+                        BAGIAN 2 · DATA ORANG TUA, SUAMI/ISTRI/WALI, ANAK & KONTAK DARURAT
+                      </span>
+                      <h4 className="mt-1 text-sm font-bold text-slate-900">
+                        Keluarga Kandung & Keluarga yang Mudah Dihubungi (Sesuai Lembar Formulir)
+                      </h4>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">Nama Bapak</label>
+                        <input
+                          type="text"
+                          value={regForm.fatherName}
+                          onChange={(e) => setRegForm({ ...regForm, fatherName: e.target.value })}
+                          placeholder="Nama ayah kandung"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Umur Bapak (Th)
+                        </label>
+                        <input
+                          type="number"
+                          value={regForm.fatherAge || ""}
+                          onChange={(e) =>
+                            setRegForm({ ...regForm, fatherAge: Number(e.target.value) })
+                          }
+                          placeholder="58"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">Nama Ibu</label>
+                        <input
+                          type="text"
+                          value={regForm.motherName}
+                          onChange={(e) => setRegForm({ ...regForm, motherName: e.target.value })}
+                          placeholder="Nama ibu kandung"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Umur Ibu (Th)
+                        </label>
+                        <input
+                          type="number"
+                          value={regForm.motherAge || ""}
+                          onChange={(e) =>
+                            setRegForm({ ...regForm, motherAge: Number(e.target.value) })
+                          }
+                          placeholder="53"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono"
+                        />
+                      </div>
+
+                      <div className="lg:col-span-2">
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Nama Suami / Istri / Wali Pemberi Izin
+                        </label>
+                        <input
+                          type="text"
+                          value={regForm.spouseOrGuardianName}
+                          onChange={(e) =>
+                            setRegForm({ ...regForm, spouseOrGuardianName: e.target.value })
+                          }
+                          placeholder="Nama suami / istri / wali resmi"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Umur Suami/Istri/Wali (Th)
+                        </label>
+                        <input
+                          type="number"
+                          value={regForm.spouseAge || ""}
+                          onChange={(e) =>
+                            setRegForm({ ...regForm, spouseAge: Number(e.target.value) })
+                          }
+                          placeholder="33"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Pekerjaan Suami/Istri/Wali
+                        </label>
+                        <input
+                          type="text"
+                          value={regForm.spouseOccupation}
+                          onChange={(e) =>
+                            setRegForm({ ...regForm, spouseOccupation: e.target.value })
+                          }
+                          placeholder="Wiraswasta / Petani"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                        />
+                      </div>
+
+                      <div className="lg:col-span-2">
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Jumlah dan Umur Anak Laki-laki
+                        </label>
+                        <input
+                          type="text"
+                          value={regForm.boysCountAndAges}
+                          onChange={(e) =>
+                            setRegForm({ ...regForm, boysCountAndAges: e.target.value })
+                          }
+                          placeholder="Contoh: 1 Orang (6 Th) atau -"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                        />
+                      </div>
+                      <div className="lg:col-span-2">
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Jumlah dan Umur Anak Perempuan
+                        </label>
+                        <input
+                          type="text"
+                          value={regForm.girlsCountAndAges}
+                          onChange={(e) =>
+                            setRegForm({ ...regForm, girlsCountAndAges: e.target.value })
+                          }
+                          placeholder="Contoh: 1 Orang (4 Th) atau -"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Saya Anak Ke- ... Dari ... Bersaudara
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            value={regForm.childOrder || ""}
+                            onChange={(e) =>
+                              setRegForm({ ...regForm, childOrder: Number(e.target.value) })
+                            }
+                            placeholder="1"
+                            className="w-20 rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-center font-mono"
+                          />
+                          <span className="text-slate-500 font-semibold">dari</span>
+                          <input
+                            type="number"
+                            value={regForm.siblingsCount || ""}
+                            onChange={(e) =>
+                              setRegForm({ ...regForm, siblingsCount: Number(e.target.value) })
+                            }
+                            placeholder="3"
+                            className="w-20 rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-center font-mono"
+                          />
+                          <span className="text-slate-500 text-[11px]">Bersaudara</span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Nama Keluarga yg Mudah Dihubungi
+                        </label>
+                        <input
+                          type="text"
+                          value={regForm.emergencyContactName}
+                          onChange={(e) =>
+                            setRegForm({ ...regForm, emergencyContactName: e.target.value })
+                          }
+                          placeholder="Nama kontak darurat"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Hubungan Keluarga
+                        </label>
+                        <input
+                          type="text"
+                          value={regForm.emergencyContactRelation}
+                          onChange={(e) =>
+                            setRegForm({ ...regForm, emergencyContactRelation: e.target.value })
+                          }
+                          placeholder="Suami / Orang Tua / Kakak"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          No. Telp / HP Keluarga Darurat
+                        </label>
+                        <input
+                          type="text"
+                          value={regForm.emergencyContactPhone}
+                          onChange={(e) =>
+                            setRegForm({ ...regForm, emergencyContactPhone: e.target.value })
+                          }
+                          placeholder="0852-xxxx-xxxx"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* BAGIAN C: PENGALAMAN KERJA 1 & 2, NEGARA TUJUAN, DAN CHECKBOX PEKERJAAN YANG DIINGINKAN */}
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 space-y-4">
+                    <div className="border-b border-slate-200 pb-2">
+                      <span className="rounded bg-slate-900 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+                        BAGIAN 3 · PENGALAMAN KERJA, NEGARA TUJUAN & PEKERJAAN YANG DIINGINKAN
+                      </span>
+                      <h4 className="mt-1 text-sm font-bold text-slate-900">
+                        Riwayat Pengalaman Kerja 1 & 2 serta Pilihan Sektor Pekerjaan
+                      </h4>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Pengalaman Kerja 1
+                        </label>
+                        <input
+                          type="text"
+                          value={regForm.workExperience1}
+                          onChange={(e) =>
+                            setRegForm({ ...regForm, workExperience1: e.target.value })
+                          }
+                          placeholder="Tahun, Tempat & Posisi Pengalaman Kerja 1"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Pengalaman Kerja 2
+                        </label>
+                        <input
+                          type="text"
+                          value={regForm.workExperience2}
+                          onChange={(e) =>
+                            setRegForm({ ...regForm, workExperience2: e.target.value })
+                          }
+                          placeholder="Tahun, Tempat & Posisi Pengalaman Kerja 2"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Negara Tujuan Penempatan
+                        </label>
+                        <select
+                          value={newForm.destinationCountry}
+                          onChange={(e) =>
+                            setNewForm({ ...newForm, destinationCountry: e.target.value })
+                          }
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-bold"
+                        >
+                          <optgroup label="Timur Tengah (SPSK / Tadbeer / Formal / QIZ)">
+                            <option value="Arab Saudi">Arab Saudi (SPSK / Musaned)</option>
+                            <option value="Uni Emirat Arab (UAE)">Uni Emirat Arab (UAE)</option>
+                            <option value="Kuwait">Kuwait</option>
+                            <option value="Oman">Oman</option>
+                            <option value="Yordania">Yordania (Jordan)</option>
+                          </optgroup>
+                          <optgroup label="Asia Timur & Tenggara">
+                            <option value="Taiwan">Taiwan</option>
+                            <option value="Hong Kong">Hong Kong</option>
+                            <option value="Jepang">Jepang</option>
+                            <option value="Singapura">Singapura</option>
+                            <option value="Malaysia">Malaysia</option>
+                            <option value="Korea Selatan">Korea Selatan</option>
+                          </optgroup>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Sektor / Jabatan Spesifik di Sistem
+                        </label>
+                        <input
+                          type="text"
+                          value={newForm.jobSector}
+                          onChange={(e) => setNewForm({ ...newForm, jobSector: e.target.value })}
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                        />
+                      </div>
+                    </div>
+
+                    {/* 5 CHECKBOX PEKERJAAN YANG DIINGINKAN SESUAI FORMULIR ASLI */}
+                    <div className="rounded-xl border border-slate-200 bg-white p-3">
+                      <label className="font-bold text-slate-800 block mb-2">
+                        Kotak Centang &ldquo;Pekerjaan yang diinginkan&rdquo; (Sesuai Lembar Formulir PT Panca Banyu Ajisakti):
+                      </label>
+                      <div className="flex flex-wrap items-center gap-4">
+                        {[
+                          { key: "desiredJobCleaner", label: "Cleaner (Kebersihan / PRT)" },
+                          { key: "desiredJobFactory", label: "Pekerja Pabrik (Manufaktur)" },
+                          { key: "desiredJobNurse", label: "Nurse / Caregiver (Perawat)" },
+                          { key: "desiredJobHospitality", label: "Hospitality (Perhotelan)" },
+                          { key: "desiredJobOther", label: "Pekerja Lain" },
+                        ].map((item) => {
+                          const checked = Boolean(
+                            regForm[item.key as keyof OfficialRegistrationForm]
+                          );
+                          return (
+                            <label
+                              key={item.key}
+                              className={`inline-flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-1.5 font-semibold transition ${
+                                checked
+                                  ? "border-sky-600 bg-sky-50 text-sky-900"
+                                  : "border-slate-200 bg-slate-50 text-slate-600"
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={(e) =>
+                                  setRegForm({
+                                    ...regForm,
+                                    [item.key]: e.target.checked,
+                                  })
+                                }
+                                className="h-4 w-4 rounded text-sky-600"
+                              />
+                              {item.label}
+                            </label>
+                          );
+                        })}
+                        {regForm.desiredJobOther && (
+                          <input
+                            type="text"
+                            value={regForm.desiredJobOtherText}
+                            onChange={(e) =>
+                              setRegForm({ ...regForm, desiredJobOtherText: e.target.value })
+                            }
+                            placeholder="Sebutkan pekerjaan lain..."
+                            className="rounded-lg border border-slate-300 px-3 py-1.5"
+                          />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* BAGIAN D & E: TABEL DOKUMEN (ASLI / COPY) & TABEL KEMAMPUAN BAHASA (BAIK / CUKUP / BURUK) */}
+                  <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+                    {/* TABEL 9 DOKUMEN SERAH TERIMA (ASLI / COPY) */}
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 lg:col-span-7 space-y-3">
+                      <div>
+                        <span className="rounded bg-teal-700 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+                          BAGIAN 4 · DOKUMEN YANG DISERAHKAN (ASLI / COPY)
+                        </span>
+                        <h4 className="mt-1 text-sm font-bold text-slate-900">
+                          Checklist Serah-Terima 9 Dokumen Fisik (Otomatis Sinkron ke Berkas Digital)
+                        </h4>
+                      </div>
+
+                      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+                        <table className="w-full text-left text-xs">
+                          <thead className="border-b border-slate-200 bg-slate-100 text-[10px] font-bold uppercase text-slate-700">
+                            <tr>
+                              <th className="px-3 py-2">No.</th>
+                              <th className="px-3 py-2">Nama Dokumen</th>
+                              <th className="px-3 py-2 text-center">ASLI</th>
+                              <th className="px-3 py-2 text-center">COPY</th>
+                              <th className="px-3 py-2 text-center">Belum Ada</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {[
+                              { no: 1, key: "ktp", label: "KTP" },
+                              { no: 2, key: "kk", label: "KARTU KELUARGA" },
+                              { no: 3, key: "akteKelahiran", label: "AKTE KELAHIRAN" },
+                              { no: 4, key: "izinKeluarga", label: "IZIN KELUARGA" },
+                              { no: 5, key: "sttbIjazah", label: "STTB / IJAZAH" },
+                              { no: 6, key: "skck", label: "S K C K" },
+                              { no: 7, key: "paspor", label: "PASPOR" },
+                            ].map((docRow) => {
+                              const curVal =
+                                regForm.docHandover[
+                                  docRow.key as keyof typeof regForm.docHandover
+                                ] as DocHandoverType;
+                              return (
+                                <tr key={docRow.key} className="hover:bg-slate-50">
+                                  <td className="px-3 py-2 font-mono font-bold text-slate-500">
+                                    {docRow.no}.
+                                  </td>
+                                  <td className="px-3 py-2 font-bold text-slate-900">
+                                    {docRow.label}
+                                  </td>
+                                  {(["ASLI", "COPY", "NONE"] as DocHandoverType[]).map((opt) => (
+                                    <td key={opt} className="px-3 py-2 text-center">
+                                      <input
+                                        type="radio"
+                                        name={`doc-${docRow.key}`}
+                                        checked={curVal === opt}
+                                        onChange={() =>
+                                          setRegForm({
+                                            ...regForm,
+                                            docHandover: {
+                                              ...regForm.docHandover,
+                                              [docRow.key]: opt,
+                                            },
+                                          })
+                                        }
+                                        className="h-4 w-4 cursor-pointer accent-teal-600"
+                                      />
+                                    </td>
+                                  ))}
+                                </tr>
+                              );
+                            })}
+                            {/* Baris 8 & 9 (Dokumen Tambahan) */}
+                            <tr className="hover:bg-slate-50">
+                              <td className="px-3 py-2 font-mono font-bold text-slate-500">8.</td>
+                              <td className="px-3 py-1.5">
+                                <input
+                                  type="text"
+                                  value={regForm.docHandover.otherDoc8Name}
+                                  onChange={(e) =>
+                                    setRegForm({
+                                      ...regForm,
+                                      docHandover: {
+                                        ...regForm.docHandover,
+                                        otherDoc8Name: e.target.value,
+                                      },
+                                    })
+                                  }
+                                  placeholder="Dokumen 8 (Misal: Buku Nikah)"
+                                  className="w-full rounded border border-slate-200 px-2 py-1 text-xs"
+                                />
+                              </td>
+                              {(["ASLI", "COPY", "NONE"] as DocHandoverType[]).map((opt) => (
+                                <td key={opt} className="px-3 py-2 text-center">
+                                  <input
+                                    type="radio"
+                                    name="doc-other8"
+                                    checked={regForm.docHandover.otherDoc8Status === opt}
+                                    onChange={() =>
+                                      setRegForm({
+                                        ...regForm,
+                                        docHandover: {
+                                          ...regForm.docHandover,
+                                          otherDoc8Status: opt,
+                                        },
+                                      })
+                                    }
+                                    className="h-4 w-4 cursor-pointer accent-teal-600"
+                                  />
+                                </td>
+                              ))}
+                            </tr>
+                            <tr className="hover:bg-slate-50">
+                              <td className="px-3 py-2 font-mono font-bold text-slate-500">9.</td>
+                              <td className="px-3 py-1.5">
+                                <input
+                                  type="text"
+                                  value={regForm.docHandover.otherDoc9Name}
+                                  onChange={(e) =>
+                                    setRegForm({
+                                      ...regForm,
+                                      docHandover: {
+                                        ...regForm.docHandover,
+                                        otherDoc9Name: e.target.value,
+                                      },
+                                    })
+                                  }
+                                  placeholder="Dokumen 9 (Misal: Paspor Lama)"
+                                  className="w-full rounded border border-slate-200 px-2 py-1 text-xs"
+                                />
+                              </td>
+                              {(["ASLI", "COPY", "NONE"] as DocHandoverType[]).map((opt) => (
+                                <td key={opt} className="px-3 py-2 text-center">
+                                  <input
+                                    type="radio"
+                                    name="doc-other9"
+                                    checked={regForm.docHandover.otherDoc9Status === opt}
+                                    onChange={() =>
+                                      setRegForm({
+                                        ...regForm,
+                                        docHandover: {
+                                          ...regForm.docHandover,
+                                          otherDoc9Status: opt,
+                                        },
+                                      })
+                                    }
+                                    className="h-4 w-4 cursor-pointer accent-teal-600"
+                                  />
+                                </td>
+                              ))}
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* TABEL KEMAMPUAN BAHASA (BAIK / CUKUP / BURUK) + CATATAN CPMI */}
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 lg:col-span-5 space-y-3">
+                      <div>
+                        <span className="rounded bg-sky-700 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+                          BAGIAN 5 · KEMAMPUAN BAHASA
+                        </span>
+                        <h4 className="mt-1 text-sm font-bold text-slate-900">
+                          Matriks Bahasa (Baik / Cukup / Buruk)
+                        </h4>
+                      </div>
+
+                      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+                        <table className="w-full text-left text-xs">
+                          <thead className="border-b border-slate-200 bg-slate-100 text-[10px] font-bold uppercase text-slate-700">
+                            <tr>
+                              <th className="px-3 py-2">Bahasa</th>
+                              <th className="px-2.5 py-2 text-center">Baik</th>
+                              <th className="px-2.5 py-2 text-center">Cukup</th>
+                              <th className="px-2.5 py-2 text-center">Buruk</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {[
+                              { key: "english", label: "Bahasa Inggris" },
+                              { key: "mandarin", label: "Bahasa Mandarin" },
+                              { key: "arabic", label: "Bahasa Arab" },
+                            ].map((lang) => {
+                              const val =
+                                regForm.languageSkills[
+                                  lang.key as keyof typeof regForm.languageSkills
+                                ] as LangSkillLevel;
+                              return (
+                                <tr key={lang.key} className="hover:bg-slate-50">
+                                  <td className="px-3 py-2.5 font-bold text-slate-900">
+                                    {lang.label}
+                                  </td>
+                                  {(["BAIK", "CUKUP", "BURUK"] as LangSkillLevel[]).map((lv) => (
+                                    <td key={lv} className="px-2.5 py-2.5 text-center">
+                                      <input
+                                        type="radio"
+                                        name={`lang-${lang.key}`}
+                                        checked={val === lv}
+                                        onChange={() =>
+                                          setRegForm({
+                                            ...regForm,
+                                            languageSkills: {
+                                              ...regForm.languageSkills,
+                                              [lang.key]: lv,
+                                            },
+                                          })
+                                        }
+                                        className="h-4 w-4 cursor-pointer accent-sky-600"
+                                      />
+                                    </td>
+                                  ))}
+                                </tr>
+                              );
+                            })}
+                            <tr className="hover:bg-slate-50">
+                              <td className="px-3 py-1.5">
+                                <input
+                                  type="text"
+                                  value={regForm.languageSkills.otherLanguageName}
+                                  onChange={(e) =>
+                                    setRegForm({
+                                      ...regForm,
+                                      languageSkills: {
+                                        ...regForm.languageSkills,
+                                        otherLanguageName: e.target.value,
+                                      },
+                                    })
+                                  }
+                                  placeholder="Bahasa Lain (Jepang/Korea)"
+                                  className="w-full rounded border border-slate-200 px-2 py-1 text-xs"
+                                />
+                              </td>
+                              {(["BAIK", "CUKUP", "BURUK"] as LangSkillLevel[]).map((lv) => (
+                                <td key={lv} className="px-2.5 py-2 text-center">
+                                  <input
+                                    type="radio"
+                                    name="lang-other"
+                                    checked={regForm.languageSkills.otherLanguageLevel === lv}
+                                    onChange={() =>
+                                      setRegForm({
+                                        ...regForm,
+                                        languageSkills: {
+                                          ...regForm.languageSkills,
+                                          otherLanguageLevel: lv,
+                                        },
+                                      })
+                                    }
+                                    className="h-4 w-4 cursor-pointer accent-sky-600"
+                                  />
+                                </td>
+                              ))}
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Catatan Biodata / Dokumen
+                        </label>
+                        <textarea
+                          rows={2}
+                          value={regForm.candidateNotes}
+                          onChange={(e) =>
+                            setRegForm({ ...regForm, candidateNotes: e.target.value })
+                          }
+                          placeholder="Catatan tambahan terkait dokumen yang diserahkan..."
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* BAGIAN F: PETUGAS LAPANGAN / REKRUT / SPONSOR & PETUGAS PT PENERIMA (DATA ENTRY) */}
+                  <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-4 space-y-4">
+                    <div className="border-b border-amber-200/80 pb-2">
+                      <span className="rounded bg-amber-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+                        BAGIAN 6 · DATA SPONSOR PENGIRIM & PENGESAHAN PETUGAS PT (DATA ENTRY)
+                      </span>
+                      <h4 className="mt-1 text-sm font-bold text-slate-900">
+                        Kolom Bawah Formulir: Petugas Lapangan / Rekrut / Sponsor & Petugas PT Penerima CPMI
+                      </h4>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Cabang P3MI Penerima
+                        </label>
+                        <select
+                          value={newForm.branchId}
+                          onChange={(e) => setNewForm({ ...newForm, branchId: e.target.value })}
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-semibold"
+                        >
+                          {db.branches.map((b) => (
+                            <option key={b.id} value={b.id}>
+                              {b.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Pilih Master Sponsor / PL
+                        </label>
+                        <select
+                          value={newForm.sponsorId}
+                          onChange={(e) => {
+                            const spId = e.target.value;
+                            const sp = db.sponsors.find((s) => s.id === spId);
+                            setNewForm({ ...newForm, sponsorId: spId });
+                            if (sp) {
+                              setRegForm({
+                                ...regForm,
+                                sponsorOfficerName: `${sp.name} (${sp.code})`,
+                                sponsorOfficerPhone: sp.phone,
+                              });
+                            }
+                          }}
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-semibold"
+                        >
+                          <option value="">Datang Langsung (Tanpa Sponsor)</option>
+                          {db.sponsors.map((s) => (
+                            <option key={s.id} value={s.id}>
+                              {s.name} ({s.area})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Nama Petugas Lapangan / Sponsor (Tercetak)
+                        </label>
+                        <input
+                          type="text"
+                          value={regForm.sponsorOfficerName}
+                          onChange={(e) =>
+                            setRegForm({ ...regForm, sponsorOfficerName: e.target.value })
+                          }
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Nomor Telp / HP Sponsor
+                        </label>
+                        <input
+                          type="text"
+                          value={regForm.sponsorOfficerPhone}
+                          onChange={(e) =>
+                            setRegForm({ ...regForm, sponsorOfficerPhone: e.target.value })
+                          }
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono"
+                        />
+                      </div>
+
+                      <div className="lg:col-span-2">
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Catatan Petugas Lapangan / Sponsor
+                        </label>
+                        <input
+                          type="text"
+                          value={regForm.sponsorNotes}
+                          onChange={(e) => setRegForm({ ...regForm, sponsorNotes: e.target.value })}
+                          placeholder="Catatan hasil wawancara lapangan / kelengkapan izin keluarga..."
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Yang Menerima CPMI (Petugas PT / Data Entry)
+                        </label>
+                        <input
+                          type="text"
+                          value={regForm.receivedByPtOfficer}
+                          onChange={(e) =>
+                            setRegForm({ ...regForm, receivedByPtOfficer: e.target.value })
+                          }
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-bold text-teal-900"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Tanggal Tandatangan Formulir
+                        </label>
+                        <input
+                          type="date"
+                          value={regForm.formSignedDate}
+                          onChange={(e) =>
+                            setRegForm({ ...regForm, formSignedDate: e.target.value })
+                          }
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* FOOTER TOMBOL SIMPAN & PRATINJAU CETAK */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setRegModalTab("SCAN_DAN_WA")}
+                        className="rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 font-semibold text-slate-700 hover:bg-slate-50"
+                      >
+                        ← Lihat Foto Scan Formulir / WA Sponsor
+                      </button>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => setShowAddModal(false)}
+                        className="rounded-xl border border-slate-200 px-4 py-2.5 font-semibold text-slate-600 hover:bg-slate-50"
+                      >
+                        Batal
+                      </button>
+                      <button
+                        type="submit"
+                        className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-6 py-2.5 text-sm font-bold text-white shadow-md hover:bg-slate-800"
+                      >
+                        <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                        Simpan Formulir PT Panca Banyu Ajisakti ke Sistem
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================
+          IDE 3: MODAL CETAK LEMBAR FISIK "FORMULIR PENDAFTARAN CPMI/CTKI"
+          PT PANCA BANYU AJISAKTI (100% IDENTIK DENGAN KERTAS ASLI)
+         ========================================================= */}
+      {printingRegFormCandidate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-3 sm:p-6 backdrop-blur-sm">
+          <div className="flex max-h-[95vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-slate-200 shadow-2xl">
+            {/* Toolbar Cetak */}
+            <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900 px-6 py-3.5 text-white">
+              <div>
+                <span className="rounded bg-amber-500 px-2 py-0.5 text-[10px] font-extrabold uppercase text-slate-950">
+                  IDE 3 · CETAK LEMBAR FISIK IDENTIK 100%
+                </span>
+                <h3 className="mt-0.5 text-sm font-bold">
+                  Pratinjau Cetak: FORMULIR PENDAFTARAN CPMI/CTKI —{" "}
+                  {printingRegFormCandidate.fullName} ({printingRegFormCandidate.regNumber})
+                </h3>
               </div>
-
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">
-                    Tahap Awal Pendaftaran
-                  </label>
-                  <select
-                    value={newForm.stage}
-                    onChange={(e) =>
-                      setNewForm({ ...newForm, stage: e.target.value as JourneyStage })
-                    }
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2"
-                  >
-                    <option value="LEAD">Lead (Dari Lowongan / Sponsor - NIK Opsional)</option>
-                    <option value="PROSPECT">Prospect (Berkas Awal - NIK 16 Digit Wajib)</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">
-                    NIK (16 Digit Angka Unik){" "}
-                    {newForm.stage === "LEAD" ? "(Boleh Menyusul)" : "*"}
-                  </label>
-                  <input
-                    type="text"
-                    maxLength={16}
-                    value={newForm.nik}
-                    onChange={(e) => setNewForm({ ...newForm, nik: e.target.value })}
-                    placeholder="Contoh: 3212155408980001"
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 font-mono"
-                  />
-                </div>
-
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">
-                    Nama Lengkap Sesuai KTP *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={newForm.fullName}
-                    onChange={(e) => setNewForm({ ...newForm, fullName: e.target.value })}
-                    placeholder="Nama lengkap calon pekerja migran"
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2"
-                  />
-                </div>
-
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">
-                    Nomor HP / WhatsApp *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={newForm.phone}
-                    onChange={(e) => setNewForm({ ...newForm, phone: e.target.value })}
-                    placeholder="0812-xxxx-xxxx"
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2"
-                  />
-                </div>
-
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">
-                    Negara Tujuan Penempatan
-                  </label>
-                  <select
-                    value={newForm.destinationCountry}
-                    onChange={(e) =>
-                      setNewForm({ ...newForm, destinationCountry: e.target.value })
-                    }
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2"
-                  >
-                    <optgroup label="Timur Tengah (SPSK / Tadbeer / Formal / QIZ)">
-                      <option value="Arab Saudi">Arab Saudi (SPSK / Musaned)</option>
-                      <option value="Uni Emirat Arab (UAE)">Uni Emirat Arab (UAE)</option>
-                      <option value="Kuwait">Kuwait</option>
-                      <option value="Oman">Oman</option>
-                      <option value="Yordania">Yordania (Jordan)</option>
-                    </optgroup>
-                    <optgroup label="Asia Timur & Tenggara">
-                      <option value="Taiwan">Taiwan</option>
-                      <option value="Hong Kong">Hong Kong</option>
-                      <option value="Jepang">Jepang</option>
-                      <option value="Singapura">Singapura</option>
-                      <option value="Malaysia">Malaysia</option>
-                      <option value="Korea Selatan">Korea Selatan</option>
-                    </optgroup>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">
-                    Sektor / Jabatan Pekerjaan
-                  </label>
-                  <input
-                    type="text"
-                    value={newForm.jobSector}
-                    onChange={(e) => setNewForm({ ...newForm, jobSector: e.target.value })}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2"
-                  />
-                </div>
-
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">Cabang P3MI</label>
-                  <select
-                    value={newForm.branchId}
-                    onChange={(e) => setNewForm({ ...newForm, branchId: e.target.value })}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2"
-                  >
-                    {db.branches.map((b) => (
-                      <option key={b.id} value={b.id}>
-                        {b.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">
-                    Sponsor / Perekrut Lapangan (PL)
-                  </label>
-                  <select
-                    value={newForm.sponsorId}
-                    onChange={(e) => setNewForm({ ...newForm, sponsorId: e.target.value })}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2"
-                  >
-                    <option value="">Datang Langsung (Tanpa Sponsor)</option>
-                    {db.sponsors.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name} ({s.area})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setShowAddModal(false)}
-                  className="rounded-lg border border-slate-200 px-4 py-2 font-semibold text-slate-600"
+                  onClick={() => window.print()}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-sky-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-sky-500"
                 >
-                  Batal
+                  <Printer className="h-4 w-4" />
+                  🖨️ Cetak / Simpan PDF (A4/F4)
                 </button>
                 <button
-                  type="submit"
-                  className="rounded-lg bg-slate-900 px-5 py-2 font-semibold text-white hover:bg-slate-800"
+                  type="button"
+                  onClick={() => setPrintingRegFormCandidate(null)}
+                  className="rounded-lg bg-white/10 p-1.5 text-slate-300 hover:bg-white/20 hover:text-white"
                 >
-                  Simpan Berkas CPMI
+                  <X className="h-5 w-5" />
                 </button>
               </div>
-            </form>
+            </div>
+
+            {/* KERTAS FORMULIR PENDAFTARAN CPMI/CTKI PT PANCA BANYU AJISAKTI */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-8">
+              {(() => {
+                const cand = printingRegFormCandidate;
+                const rf: OfficialRegistrationForm = cand.registrationForm || regForm;
+                const bDateParts = (cand.birthDate || "1998-08-14").split("-");
+                const yyyy = bDateParts[0] || "1998";
+                const mm = bDateParts[1] || "08";
+                const dd = bDateParts[2] || "14";
+                const dateBoxes = [
+                  dd[0] || "1",
+                  dd[1] || "4",
+                  mm[0] || "0",
+                  mm[1] || "8",
+                  yyyy[0] || "1",
+                  yyyy[1] || "9",
+                  yyyy[2] || "9",
+                  yyyy[3] || "8",
+                ];
+
+                return (
+                  <div className="mx-auto max-w-[820px] rounded-sm border-2 border-slate-800 bg-white p-6 sm:p-8 text-[11px] leading-snug text-slate-900 shadow-2xl">
+                    {/* KOP SURAT PT PANCA BANYU AJISAKTI + KOTAK PAS FOTO 4x6 */}
+                    <div className="grid grid-cols-12 gap-3 items-start">
+                      <div className="col-span-9">
+                        <div className="flex items-center gap-3">
+                          {/* Logo Segitiga Merah Panca Banyu Ajisakti */}
+                          <div className="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-full border-2 border-slate-800 bg-white p-1 text-center">
+                            <span className="text-[7px] font-black tracking-tighter text-slate-900 uppercase">
+                              PANCA BANYU
+                            </span>
+                            <span className="text-2xl font-black leading-none text-red-600">
+                              ▲
+                            </span>
+                            <span className="text-[7px] font-black tracking-tighter text-slate-900 uppercase">
+                              AJISAKTI
+                            </span>
+                          </div>
+                          <div className="flex-1 text-center">
+                            <h2 className="text-xl sm:text-2xl font-black tracking-wider text-blue-900 uppercase">
+                              PANCA BANYU AJISAKTI
+                            </h2>
+                            <p className="text-[11px] font-extrabold tracking-widest text-blue-950 uppercase">
+                              JASA TENAGA KERJA - INDONESIA MANPOWER SERVICE
+                            </p>
+                            <p className="mt-0.5 text-[10px] text-slate-700">
+                              Jl. Kayu Manis No. 51, Kel. Balekambang, Kec. Kramatjati, Jakarta Timur
+                            </p>
+                            <p className="text-[10px] text-slate-700">
+                              Telp. +62-21 29373673, Fax.: +62-21 29826026, Email : pancabanyu@yahoo.com
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Banner Biru FORMULIR PENDAFTARAN CPMI/CTKI + Nomor Pendaftaran */}
+                        <div className="mt-3 flex items-stretch gap-2">
+                          <div className="flex-1 bg-sky-600 px-3 py-1.5 text-center text-sm font-black tracking-wider text-white uppercase border border-sky-700">
+                            FORMULIR PENDAFTARAN CPMI/CTKI
+                          </div>
+                          <div className="w-48 border-2 border-slate-800 px-2 py-1 text-center">
+                            <span className="block text-[9px] font-semibold text-slate-600">
+                              Nomor Pendaftaran :
+                            </span>
+                            <strong className="font-mono text-xs font-black text-slate-950">
+                              {cand.regNumber}
+                            </strong>
+                          </div>
+                        </div>
+
+                        {/* Paragraf Pernyataan */}
+                        <p className="mt-2 text-justify text-[10.5px] leading-tight text-slate-800">
+                          Saya yang mengisi Biodata ini dengan sebenar-benarnya dan tanpa paksaan dari pihak manapun. Saya bertanggung jawab tentang kebenaran isinya dan bersedia menanggung kerugian pihak lain atau tuntutan hukum apa bila dikemudian hari saya terbukti memalsukan data-data pribadi saya. Data pribadi saya adalah sebagai berikut :
+                        </p>
+                      </div>
+
+                      {/* Kotak Pas Foto 4x6 Biru di Kanan Atas */}
+                      <div className="col-span-3 flex justify-end">
+                        <div className="flex h-40 w-32 flex-col items-center justify-center overflow-hidden border-[3px] border-blue-900 bg-slate-50 p-1">
+                          <img
+                            src={getCandidateAvatarUrl(cand)}
+                            alt={cand.fullName}
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* BARIS-BARIS KOTAK FORMULIR IDENTIK DENGAN KERTAS FISIK */}
+                    <div className="mt-3 space-y-1.5">
+                      {/* Baris 1: Nama Lengkap & Nama Panggilan */}
+                      <div className="grid grid-cols-12 gap-2 items-center">
+                        <div className="col-span-2 font-bold">Nama Lengkap :</div>
+                        <div className="col-span-5 border border-slate-700 px-2 py-1 font-bold uppercase">
+                          {cand.fullName}
+                        </div>
+                        <div className="col-span-2 text-right font-bold">Nama Panggilan :</div>
+                        <div className="col-span-3 border border-slate-700 px-2 py-1 font-bold">
+                          {rf.nickname || cand.fullName.split(" ")[0]}
+                        </div>
+                      </div>
+
+                      {/* Baris 2: Tempat & Tanggal Lahir (Kotak 8 Digit) + Tinggi Badan + Berat Badan */}
+                      <div className="grid grid-cols-12 gap-1.5 items-center">
+                        <div className="col-span-2 text-[10px] font-bold leading-tight">
+                          Tempat, dan Tanggal lahir :
+                        </div>
+                        <div className="col-span-3 border border-slate-700 px-2 py-1 font-semibold">
+                          {cand.birthPlace || "Indramayu"}
+                        </div>
+                        <div className="col-span-3 flex items-center gap-0.5">
+                          {dateBoxes.map((digit, i) => (
+                            <span
+                              key={i}
+                              className="flex h-6 w-5 items-center justify-center border border-slate-700 font-mono text-[11px] font-bold"
+                            >
+                              {digit}
+                            </span>
+                          ))}
+                        </div>
+                        <div className="col-span-2 flex items-center gap-1">
+                          <span className="text-[9.5px] font-bold leading-none">
+                            Tinggi Badan :
+                          </span>
+                          <div className="flex-1 border border-slate-700 px-1.5 py-1 text-center font-mono font-bold">
+                            {rf.heightCm} <span className="font-normal text-[9px]">Cm</span>
+                          </div>
+                        </div>
+                        <div className="col-span-2 flex items-center gap-1">
+                          <span className="text-[9.5px] font-bold leading-none">
+                            Berat Badan :
+                          </span>
+                          <div className="flex-1 border border-slate-700 px-1.5 py-1 text-center font-mono font-bold">
+                            {rf.weightKg} <span className="font-normal text-[9px]">Kg</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Baris 3: Agama, Jenis Kelamin, Status Perkawinan, Alamat lengkap label */}
+                      <div className="grid grid-cols-12 gap-2 items-center">
+                        <div className="col-span-1 font-bold">Agama :</div>
+                        <div className="col-span-2 border border-slate-700 px-2 py-1">
+                          {rf.religion}
+                        </div>
+                        <div className="col-span-2 text-right font-bold">Jenis Kelamin :</div>
+                        <div className="col-span-2 border border-slate-700 px-2 py-1">
+                          {cand.gender === "L" ? "Laki-laki" : "Perempuan"}
+                        </div>
+                        <div className="col-span-2 text-right font-bold">Status Perkawinan :</div>
+                        <div className="col-span-3 border border-slate-700 px-2 py-1">
+                          {cand.maritalStatus}
+                        </div>
+                      </div>
+
+                      {/* Baris 4 & 5: Alamat Lengkap + Kode Pos + Telp / Hp */}
+                      <div className="grid grid-cols-12 gap-2 items-center">
+                        <div className="col-span-2 font-bold">Alamat lengkap :</div>
+                        <div className="col-span-10 border border-slate-700 px-2 py-1">
+                          {cand.address}
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-12 gap-2 items-center">
+                        <div className="col-span-5 border border-slate-700 px-2 py-1 text-slate-600">
+                          Cabang P3MI: {db.branches.find((b) => b.id === cand.branchId)?.name}
+                        </div>
+                        <div className="col-span-1 text-right font-bold">Kode Pos :</div>
+                        <div className="col-span-2 border border-slate-700 px-2 py-1 font-mono">
+                          {rf.postalCode}
+                        </div>
+                        <div className="col-span-1 text-right font-bold">Telp / Hp :</div>
+                        <div className="col-span-3 border border-slate-700 px-2 py-1 font-mono font-bold">
+                          {cand.phone}
+                        </div>
+                      </div>
+
+                      {/* Baris 6: Pendidikan Terakhir, Lulus Tahun, No. KTP / Paspor */}
+                      <div className="grid grid-cols-12 gap-2 items-center">
+                        <div className="col-span-2 font-bold">Pendidikan Terakhir :</div>
+                        <div className="col-span-2 border border-slate-700 px-2 py-1">
+                          {cand.education}
+                        </div>
+                        <div className="col-span-2 text-right font-bold">Lulus Tahun :</div>
+                        <div className="col-span-1 border border-slate-700 px-2 py-1 font-mono text-center">
+                          {rf.graduationYear}
+                        </div>
+                        <div className="col-span-2 text-right font-bold">No. KTP / Paspor :</div>
+                        <div className="col-span-3 border border-slate-700 px-2 py-1 font-mono font-bold">
+                          {cand.nik || rf.ktpOrPassportNo}
+                        </div>
+                      </div>
+
+                      {/* Baris 7: Nama Bapak + Umur & Nama Ibu + Umur */}
+                      <div className="grid grid-cols-12 gap-2 items-center">
+                        <div className="col-span-2 font-bold">Nama Bapak :</div>
+                        <div className="col-span-3 border border-slate-700 px-2 py-1">
+                          {rf.fatherName}
+                        </div>
+                        <div className="col-span-1 text-right font-bold">Umur :</div>
+                        <div className="col-span-1 border border-slate-700 px-1.5 py-1 text-center font-mono">
+                          {rf.fatherAge} Th.
+                        </div>
+                        <div className="col-span-1 text-right font-bold">Nama Ibu :</div>
+                        <div className="col-span-2 border border-slate-700 px-2 py-1">
+                          {rf.motherName}
+                        </div>
+                        <div className="col-span-1 text-right font-bold">Umur :</div>
+                        <div className="col-span-1 border border-slate-700 px-1.5 py-1 text-center font-mono">
+                          {rf.motherAge} Th.
+                        </div>
+                      </div>
+
+                      {/* Baris 8: Nama Suami / Istri / Wali + Umur + Pekerjaan */}
+                      <div className="grid grid-cols-12 gap-2 items-center">
+                        <div className="col-span-2 font-bold text-[10px]">
+                          Nama Suami / Istri / Wali :
+                        </div>
+                        <div className="col-span-4 border border-slate-700 px-2 py-1">
+                          {rf.spouseOrGuardianName}
+                        </div>
+                        <div className="col-span-1 text-right font-bold">Umur :</div>
+                        <div className="col-span-1 border border-slate-700 px-1.5 py-1 text-center font-mono">
+                          {rf.spouseAge} Th.
+                        </div>
+                        <div className="col-span-1 text-right font-bold">Pekerjaan :</div>
+                        <div className="col-span-3 border border-slate-700 px-2 py-1">
+                          {rf.spouseOccupation}
+                        </div>
+                      </div>
+
+                      {/* Baris 9: Jumlah & umur anak Laki-laki & Perempuan */}
+                      <div className="grid grid-cols-12 gap-2 items-center">
+                        <div className="col-span-3 font-bold text-[10px]">
+                          Jumlah dan umur anak Laki-laki :
+                        </div>
+                        <div className="col-span-3 border border-slate-700 px-2 py-1">
+                          {rf.boysCountAndAges}
+                        </div>
+                        <div className="col-span-3 text-right font-bold text-[10px]">
+                          Jumlah dan umur anak Perempuan :
+                        </div>
+                        <div className="col-span-3 border border-slate-700 px-2 py-1">
+                          {rf.girlsCountAndAges}
+                        </div>
+                      </div>
+
+                      {/* Baris 10: Saya anak ke ... dari ... Bersaudara + Keluarga yg mudah dihubungi + Hubungan */}
+                      <div className="grid grid-cols-12 gap-2 items-center">
+                        <div className="col-span-4 flex items-center gap-1">
+                          <span className="font-bold text-[10px]">Saya anak ke :</span>
+                          <span className="border border-slate-700 px-2 py-0.5 font-mono font-bold">
+                            {rf.childOrder}
+                          </span>
+                          <span className="text-[10px]">dari :</span>
+                          <span className="border border-slate-700 px-2 py-0.5 font-mono font-bold">
+                            {rf.siblingsCount}
+                          </span>
+                          <span className="text-[10px]">Bersaudara</span>
+                        </div>
+                        <div className="col-span-2 font-bold text-[9.5px] leading-none">
+                          Nama Keluarga yang mudah di hubungi :
+                        </div>
+                        <div className="col-span-3 border border-slate-700 px-2 py-1">
+                          {rf.emergencyContactName}
+                        </div>
+                        <div className="col-span-1 text-right font-bold text-[10px]">
+                          Hubungan :
+                        </div>
+                        <div className="col-span-2 border border-slate-700 px-2 py-1">
+                          {rf.emergencyContactRelation}
+                        </div>
+                      </div>
+
+                      {/* Baris 11: Nomor Telp / Hp keluarga yang mudah dihubungi */}
+                      <div className="grid grid-cols-12 gap-2 items-center">
+                        <div className="col-span-3 font-bold text-[10px] leading-tight">
+                          Nomor Telp / Hp keluarga yang mudah di hubungi :
+                        </div>
+                        <div className="col-span-9 border border-slate-700 px-2 py-1 font-mono font-bold">
+                          {rf.emergencyContactPhone}
+                        </div>
+                      </div>
+
+                      {/* Baris 12 & 13: Pengalaman Kerja 1 & 2 */}
+                      <div className="grid grid-cols-12 gap-2 items-center">
+                        <div className="col-span-2 font-bold">Pengalaman Kerja 1 :</div>
+                        <div className="col-span-10 border border-slate-700 px-2 py-1">
+                          {rf.workExperience1 || "-"}
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-12 gap-2 items-center">
+                        <div className="col-span-2 font-bold">Pengalaman Kerja 2 :</div>
+                        <div className="col-span-10 border border-slate-700 px-2 py-1">
+                          {rf.workExperience2 || "-"}
+                        </div>
+                      </div>
+
+                      {/* Baris 14 & 15: Negara Tujuan & Pekerjaan yang diinginkan (Kotak Centang) */}
+                      <div className="grid grid-cols-12 gap-2 items-center pt-1">
+                        <div className="col-span-2 font-bold">Negara Tujuan :</div>
+                        <div className="col-span-3 border border-slate-700 px-2 py-1 font-bold uppercase">
+                          {cand.destinationCountry}
+                        </div>
+                        <div className="col-span-2 text-right font-bold text-[10px]">
+                          Pekerjaan yang diinginkan :
+                        </div>
+                        <div className="col-span-5 flex flex-wrap items-center gap-3">
+                          <span className="inline-flex items-center gap-1">
+                            <span className="flex h-4 w-4 items-center justify-center border border-slate-800 font-bold">
+                              {rf.desiredJobCleaner ? "✓" : ""}
+                            </span>
+                            Cleaner
+                          </span>
+                          <span className="inline-flex items-center gap-1">
+                            <span className="flex h-4 w-4 items-center justify-center border border-slate-800 font-bold">
+                              {rf.desiredJobFactory ? "✓" : ""}
+                            </span>
+                            Pekerja Pabrik
+                          </span>
+                          <span className="inline-flex items-center gap-1">
+                            <span className="flex h-4 w-4 items-center justify-center border border-slate-800 font-bold">
+                              {rf.desiredJobNurse ? "✓" : ""}
+                            </span>
+                            Nurse
+                          </span>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-12 gap-2 items-center">
+                        <div className="col-span-2 flex items-center gap-1">
+                          <span className="flex h-4 w-4 items-center justify-center border border-slate-800 font-bold">
+                            {rf.desiredJobHospitality ? "✓" : ""}
+                          </span>
+                          Hospitality
+                        </div>
+                        <div className="col-span-2 flex items-center gap-1">
+                          <span className="flex h-4 w-4 items-center justify-center border border-slate-800 font-bold">
+                            {rf.desiredJobOther ? "✓" : ""}
+                          </span>
+                          Pekerja Lain :
+                        </div>
+                        <div className="col-span-8 border border-slate-700 px-2 py-1">
+                          {cand.jobSector}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* TABEL DOKUMEN (1-9 ASLI/COPY) & TABEL BAHASA (BAIK/CUKUP/BURUK) */}
+                    <div className="mt-3 grid grid-cols-12 gap-3 items-start">
+                      <div className="col-span-8">
+                        <p className="font-bold text-[10.5px] mb-1">
+                          Dokumen-dokumen yang saya serahkan untuk proses sebagai berikut :
+                        </p>
+                        <div className="grid grid-cols-3 gap-2 text-[9.5px]">
+                          {/* Kolom Dokumen 1-3 */}
+                          <table className="w-full border-collapse border border-slate-700">
+                            <thead>
+                              <tr className="bg-slate-100">
+                                <th className="border border-slate-700 px-1 py-0.5">NO.</th>
+                                <th className="border border-slate-700 px-1 py-0.5">DOKUMEN</th>
+                                <th className="border border-slate-700 px-1 py-0.5">ASLI</th>
+                                <th className="border border-slate-700 px-1 py-0.5">COPY</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {[
+                                { no: "1.", name: "KTP", val: rf.docHandover.ktp },
+                                { no: "2.", name: "KARTU KELUARGA", val: rf.docHandover.kk },
+                                {
+                                  no: "3.",
+                                  name: "AKTE KELAHIRAN",
+                                  val: rf.docHandover.akteKelahiran,
+                                },
+                              ].map((r) => (
+                                <tr key={r.no}>
+                                  <td className="border border-slate-700 px-1 py-1 text-center">
+                                    {r.no}
+                                  </td>
+                                  <td className="border border-slate-700 px-1 py-1 font-semibold">
+                                    {r.name}
+                                  </td>
+                                  <td className="border border-slate-700 px-1 py-1 text-center font-bold">
+                                    {r.val === "ASLI" ? "✓" : ""}
+                                  </td>
+                                  <td className="border border-slate-700 px-1 py-1 text-center font-bold">
+                                    {r.val === "COPY" ? "✓" : ""}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+
+                          {/* Kolom Dokumen 4-6 */}
+                          <table className="w-full border-collapse border border-slate-700">
+                            <thead>
+                              <tr className="bg-slate-100">
+                                <th className="border border-slate-700 px-1 py-0.5">NO.</th>
+                                <th className="border border-slate-700 px-1 py-0.5">DOKUMEN</th>
+                                <th className="border border-slate-700 px-1 py-0.5">ASLI</th>
+                                <th className="border border-slate-700 px-1 py-0.5">COPY</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {[
+                                {
+                                  no: "4.",
+                                  name: "IZIN KELUARGA",
+                                  val: rf.docHandover.izinKeluarga,
+                                },
+                                {
+                                  no: "5.",
+                                  name: "STTB / IJAZAH",
+                                  val: rf.docHandover.sttbIjazah,
+                                },
+                                { no: "6.", name: "S K C K", val: rf.docHandover.skck },
+                              ].map((r) => (
+                                <tr key={r.no}>
+                                  <td className="border border-slate-700 px-1 py-1 text-center">
+                                    {r.no}
+                                  </td>
+                                  <td className="border border-slate-700 px-1 py-1 font-semibold">
+                                    {r.name}
+                                  </td>
+                                  <td className="border border-slate-700 px-1 py-1 text-center font-bold">
+                                    {r.val === "ASLI" ? "✓" : ""}
+                                  </td>
+                                  <td className="border border-slate-700 px-1 py-1 text-center font-bold">
+                                    {r.val === "COPY" ? "✓" : ""}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+
+                          {/* Kolom Dokumen 7-9 */}
+                          <table className="w-full border-collapse border border-slate-700">
+                            <thead>
+                              <tr className="bg-slate-100">
+                                <th className="border border-slate-700 px-1 py-0.5">NO.</th>
+                                <th className="border border-slate-700 px-1 py-0.5">DOKUMEN</th>
+                                <th className="border border-slate-700 px-1 py-0.5">ASLI</th>
+                                <th className="border border-slate-700 px-1 py-0.5">COPY</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {[
+                                { no: "7.", name: "PASPOR", val: rf.docHandover.paspor },
+                                {
+                                  no: "8.",
+                                  name: rf.docHandover.otherDoc8Name || "................",
+                                  val: rf.docHandover.otherDoc8Status,
+                                },
+                                {
+                                  no: "9.",
+                                  name: rf.docHandover.otherDoc9Name || "................",
+                                  val: rf.docHandover.otherDoc9Status,
+                                },
+                              ].map((r) => (
+                                <tr key={r.no}>
+                                  <td className="border border-slate-700 px-1 py-1 text-center">
+                                    {r.no}
+                                  </td>
+                                  <td className="border border-slate-700 px-1 py-1 font-semibold truncate max-w-[80px]">
+                                    {r.name}
+                                  </td>
+                                  <td className="border border-slate-700 px-1 py-1 text-center font-bold">
+                                    {r.val === "ASLI" ? "✓" : ""}
+                                  </td>
+                                  <td className="border border-slate-700 px-1 py-1 text-center font-bold">
+                                    {r.val === "COPY" ? "✓" : ""}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      {/* Tabel Kemampuan Bahasa */}
+                      <div className="col-span-4">
+                        <table className="w-full border-collapse border border-slate-700 text-[9.5px] mt-4">
+                          <thead>
+                            <tr className="bg-slate-100">
+                              <th className="border border-slate-700 px-1.5 py-0.5 text-left">
+                                Bahasa
+                              </th>
+                              <th className="border border-slate-700 px-1 py-0.5">Baik</th>
+                              <th className="border border-slate-700 px-1 py-0.5">Cukup</th>
+                              <th className="border border-slate-700 px-1 py-0.5">Buruk</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {[
+                              { name: "Bahasa Inggris", val: rf.languageSkills.english },
+                              { name: "Bahasa Mandarin", val: rf.languageSkills.mandarin },
+                              { name: "Bahasa Arab", val: rf.languageSkills.arabic },
+                              {
+                                name: rf.languageSkills.otherLanguageName || "................",
+                                val: rf.languageSkills.otherLanguageLevel,
+                              },
+                            ].map((l, idx) => (
+                              <tr key={idx}>
+                                <td className="border border-slate-700 px-1.5 py-1 font-semibold">
+                                  {l.name}
+                                </td>
+                                <td className="border border-slate-700 px-1 py-1 text-center font-bold">
+                                  {l.val === "BAIK" ? "✓" : ""}
+                                </td>
+                                <td className="border border-slate-700 px-1 py-1 text-center font-bold">
+                                  {l.val === "CUKUP" ? "✓" : ""}
+                                </td>
+                                <td className="border border-slate-700 px-1 py-1 text-center font-bold">
+                                  {l.val === "BURUK" ? "✓" : ""}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* CATATAN & DATA PETUGAS LAPANGAN / REKRUT / SPONSOR */}
+                    <div className="mt-2.5 space-y-1.5">
+                      <div className="grid grid-cols-12 gap-2 items-center">
+                        <div className="col-span-2 font-bold">Catatan :</div>
+                        <div className="col-span-10 border border-slate-700 px-2 py-1">
+                          {rf.candidateNotes || "-"}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-12 gap-2 items-center">
+                        <div className="col-span-3 font-bold text-[10px] leading-tight">
+                          Nama Petugas Lapangan / Petugas Rekrut / Sponsor :
+                        </div>
+                        <div className="col-span-4 border border-slate-700 px-2 py-1 font-bold">
+                          {rf.sponsorOfficerName}
+                        </div>
+                        <div className="col-span-2 text-right font-bold">Nomor Telp / Hp :</div>
+                        <div className="col-span-3 border border-slate-700 px-2 py-1 font-mono font-bold">
+                          {rf.sponsorOfficerPhone}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-12 gap-2 items-center">
+                        <div className="col-span-2 font-bold">Catatan :</div>
+                        <div className="col-span-10 border border-slate-700 px-2 py-1.5">
+                          {rf.sponsorNotes || "-"}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 3 KOLOM TANDA TANGAN BAWAH (CALON PMI, PETUGAS LAPANGAN/REKRUT, PETUGAS PT) */}
+                    <div className="mt-6 grid grid-cols-3 gap-6 text-center text-[11px]">
+                      <div>
+                        <p className="border-t border-slate-700 pt-1 font-semibold">
+                          Yang mengisi biodata
+                        </p>
+                        <div className="h-14 flex items-center justify-center text-[10px] italic text-slate-400">
+                          (Ttd. {rf.formSignedDate})
+                        </div>
+                        <p className="font-bold underline">( {cand.fullName} )</p>
+                        <p className="text-[10px] font-bold">Calon PMI</p>
+                      </div>
+
+                      <div>
+                        <p className="pt-1 font-semibold">Mengetahui / Saksi</p>
+                        <div className="h-14 flex items-center justify-center text-[10px] italic text-slate-400">
+                          (Terverifikasi Sponsor)
+                        </div>
+                        <p className="font-bold underline">( {rf.sponsorOfficerName} )</p>
+                        <p className="text-[10px] font-bold">Petugas Lapangan / Rekrut</p>
+                      </div>
+
+                      <div>
+                        <p className="pt-1 font-semibold">Yang menerima CPMI</p>
+                        <div className="h-14 flex items-center justify-center text-[10px] italic text-teal-700 font-semibold">
+                          ✓ Diterima & Diinput Sistem
+                        </div>
+                        <p className="font-bold underline">( {rf.receivedByPtOfficer} )</p>
+                        <p className="text-[10px] font-bold">Petugas PT</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
           </div>
         </div>
       )}

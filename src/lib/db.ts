@@ -15,8 +15,10 @@ import {
   JobVacancy,
   JourneyStage,
   MedicalClinicPartner,
+  OfficialRegistrationForm,
   RenewalTask,
   Sponsor,
+  SponsorFormSubmission,
   SponsorInstallment,
   StaffAccount,
   TrainingRecord,
@@ -35,6 +37,7 @@ export interface DatabaseSchema {
   foreignAgencies?: ForeignAgency[];
   medicalClinics?: MedicalClinicPartner[];
   bpjsFinancingPartners?: BpjsFinancingPartner[];
+  sponsorSubmissions?: SponsorFormSubmission[];
 }
 
 const IS_SERVERLESS = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
@@ -1978,6 +1981,354 @@ export function createInitialBpjsFinancing(): BpjsFinancingPartner[] {
   ];
 }
 
+export function buildDefaultRegistrationFormForCandidate(
+  c: Candidate,
+  sponsors: Sponsor[] = []
+): OfficialRegistrationForm {
+  const sp = sponsors.find((s) => s.id === c.sponsorId);
+  const firstWord = c.fullName.split(" ")[0] || c.fullName;
+  const isMidEast = [
+    "Arab Saudi",
+    "Uni Emirat Arab (UAE)",
+    "Kuwait",
+    "Oman",
+    "Yordania",
+  ].includes(c.destinationCountry);
+  const isMandarin = ["Taiwan", "Hong Kong", "Singapura"].includes(c.destinationCountry);
+  const hasPassport = c.documents?.some(
+    (d) => d.docType === "PASPOR" && d.status === "VERIFIED"
+  );
+  const hasSkck = c.documents?.some(
+    (d) => d.docType === "IZIN_KELUARGA" && d.status === "VERIFIED"
+  );
+
+  return {
+    nickname: firstWord,
+    heightCm: c.gender === "L" ? 168 : 158,
+    weightKg: c.gender === "L" ? 62 : 52,
+    religion: "Islam",
+    postalCode: c.branchId === "br-idm" ? "45272" : c.branchId === "br-clp" ? "53212" : "65141",
+    graduationYear: "2018",
+    ktpOrPassportNo: c.nik || "Menyusul",
+    fatherName: "H. Карtono / Bapak Kandung",
+    fatherAge: 56,
+    motherName: "Hj. Sumiati / Ibu Kandung",
+    motherAge: 51,
+    spouseOrGuardianName:
+      c.maritalStatus === "Kawin" ? "Suami / Istri Sah (Wali Izin)" : "Orang Tua / Wali Kandung",
+    spouseAge: c.maritalStatus === "Kawin" ? 33 : 56,
+    spouseOccupation: "Wiraswasta / Petani",
+    boysCountAndAges: c.maritalStatus === "Kawin" ? "1 orang (7 Th)" : "-",
+    girlsCountAndAges: "-",
+    childOrder: 2,
+    siblingsCount: 3,
+    emergencyContactName:
+      c.maritalStatus === "Kawin" ? "Suami / Istri Sah" : "Bapak / Ibu Kandung",
+    emergencyContactRelation: c.maritalStatus === "Kawin" ? "Suami/Istri" : "Orang Tua",
+    emergencyContactPhone: c.phone ? `${c.phone.slice(0, -2)}99` : "0812-8899-7711",
+    workExperience1:
+      c.stage === "ALUMNI"
+        ? `Eks-PMI ${c.destinationCountry} (${c.jobSector}) selama 2 Kontrak (Selesai Baik)`
+        : "2021 - 2024 : Bekerja di Sektor Jasa / Perawatan / Industri Lokal (3 Tahun)",
+    workExperience2: "2019 - 2021 : Pengalaman Kerja Mandiri & Pelatihan Keterampilan",
+    desiredJobCleaner:
+      c.jobSector.toLowerCase().includes("clean") ||
+      c.jobSector.toLowerCase().includes("house") ||
+      c.jobSector.toLowerCase().includes("domestic"),
+    desiredJobFactory:
+      c.jobSector.toLowerCase().includes("pabrik") ||
+      c.jobSector.toLowerCase().includes("manufaktur") ||
+      c.jobSector.toLowerCase().includes("industri"),
+    desiredJobNurse:
+      c.jobSector.toLowerCase().includes("caregiver") ||
+      c.jobSector.toLowerCase().includes("lansia") ||
+      c.jobSector.toLowerCase().includes("nurse") ||
+      c.jobSector.toLowerCase().includes("perawat"),
+    desiredJobHospitality:
+      c.jobSector.toLowerCase().includes("hotel") ||
+      c.jobSector.toLowerCase().includes("hospitality") ||
+      c.jobSector.toLowerCase().includes("waiter"),
+    desiredJobOther: false,
+    desiredJobOtherText: c.jobSector,
+    docHandover: {
+      ktp: "ASLI",
+      kk: "ASLI",
+      akteKelahiran: "ASLI",
+      izinKeluarga: "ASLI",
+      sttbIjazah: "ASLI",
+      skck: hasSkck ? "ASLI" : "COPY",
+      paspor: hasPassport ? "ASLI" : "NONE",
+      otherDoc8Name: "Buku Nikah / Akte Cerai",
+      otherDoc8Status: c.maritalStatus === "Belum Kawin" ? "NONE" : "ASLI",
+      otherDoc9Name: "Pas Foto 4x6 & Kartu Kuning AK-1",
+      otherDoc9Status: "ASLI",
+    },
+    languageSkills: {
+      english: isMidEast ? "CUKUP" : "BAIK",
+      mandarin: isMandarin ? "BAIK" : "BURUK",
+      arabic: isMidEast ? "BAIK" : "CUKUP",
+      otherLanguageName: c.destinationCountry === "Jepang" ? "Bahasa Jepang" : "",
+      otherLanguageLevel: c.destinationCountry === "Jepang" ? "BAIK" : "NONE",
+    },
+    candidateNotes:
+      "Berkas fisik asli telah diserahkan saat pendaftaran awal di kantor cabang PT Panca Banyu Ajisakti.",
+    sponsorOfficerName: sp ? sp.name : "Petugas Rekrut Lapangan (PL)",
+    sponsorOfficerPhone: sp ? sp.phone : "0812-2345-6789",
+    sponsorNotes:
+      "Kandidat sehat jasmani & rohani, keluarga mendukung penuh keberangkatan dan telah menandatangani surat izin bermaterai.",
+    receivedByPtOfficer: "Rina Kartika (Staf Data Entry & Verifikasi PT Panca Banyu Ajisakti)",
+    formSignedDate: c.createdAt || relativeDate(-10),
+  };
+}
+
+function createInitialSponsorSubmissions(): SponsorFormSubmission[] {
+  return [
+    {
+      id: "sub-form-001",
+      submissionCode: "FORM-SP/2026/0401",
+      submittedAt: `${relativeDate(0)} 08:45 WIB`,
+      sponsorId: "sp-1",
+      sponsorName: "Kang Dedi Kusnadi (PL-IDM-001)",
+      sponsorPhone: "0812-2301-4455",
+      branchId: "br-idm",
+      status: "MENUNGGU_DATA_ENTRY",
+      sourceMethod: "SCAN_FORM_FISIK",
+      physicalFormImageUrl: "/form-pendaftaran-asli.jpg",
+      fullName: "Titi Sari Binti Карtono",
+      nik: "3212156205970004",
+      gender: "P",
+      avatarUrl: "/avatars/cpmi-hijab-red.svg",
+      birthPlace: "Indramayu",
+      birthDate: "1997-05-22",
+      phone: "0813-9455-2210",
+      address: "Blok Desa RT 004/002 Desa Juntinyuat, Kec. Juntinyuat, Kab. Indramayu",
+      maritalStatus: "Kawin",
+      education: "SMA/SMK",
+      destinationCountry: "Arab Saudi",
+      jobSector: "Housekeeping & Caregiver (SPSK Syarikah)",
+      registrationForm: {
+        nickname: "Titi",
+        heightCm: 159,
+        weightKg: 54,
+        religion: "Islam",
+        postalCode: "45282",
+        graduationYear: "2015",
+        ktpOrPassportNo: "3212156205970004",
+        fatherName: "Kartono",
+        fatherAge: 58,
+        motherName: "Rasminah",
+        motherAge: 53,
+        spouseOrGuardianName: "Hendrik Setiawan",
+        spouseAge: 32,
+        spouseOccupation: "Nelayan / Wiraswasta",
+        boysCountAndAges: "1 Orang (6 Th)",
+        girlsCountAndAges: "-",
+        childOrder: 1,
+        siblingsCount: 3,
+        emergencyContactName: "Hendrik Setiawan",
+        emergencyContactRelation: "Suami Kandung",
+        emergencyContactPhone: "0852-2411-9088",
+        workExperience1: "2019 - 2023 : Asisten Rumah Tangga & Babysitter di Jakarta (4 Tahun)",
+        workExperience2: "2023 - 2025 : Eks-PMI Arab Saudi (Riyadh) - Selesai Kontrak 2 Tahun Baik",
+        desiredJobCleaner: true,
+        desiredJobFactory: false,
+        desiredJobNurse: true,
+        desiredJobHospitality: false,
+        desiredJobOther: false,
+        desiredJobOtherText: "",
+        docHandover: {
+          ktp: "ASLI",
+          kk: "ASLI",
+          akteKelahiran: "ASLI",
+          izinKeluarga: "ASLI",
+          sttbIjazah: "ASLI",
+          skck: "COPY",
+          paspor: "ASLI",
+          otherDoc8Name: "Buku Nikah Asli",
+          otherDoc8Status: "ASLI",
+          otherDoc9Name: "Paspor Lama Eks-Riyadh",
+          otherDoc9Status: "ASLI",
+        },
+        languageSkills: {
+          english: "CUKUP",
+          mandarin: "BURUK",
+          arabic: "BAIK",
+          otherLanguageName: "",
+          otherLanguageLevel: "NONE",
+        },
+        candidateNotes: "Siap langsung masuk pemeriksaan Wafid (GAMCA) minggu ini.",
+        sponsorOfficerName: "Kang Dedi Kusnadi (PL-IDM-001)",
+        sponsorOfficerPhone: "0812-2301-4455",
+        sponsorNotes: "Dokumen fisik asli KTP, KK, Akte, Ijazah, Buku Nikah & Izin Suami sudah lengkap di map merah diserahkan ke meja Data Entry.",
+        receivedByPtOfficer: "Rina Kartika (Staf Data Entry PT Panca Banyu Ajisakti)",
+        formSignedDate: relativeDate(0),
+      },
+    },
+    {
+      id: "sub-form-002",
+      submissionCode: "FORM-SP/2026/0402",
+      submittedAt: `${relativeDate(0)} 10:15 WIB`,
+      sponsorId: "sp-2",
+      sponsorName: "Pak Slamet Riyadi (PL-CLP-002)",
+      sponsorPhone: "0813-2700-9911",
+      branchId: "br-clp",
+      status: "MENUNGGU_DATA_ENTRY",
+      sourceMethod: "FORM_DIGITAL_SPONSOR",
+      physicalFormImageUrl: "/form-pendaftaran-asli.jpg",
+      fullName: "Rizky Pratama Putra",
+      nik: "3301141809010002",
+      gender: "L",
+      avatarUrl: "/avatars/cpmi-male-blue.svg",
+      birthPlace: "Cilacap",
+      birthDate: "2001-09-18",
+      phone: "0857-4288-3319",
+      address: "Jl. Laut Selatan RT 002/005 Kec. Majenang, Kab. Cilacap, Jawa Tengah",
+      maritalStatus: "Belum Kawin",
+      education: "SMA/SMK",
+      destinationCountry: "Jepang",
+      jobSector: "Operator Manufaktur & Pengolahan Makanan (SSW)",
+      registrationForm: {
+        nickname: "Rizky",
+        heightCm: 171,
+        weightKg: 64,
+        religion: "Islam",
+        postalCode: "53257",
+        graduationYear: "2019",
+        ktpOrPassportNo: "3301141809010002",
+        fatherName: "Slamet Widodo",
+        fatherAge: 52,
+        motherName: "Siti Aminah",
+        motherAge: 48,
+        spouseOrGuardianName: "Slamet Widodo (Ayah Kandung)",
+        spouseAge: 52,
+        spouseOccupation: "Pedagang",
+        boysCountAndAges: "-",
+        girlsCountAndAges: "-",
+        childOrder: 1,
+        siblingsCount: 2,
+        emergencyContactName: "Slamet Widodo",
+        emergencyContactRelation: "Ayah Kandung",
+        emergencyContactPhone: "0813-2890-4412",
+        workExperience1: "2020 - 2024 : Operator Produksi PT Indofood CBP Cikarang (4 Tahun)",
+        workExperience2: "2024 - 2025 : Pelatihan Bahasa Jepang N4 & SSW Pengolahan Makanan",
+        desiredJobCleaner: false,
+        desiredJobFactory: true,
+        desiredJobNurse: false,
+        desiredJobHospitality: false,
+        desiredJobOther: false,
+        desiredJobOtherText: "",
+        docHandover: {
+          ktp: "ASLI",
+          kk: "ASLI",
+          akteKelahiran: "ASLI",
+          izinKeluarga: "ASLI",
+          sttbIjazah: "ASLI",
+          skck: "ASLI",
+          paspor: "COPY",
+          otherDoc8Name: "Sertifikat JFT-Basic A2 & SSW",
+          otherDoc8Status: "ASLI",
+          otherDoc9Name: "Paklaring PT Indofood",
+          otherDoc9Status: "COPY",
+        },
+        languageSkills: {
+          english: "BAIK",
+          mandarin: "BURUK",
+          arabic: "BURUK",
+          otherLanguageName: "Bahasa Jepang (JLPT N4)",
+          otherLanguageLevel: "BAIK",
+        },
+        candidateNotes: "Sudah lulus JFT-Basic A2 & SSW Prometric.",
+        sponsorOfficerName: "Pak Slamet Riyadi (PL-CLP-002)",
+        sponsorOfficerPhone: "0813-2700-9911",
+        sponsorNotes: "Berkas asli SMK Teknik Mesin, KTP, KK, Akte & Izin Orang Tua sudah diverifikasi di Cabang Cilacap.",
+        receivedByPtOfficer: "Rina Kartika (Staf Data Entry PT Panca Banyu Ajisakti)",
+        formSignedDate: relativeDate(0),
+      },
+    },
+    {
+      id: "sub-form-003",
+      submissionCode: "FORM-SP/2026/0403",
+      submittedAt: `${relativeDate(0)} 11:30 WIB`,
+      sponsorId: "sp-3",
+      sponsorName: "Bu Nurhayati (PL-MLG-003)",
+      sponsorPhone: "0812-3388-7766",
+      branchId: "br-mlg",
+      status: "MENUNGGU_DATA_ENTRY",
+      sourceMethod: "PARSE_WA_SPONSOR",
+      physicalFormImageUrl: "/form-pendaftaran-asli.jpg",
+      fullName: "Lilis Karlina Wulandari",
+      nik: "3507195408990003",
+      gender: "P",
+      avatarUrl: "/avatars/cpmi-hijab-blue.svg",
+      birthPlace: "Malang",
+      birthDate: "1999-08-14",
+      phone: "0821-4319-8872",
+      address: "Dusun Krajan RT 006/002 Kec. Kepanjen, Kab. Malang, Jawa Timur",
+      maritalStatus: "Cerai Hidup",
+      education: "SMA/SMK",
+      destinationCountry: "Taiwan",
+      jobSector: "Caregiver (Perawat Lansia)",
+      registrationForm: {
+        nickname: "Lilis",
+        heightCm: 156,
+        weightKg: 51,
+        religion: "Islam",
+        postalCode: "65163",
+        graduationYear: "2017",
+        ktpOrPassportNo: "3507195408990003",
+        fatherName: "Suparman",
+        fatherAge: 60,
+        motherName: "Sulastri",
+        motherAge: 55,
+        spouseOrGuardianName: "Suparman (Ayah Kandung / Wali)",
+        spouseAge: 60,
+        spouseOccupation: "Petani",
+        boysCountAndAges: "-",
+        girlsCountAndAges: "1 Orang (5 Th)",
+        childOrder: 2,
+        siblingsCount: 4,
+        emergencyContactName: "Sulastri",
+        emergencyContactRelation: "Ibu Kandung",
+        emergencyContactPhone: "0822-3109-5541",
+        workExperience1: "2020 - 2023 : Perawat Lansia Homecare di Surabaya (3 Tahun)",
+        workExperience2: "2023 - 2025 : Caregiver di Taichung, Taiwan (Selesai Kontrak 2 Tahun)",
+        desiredJobCleaner: false,
+        desiredJobFactory: false,
+        desiredJobNurse: true,
+        desiredJobHospitality: false,
+        desiredJobOther: false,
+        desiredJobOtherText: "",
+        docHandover: {
+          ktp: "ASLI",
+          kk: "ASLI",
+          akteKelahiran: "ASLI",
+          izinKeluarga: "ASLI",
+          sttbIjazah: "ASLI",
+          skck: "ASLI",
+          paspor: "ASLI",
+          otherDoc8Name: "Akte Cerai Resmi Pengadilan Agama",
+          otherDoc8Status: "ASLI",
+          otherDoc9Name: "ARC & Paspor Lama Eks-Taiwan",
+          otherDoc9Status: "COPY",
+        },
+        languageSkills: {
+          english: "CUKUP",
+          mandarin: "BAIK",
+          arabic: "BURUK",
+          otherLanguageName: "",
+          otherLanguageLevel: "NONE",
+        },
+        candidateNotes: "Eks-Taiwan lancar berbahasa Mandarin percakapan harian lansia.",
+        sponsorOfficerName: "Bu Nurhayati (PL-MLG-003)",
+        sponsorOfficerPhone: "0812-3388-7766",
+        sponsorNotes: "Formulir pendaftaran fisik telah ditandatangani oleh Calon PMI & Sponsor, siap diinput oleh Data Entry.",
+        receivedByPtOfficer: "Rina Kartika (Staf Data Entry PT Panca Banyu Ajisakti)",
+        formSignedDate: relativeDate(0),
+      },
+    },
+  ];
+}
+
 export function syncExpirationsAndTasks(db: DatabaseSchema): void {
   if (!db.staffAccounts || db.staffAccounts.length === 0) {
     db.staffAccounts = createInitialStaff();
@@ -1996,6 +2347,9 @@ export function syncExpirationsAndTasks(db: DatabaseSchema): void {
   }
   if (!db.bpjsFinancingPartners || db.bpjsFinancingPartners.length === 0) {
     db.bpjsFinancingPartners = createInitialBpjsFinancing();
+  }
+  if (!db.sponsorSubmissions || db.sponsorSubmissions.length === 0) {
+    db.sponsorSubmissions = createInitialSponsorSubmissions();
   }
   const initialVacancies = createInitialVacancies();
   if (!db.vacancies || db.vacancies.length === 0) {
@@ -2026,6 +2380,9 @@ export function syncExpirationsAndTasks(db: DatabaseSchema): void {
     }
     if (!cpmi.training) {
       cpmi.training = buildDefaultTrainingForCandidate(cpmi);
+    }
+    if (!cpmi.registrationForm) {
+      cpmi.registrationForm = buildDefaultRegistrationFormForCandidate(cpmi, db.sponsors);
     }
     if (cpmi.id === "cpmi-9" && !cpmi.badilInfo) {
       cpmi.specialStatus = "BADIL_REPLACEMENT";
