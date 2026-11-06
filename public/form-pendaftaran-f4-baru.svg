@@ -1,0 +1,211 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 1200" width="820" height="1200">
+  <rect width="820" height="1200" fill="#ffffff" stroke="#1e293b" stroke-width="2"/>
+  
+  <!-- Header Logo Segitiga Merah Panca Banyu Ajisakti -->
+  <g transform="translate(45, 28)">
+    <text x="42" y="12" font-family="Arial, sans-serif" font-size="9" font-weight="900" fill="#0f172a" text-anchor="middle" letter-spacing="1.5">PANCA BANYU</text>
+    <polygon points="42,16 14,66 70,66" fill="#dc2626"/>
+    <polygon points="42,32 28,58 56,58" fill="#ffffff"/>
+    <rect x="33" y="47" width="18" height="6" fill="#dc2626"/>
+    <text x="42" y="79" font-family="Arial, sans-serif" font-size="9" font-weight="900" fill="#0f172a" text-anchor="middle" letter-spacing="2">AJISAKTI</text>
+  </g>
+
+  <!-- Header Kop Tengah -->
+  <text x="365" y="54" font-family="Arial, sans-serif" font-size="27" font-weight="900" fill="#1e3a8a" text-anchor="middle" letter-spacing="1.5">PANCA BANYU AJISAKTI</text>
+  <text x="365" y="73" font-family="Arial, sans-serif" font-size="13.5" font-weight="800" fill="#1e3a8a" text-anchor="middle" letter-spacing="0.5">JASA TENAGA KERJA-INDONESIA MANPOWER SERVICE</text>
+  <text x="365" y="88" font-family="Arial, sans-serif" font-size="10.5" fill="#1e3a8a" text-anchor="middle">Jl. kayu manis No. 51 Kel. Bale Kambang Kec. Keramat Jati Jakarta Timur</text>
+  <text x="365" y="102" font-family="Arial, sans-serif" font-size="10.5" fill="#1e3a8a" text-anchor="middle">Telp. +62-21 2937373 Fax +62-2129826026 Email pancabanyu@yahoo.com</text>
+
+  <!-- Kotak No. Reg. Kanan Atas -->
+  <rect x="632" y="34" width="154" height="44" rx="6" fill="#ffffff" stroke="#0f172a" stroke-width="1.3"/>
+  <text x="640" y="50" font-family="Arial, sans-serif" font-size="11" fill="#0f172a">No. Reg.</text>
+  <text x="646" y="69" font-family="Courier New, monospace" font-size="13" font-weight="700" fill="#1d4ed8">P3MI-2026-0401</text>
+  <text x="634" y="114" font-family="Arial, sans-serif" font-size="11.5" fill="#0f172a">Tgl <tspan fill="#1d4ed8" font-weight="700">06 / 11 / 2026</tspan></text>
+
+  <!-- Garis Pembatas Kop -->
+  <line x1="38" y1="115" x2="628" y2="115" stroke="#0f172a" stroke-width="1.3"/>
+
+  <!-- Judul & Pernyataan -->
+  <text x="38" y="138" font-family="Arial, sans-serif" font-size="14" font-weight="800" fill="#0f172a">FORMULIR PENDAFTARAN CPMI/CTKI</text>
+  <text x="38" y="158" font-family="Arial, sans-serif" font-size="11.5" fill="#0f172a">Saya yang mengisi Biodata ini bertanggung jawab dan tanpa unsur paksaan dari pihak manapun terhadap isinya serta</text>
+  <text x="38" y="174" font-family="Arial, sans-serif" font-size="11.5" fill="#0f172a">bersedia menanggung kerugian pihak lain atau tuntutan hukum apabila dikemudian hari terbukti memalsukan atau</text>
+  <text x="38" y="190" font-family="Arial, sans-serif" font-size="11.5" fill="#0f172a">berbohong. Data diri saya adalah sebagai berikut :</text>
+
+  <!-- Item 1 s/d 14 -->
+  <g font-family="Arial, sans-serif" font-size="12" fill="#0f172a">
+    <text x="44" y="212">1. Negara Tujuan</text>
+    <text x="184" y="212">: <tspan fill="#1d4ed8" font-weight="700">Arab Saudi (Riyadh - SPSK Syarikah)</tspan></text>
+
+    <text x="44" y="231">2. Nama Sponsor</text>
+    <text x="184" y="231">: <tspan fill="#1d4ed8" font-weight="700">Kang Dedi Kusnadi (PL-IDM-001) / 0812-2301-4455</tspan></text>
+
+    <text x="44" y="250">3. Nama Lengkap</text>
+    <text x="184" y="250">: <tspan fill="#1d4ed8" font-weight="700">TITI SARI BINTI KARTONO</tspan></text>
+    <text x="562" y="250">Telp. <tspan fill="#1d4ed8" font-weight="700">0813-9455-2210</tspan></text>
+
+    <text x="44" y="269">4. Tempat Tgl Lahir</text>
+    <text x="184" y="269">: <tspan fill="#1d4ed8" font-weight="700">Indramayu, 22-05-1997</tspan></text>
+    <text x="498" y="269">Umur Asli : <tspan fill="#1d4ed8" font-weight="700">29 Tahun</tspan></text>
+
+    <text x="44" y="288">5. Agama</text>
+    <text x="184" y="288">: <tspan fill="#1d4ed8" font-weight="700">Islam</tspan></text>
+
+    <text x="44" y="307">6. Pendidikan terakhir : A. SD</text>
+    <text x="315" y="307">B. SMP</text>
+    <rect x="440" y="294" width="60" height="17" rx="3" fill="none" stroke="#1d4ed8" stroke-width="1.8"/>
+    <text x="445" y="307" font-weight="700" fill="#1d4ed8">C. SMA</text>
+    <text x="576" y="307">D. Diploma/Universitas</text>
+
+    <text x="44" y="326">7. Anak ke</text>
+    <text x="184" y="326">: <tspan fill="#1d4ed8" font-weight="700">1</tspan> dari <tspan fill="#1d4ed8" font-weight="700">3</tspan> bersaudara</text>
+
+    <text x="44" y="345">8. Status</text>
+    <text x="184" y="345">: A. Belum Kawin</text>
+    <rect x="398" y="332" width="66" height="17" rx="3" fill="none" stroke="#1d4ed8" stroke-width="1.8"/>
+    <text x="403" y="345" font-weight="700" fill="#1d4ed8">B. Kawin</text>
+    <text x="576" y="345">C. Janda</text>
+
+    <text x="44" y="364">9. Jumlah Anak</text>
+    <text x="184" y="364">: <tspan fill="#1d4ed8" font-weight="700">1</tspan> Orang,   Anak Pertama <tspan fill="#1d4ed8" font-weight="700">6</tspan> Tahun,   Anak Terakhir <tspan fill="#1d4ed8" font-weight="700">-</tspan> Tahun</text>
+
+    <text x="38" y="383">10. Keadaan Fisik</text>
+    <text x="184" y="383">: Tinggi Badan <tspan fill="#1d4ed8" font-weight="700">159</tspan> cm          Berat Badan <tspan fill="#1d4ed8" font-weight="700">54</tspan> kg</text>
+
+    <text x="38" y="402">11. Alamat Lengkap</text>
+    <text x="184" y="402">: <tspan fill="#1d4ed8" font-weight="700">Blok Desa RT 004/002 Desa Juntinyuat, Kec. Juntinyuat, Kab. Indramayu (45282)</tspan></text>
+    <text x="184" y="421" fill="#1d4ed8" font-weight="700">  NIK KTP: 3212156205970004</text>
+
+    <text x="38" y="444">12. Orang Tua</text>
+    <text x="184" y="444">: Bapak <tspan fill="#1d4ed8" font-weight="700">Kartono</tspan>   Umur <tspan fill="#1d4ed8" font-weight="700">58</tspan> th     Ibu <tspan fill="#1d4ed8" font-weight="700">Rasminah</tspan>   Umur <tspan fill="#1d4ed8" font-weight="700">53</tspan> Th</text>
+    <text x="193" y="463">Kakek dari Bapak : <tspan fill="#1d4ed8" font-weight="700">H. Abdul Halim</tspan></text>
+
+    <text x="38" y="482">13. Suami</text>
+    <text x="184" y="482">: <tspan fill="#1d4ed8" font-weight="700">Hendrik Setiawan</tspan>   Umur <tspan fill="#1d4ed8" font-weight="700">32</tspan> Th.   Pekerjaan Suami : <tspan fill="#1d4ed8" font-weight="700">Nelayan / Wiraswasta</tspan></text>
+
+    <text x="38" y="501">14. Keluarga Lain</text>
+    <text x="184" y="501">: nama <tspan fill="#1d4ed8" font-weight="700">Hendrik Setiawan</tspan>   hubungan <tspan fill="#1d4ed8" font-weight="700">Suami Kandung</tspan>   no tlp <tspan fill="#1d4ed8" font-weight="700">0852-2411-9088</tspan></text>
+
+    <text x="38" y="523" font-weight="700">15. PENGALAMAN BEKERJA DILUAR NEGERI (Ex/Non)</text>
+  </g>
+
+  <!-- Tabel 15: Pengalaman Bekerja di Luar Negeri -->
+  <g transform="translate(38, 532)" font-family="Arial, sans-serif" font-size="10" fill="#0f172a">
+    <rect x="0" y="0" width="742" height="165" fill="none" stroke="#0f172a" stroke-width="1.2"/>
+    <line x1="0" y1="44" x2="742" y2="44" stroke="#0f172a" stroke-width="1"/>
+    <line x1="386" y1="22" x2="742" y2="22" stroke="#0f172a" stroke-width="1"/>
+    <line x1="0" y1="74" x2="742" y2="74" stroke="#0f172a" stroke-width="1"/>
+    <line x1="0" y1="104" x2="742" y2="104" stroke="#0f172a" stroke-width="1"/>
+    <line x1="0" y1="134" x2="742" y2="134" stroke="#0f172a" stroke-width="1"/>
+
+    <line x1="32" y1="0" x2="32" y2="165" stroke="#0f172a" stroke-width="1"/>
+    <line x1="195" y1="0" x2="195" y2="165" stroke="#0f172a" stroke-width="1"/>
+    <line x1="268" y1="0" x2="268" y2="165" stroke="#0f172a" stroke-width="1"/>
+    <line x1="386" y1="0" x2="386" y2="165" stroke="#0f172a" stroke-width="1"/>
+    <line x1="448" y1="22" x2="448" y2="165" stroke="#0f172a" stroke-width="1"/>
+    <line x1="504" y1="22" x2="504" y2="165" stroke="#0f172a" stroke-width="1"/>
+
+    <text x="16" y="26" font-weight="700" text-anchor="middle">no</text>
+    <text x="113" y="26" font-weight="700" text-anchor="middle">NEGARA DAN KOTA</text>
+    <text x="231" y="26" font-weight="700" text-anchor="middle">LAMA</text>
+    <text x="327" y="26" font-weight="700" text-anchor="middle">PERIODE</text>
+    <text x="564" y="15" font-weight="700" text-anchor="middle">STATUS PEMULANGAN</text>
+    <text x="417" y="36" font-weight="700" text-anchor="middle">SELESAI</text>
+    <text x="476" y="36" font-weight="700" text-anchor="middle">KASUS</text>
+    <text x="623" y="36" font-weight="700" text-anchor="middle">KETERANGAN</text>
+
+    <!-- Row 1 Data -->
+    <text x="16" y="63" text-anchor="middle" fill="#1d4ed8" font-weight="700">1</text>
+    <text x="40" y="63" fill="#1d4ed8" font-weight="700">Arab Saudi - Riyadh</text>
+    <text x="231" y="63" text-anchor="middle" fill="#1d4ed8" font-weight="700">2 Tahun</text>
+    <text x="327" y="63" text-anchor="middle" fill="#1d4ed8" font-weight="700">2023 - 2025</text>
+    <text x="417" y="63" text-anchor="middle" fill="#1d4ed8" font-weight="900">✓</text>
+    <text x="512" y="63" fill="#1d4ed8" font-weight="700">Finish Kontrak 2 Tahun Baik (Ada Exit Final)</text>
+
+    <!-- Row 2 Data -->
+    <text x="16" y="93" text-anchor="middle" fill="#1d4ed8" font-weight="700">2</text>
+    <text x="40" y="93" fill="#1d4ed8" font-weight="700">Indonesia - Jakarta</text>
+    <text x="231" y="93" text-anchor="middle" fill="#1d4ed8" font-weight="700">4 Tahun</text>
+    <text x="327" y="93" text-anchor="middle" fill="#1d4ed8" font-weight="700">2019 - 2023</text>
+    <text x="417" y="93" text-anchor="middle" fill="#1d4ed8" font-weight="900">✓</text>
+    <text x="512" y="93" fill="#1d4ed8" font-weight="700">ART &amp; Babysitter Lokal</text>
+  </g>
+
+  <g font-family="Arial, sans-serif" font-size="11.5" fill="#0f172a">
+    <text x="38" y="718">Keterangan : <tspan fill="#1d4ed8" font-weight="700">Eks-Riyadh lancar komunikasi bahasa Arab harian &amp; masakan Timur Tengah.</tspan></text>
+
+    <!-- 15. PEMAHAMAN BAHASA -->
+    <text x="38" y="740" font-weight="700">15. PEMAHAMAN BAHASA</text>
+    <text x="56" y="759">A. Bahasa Arab     (Tidak Bisa / Sedikit / <tspan fill="#1d4ed8" font-weight="800" text-decoration="underline">lancar</tspan>) Ket. <tspan fill="#1d4ed8" font-weight="700">Lancar percakapan rumah tangga Saudi</tspan></text>
+    <text x="56" y="778">B. Bahasa Inggris  (Tidak Bisa / <tspan fill="#1d4ed8" font-weight="800" text-decoration="underline">Sedikit</tspan> / lancar) Ket. <tspan fill="#1d4ed8" font-weight="700">Dasar angka &amp; sapaan</tspan></text>
+
+    <!-- 16. KESANGGUPAN BEKERJA DILUAR NEGERI -->
+    <text x="38" y="800" font-weight="700">16. KESANGGUPAN BEKERJA DILUAR NEGERI</text>
+    <text x="56" y="819">a. Merawat Anak Bayi / Anak Kecil             ( <tspan fill="#1d4ed8" font-weight="900">✓</tspan> ) Ket. <tspan fill="#1d4ed8" font-weight="700">Sanggup &amp; berpengalaman</tspan></text>
+    <text x="56" y="838">b. Merawat Orang Tua Jompo                    ( <tspan fill="#1d4ed8" font-weight="900">✓</tspan> ) Ket. <tspan fill="#1d4ed8" font-weight="700">Sanggup merawat lansia</tspan></text>
+    <text x="56" y="857">c. Bersih-bersih Rumah / Cuci Baju/Menyertrika dll. ( <tspan fill="#1d4ed8" font-weight="900">✓</tspan> ) Ket. <tspan fill="#1d4ed8" font-weight="700">Sanggup pekerjaan rumah tangga</tspan></text>
+    <text x="56" y="876">d. Memasak masakan Arab :</text>
+
+    <!-- Masakan Arab Grid -->
+    <g font-size="11">
+      <text x="72" y="895" fill="#1d4ed8" font-weight="700">✓ - Ruz Kabsah</text>
+      <text x="72" y="913" fill="#1d4ed8" font-weight="700">✓ - Ruz Bukhari</text>
+      <text x="72" y="931" fill="#1d4ed8" font-weight="700">✓ - Ruz Briyani</text>
+
+      <text x="200" y="895" fill="#1d4ed8" font-weight="700">✓ - Ruz Makbus</text>
+      <text x="200" y="913" fill="#1d4ed8" font-weight="700">✓ - Saluna/Idam</text>
+      <text x="200" y="931" fill="#1d4ed8" font-weight="700">✓ - Macarona</text>
+
+      <text x="315" y="895" fill="#1d4ed8" font-weight="700">✓ - Makarona Basamil</text>
+      <text x="315" y="913">- Warag Enab</text>
+      <text x="315" y="931" fill="#1d4ed8" font-weight="700">✓ - Fatair</text>
+
+      <text x="475" y="895">- Pizza</text>
+      <text x="475" y="913" fill="#1d4ed8" font-weight="700">✓ - Sambosa</text>
+      <text x="475" y="931" fill="#1d4ed8" font-weight="700">✓ - Salatah</text>
+
+      <text x="580" y="895">- Cake</text>
+      <text x="580" y="913">- Salatah</text>
+      <text x="580" y="931">- Cream Caramel</text>
+
+      <text x="685" y="895" fill="#1d4ed8" font-weight="700">✓ - Juice</text>
+    </g>
+
+    <!-- 17. KELENGKAPAN DOKUMEN -->
+    <text x="38" y="954" font-weight="700">17. KELENGKAPAN DOKUMEN</text>
+    <text x="56" y="974">a. Passport Lama (copy / <tspan fill="#1d4ed8" font-weight="800" text-decoration="underline">asli</tspan>)</text>
+    <text x="264" y="974">Ijazah/STTB (copy / <tspan fill="#1d4ed8" font-weight="800" text-decoration="underline">asli</tspan>)</text>
+    <text x="492" y="974">Kartu BPJS (<tspan fill="#1d4ed8" font-weight="800" text-decoration="underline">copy</tspan> / asli)</text>
+
+    <text x="56" y="993">b. KTP (copy / <tspan fill="#1d4ed8" font-weight="800" text-decoration="underline">asli</tspan>)</text>
+    <text x="264" y="993">Akta Lahir (copy / <tspan fill="#1d4ed8" font-weight="800" text-decoration="underline">asli</tspan>)</text>
+    <text x="492" y="993">Surat Izin Orang Tua (copy / <tspan fill="#1d4ed8" font-weight="800" text-decoration="underline">asli</tspan>)</text>
+
+    <text x="56" y="1012">c. KK (copy / <tspan fill="#1d4ed8" font-weight="800" text-decoration="underline">asli</tspan>)</text>
+    <text x="264" y="1012">Surat Izin Suami (copy / <tspan fill="#1d4ed8" font-weight="800" text-decoration="underline">asli</tspan>)</text>
+    <text x="492" y="1012">Dokumen Lain: <tspan fill="#1d4ed8" font-weight="700">Buku Nikah (ASLI)</tspan></text>
+
+    <!-- Catatan & Terima/Tidak Diterima/ACC -->
+    <text x="44" y="1038" font-style="italic">Catatan :</text>
+    <text x="44" y="1055" fill="#1d4ed8" font-weight="700">Dokumen fisik asli lengkap diserahkan ke Data Entry PT Panca Banyu Ajisakti.</text>
+    <text x="44" y="1072" fill="#1d4ed8" font-weight="700">Siap langsung masuk Medical Wafid (GAMCA) minggu ini.</text>
+
+    <text x="618" y="1038">Terima            ( <tspan fill="#1d4ed8" font-weight="900">✓</tspan> )</text>
+    <text x="618" y="1054">Tidak diterima (   )</text>
+    <text x="618" y="1070">ACC:</text>
+    <text x="618" y="1094" fill="#1d4ed8" font-weight="700">( H. Bambang Wijaya )</text>
+
+    <!-- 3 Kolom Tanda Tangan -->
+    <text x="115" y="1115" text-anchor="middle">Yang Mengisi Data</text>
+    <text x="405" y="1115" text-anchor="middle">Mengetahui/Saksi</text>
+    <text x="685" y="1115" text-anchor="middle">Yang Menerima CPMI</text>
+
+    <text x="115" y="1162" text-anchor="middle" fill="#1d4ed8" font-weight="700">( Titi Sari Binti Kartono )</text>
+    <text x="115" y="1178" text-anchor="middle">calon PMI</text>
+
+    <text x="405" y="1162" text-anchor="middle" fill="#1d4ed8" font-weight="700">( Kang Dedi Kusnadi )</text>
+    <text x="405" y="1178" text-anchor="middle">Petugas Lapangan/Rekrut</text>
+
+    <text x="685" y="1162" text-anchor="middle" fill="#1d4ed8" font-weight="700">( Rina Kartika )</text>
+    <text x="685" y="1178" text-anchor="middle">Petugas PT.</text>
+  </g>
+</svg>

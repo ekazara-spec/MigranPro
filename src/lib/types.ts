@@ -386,31 +386,59 @@ export interface AuditLog {
 
 export type DocHandoverType = "NONE" | "ASLI" | "COPY";
 export type LangSkillLevel = "NONE" | "BAIK" | "CUKUP" | "BURUK";
+export type F4LangLevel = "TIDAK_BISA" | "SEDIKIT" | "LANCAR";
+
+export interface OverseasWorkExperienceRow {
+  no: number;
+  countryAndCity: string; // NEGARA DAN KOTA
+  duration: string; // LAMA
+  period: string; // PERIODE
+  returnStatus: "SELESAI" | "KASUS" | "NONE"; // STATUS PEMULANGAN (SELESAI / KASUS)
+  remarks: string; // KETERANGAN
+}
 
 export interface OfficialRegistrationForm {
   nickname: string; // Nama Panggilan
-  heightCm: number; // Tinggi Badan (Cm)
-  weightKg: number; // Berat Badan (Kg)
-  religion: string; // Agama
+  realAge?: number; // 4. Umur Asli (Tahun)
+  heightCm: number; // 10. Tinggi Badan (Cm)
+  weightKg: number; // 10. Berat Badan (Kg)
+  religion: string; // 5. Agama
   postalCode: string; // Kode Pos
   graduationYear: string; // Lulus Tahun
   ktpOrPassportNo: string; // No. KTP / Paspor
-  fatherName: string; // Nama Bapak
-  fatherAge: number; // Umur Bapak (Th)
-  motherName: string; // Nama Ibu
-  motherAge: number; // Umur Ibu (Th)
-  spouseOrGuardianName: string; // Nama Suami / Istri / Wali
-  spouseAge: number; // Umur Suami / Istri / Wali (Th)
-  spouseOccupation: string; // Pekerjaan Suami / Istri / Wali
-  boysCountAndAges: string; // Jumlah dan umur anak Laki-laki
-  girlsCountAndAges: string; // Jumlah dan umur anak Perempuan
-  childOrder: number; // Saya anak ke
-  siblingsCount: number; // dari ... Bersaudara
-  emergencyContactName: string; // Nama Keluarga yang mudah dihubungi
-  emergencyContactRelation: string; // Hubungan
-  emergencyContactPhone: string; // Nomor Telp / Hp keluarga yang mudah dihubungi
-  workExperience1: string; // Pengalaman Kerja 1
-  workExperience2: string; // Pengalaman Kerja 2
+  fatherName: string; // 12. Nama Bapak
+  fatherAge: number; // 12. Umur Bapak (Th)
+  motherName: string; // 12. Nama Ibu
+  motherAge: number; // 12. Umur Ibu (Th)
+  paternalGrandfatherName?: string; // 12. Kakek dari Bapak
+  spouseOrGuardianName: string; // 13. Suami
+  spouseAge: number; // 13. Umur Suami (Th)
+  spouseOccupation: string; // 13. Pekerjaan Suami
+  childrenTotalCount?: number; // 9. Jumlah Anak (... Orang)
+  firstChildAge?: string; // 9. Anak Pertama (... Tahun)
+  lastChildAge?: string; // 9. Anak Terakhir (... Tahun)
+  boysCountAndAges: string;
+  girlsCountAndAges: string;
+  childOrder: number; // 7. Anak ke
+  siblingsCount: number; // 7. dari ... bersaudara
+  emergencyContactName: string; // 14. Keluarga Lain: nama
+  emergencyContactRelation: string; // 14. hubungan
+  emergencyContactPhone: string; // 14. no tlp
+  workExperience1: string;
+  workExperience2: string;
+  overseasExperiences?: OverseasWorkExperienceRow[]; // 15. PENGALAMAN BEKERJA DILUAR NEGERI (Ex/Non)
+  overseasExperienceNotes?: string; // Keterangan di bawah tabel 15
+  arabicLevelF4?: F4LangLevel; // 15.A. Bahasa Arab (Tidak Bisa / Sedikit / lancar)
+  arabicNotesF4?: string; // Ket. Bahasa Arab
+  englishLevelF4?: F4LangLevel; // 15.B. Bahasa Inggris (Tidak Bisa / Sedikit / lancar)
+  englishNotesF4?: string; // Ket. Bahasa Inggris
+  willingCareBaby?: boolean; // 16.a. Merawat Anak Bayi / Anak Kecil
+  willingCareBabyNotes?: string; // Ket. 16.a
+  willingCareElderly?: boolean; // 16.b. Merawat Orang Tua Jompo
+  willingCareElderlyNotes?: string; // Ket. 16.b
+  willingHousekeeping?: boolean; // 16.c. Bersih-bersih Rumah / Cuci Baju/Menyertrika dll.
+  willingHousekeepingNotes?: string; // Ket. 16.c
+  arabicCookingSkills?: string[]; // 16.d. Memasak masakan Arab (Ruz Kabsah, Ruz Bukhari, dll.)
   desiredJobCleaner: boolean;
   desiredJobFactory: boolean;
   desiredJobNurse: boolean;
@@ -418,14 +446,16 @@ export interface OfficialRegistrationForm {
   desiredJobOther: boolean;
   desiredJobOtherText: string;
   docHandover: {
-    ktp: DocHandoverType;
-    kk: DocHandoverType;
-    akteKelahiran: DocHandoverType;
-    izinKeluarga: DocHandoverType;
-    sttbIjazah: DocHandoverType;
+    ktp: DocHandoverType; // 17.b. KTP (copy / asli)
+    kk: DocHandoverType; // 17.c. KK (copy / asli)
+    akteKelahiran: DocHandoverType; // 17.b. Akta Lahir (copy / asli)
+    izinKeluarga: DocHandoverType; // 17.b. Surat Izin Orang Tua (copy / asli)
+    izinSuami?: DocHandoverType; // 17.c. Surat Izin Suami (copy / asli)
+    sttbIjazah: DocHandoverType; // 17.a. Ijazah/STTB (copy / asli)
+    kartuBpjs?: DocHandoverType; // 17.a. Kartu BPJS (copy / asli)
     skck: DocHandoverType;
-    paspor: DocHandoverType;
-    otherDoc8Name: string;
+    paspor: DocHandoverType; // 17.a. Passport Lama (copy / asli)
+    otherDoc8Name: string; // 17.c. Dokumen Lain..........
     otherDoc8Status: DocHandoverType;
     otherDoc9Name: string;
     otherDoc9Status: DocHandoverType;
@@ -437,12 +467,14 @@ export interface OfficialRegistrationForm {
     otherLanguageName: string;
     otherLanguageLevel: LangSkillLevel;
   };
+  acceptanceDecision?: "TERIMA" | "TIDAK_DITERIMA" | "PENDING"; // Terima ( ) / Tidak diterima ( )
+  accByName?: string; // ACC: (...................................)
   candidateNotes: string; // Catatan berkas
-  sponsorOfficerName: string; // Nama Petugas Lapangan / Petugas Rekrut / Sponsor
+  sponsorOfficerName: string; // 2. Nama Sponsor & Petugas Lapangan/Rekrut
   sponsorOfficerPhone: string; // Nomor Telp / Hp Sponsor
   sponsorNotes: string; // Catatan Sponsor
-  receivedByPtOfficer: string; // Yang menerima CPMI (Petugas PT)
-  formSignedDate: string; // Tanggal tanda tangan formulir
+  receivedByPtOfficer: string; // Yang menerima CPMI (Petugas PT.)
+  formSignedDate: string; // Tgl ......... / ........ / .................
 }
 
 export interface SponsorFormSubmission {

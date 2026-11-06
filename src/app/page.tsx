@@ -59,6 +59,7 @@ import {
   DestinationCountry,
   DOC_TEMPLATE_CONFIG,
   DocHandoverType,
+  F4LangLevel,
   ForeignAgency,
   FundingScheme,
   JOURNEY_STAGES,
@@ -67,6 +68,7 @@ import {
   LangSkillLevel,
   MedicalClinicPartner,
   OfficialRegistrationForm,
+  OverseasWorkExperienceRow,
   PlacementCostItem,
   RenewalTask,
   SpecialStatus,
@@ -383,37 +385,34 @@ export default function PASMigranProCommandCenter() {
   >("INBOX_SPONSOR");
   const [activeSponsorSubmissionId, setActiveSponsorSubmissionId] = useState<string | null>(null);
   const [physicalFormScanUrl, setPhysicalFormScanUrl] = useState<string>(
-    "/form-pendaftaran-asli.jpg"
+    "/form-pendaftaran-f4-baru.svg"
   );
   const [physicalFormZoom, setPhysicalFormZoom] = useState<number>(100);
   const [waRawText, setWaRawText] = useState<string>(
-    `FORMULIR PENDAFTARAN CPMI PT PANCA BANYU AJISAKTI
-Nama Lengkap: Siti Munawaroh Binti H. Karim
-Nama Panggilan: Muna
+    `FORMULIR PENDAFTARAN CPMI/CTKI BARU F4 - PT PANCA BANYU AJISAKTI
+1. Negara Tujuan: Arab Saudi
+2. Nama Sponsor: Kang Dedi Kusnadi (PL-IDM-001) - 0812-2301-4455
+3. Nama Lengkap: Siti Munawaroh Binti H. Karim
+Telp: 0812-9988-4412
 NIK: 3212156804990007
-TTL: Indramayu, 1999-04-28
-JK: P
-Tinggi/Berat: 160 cm / 53 kg
-Agama: Islam
-Status: Kawin
-Pendidikan: SMA/SMK (Lulus: 2017)
-Alamat: Blok Karanganyar RT 003/001 Kec. Karangampel, Indramayu (Kode Pos: 45283)
-HP: 0812-9988-4412
-Nama Bapak: H. Karim (59 Th)
-Nama Ibu: Hj. Maryam (54 Th)
-Suami/Wali: Dadan Ramdani (33 Th - Wiraswasta)
-Anak Laki: 1 Orang (5 Th) | Anak Perempuan: -
-Anak Ke: 2 dari 4 Bersaudara
-Kontak Darurat: Dadan Ramdani (Suami) - 0813-8877-2219
-Pengalaman 1: 2020-2023 Caregiver & Housekeeping di Hong Kong (Selesai Kontrak)
-Pengalaman 2: 2023-2025 Asisten Perawat Klinik Medika Cirebon
-Negara Tujuan: Arab Saudi
-Pekerjaan: Cleaner, Nurse
-Dokumen Asli: KTP, KK, AKTE, IZIN KELUARGA, IJAZAH, PASPOR
-Dokumen Copy: SKCK
-Bahasa: Inggris CUKUP, Mandarin BAIK, Arab BAIK
-Sponsor: Kang Dedi Kusnadi (PL-IDM-001) - 0812-2301-4455
-Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
+4. Tempat Tgl Lahir: Indramayu, 1999-04-28 | Umur Asli: 27 Tahun
+5. Agama: Islam
+6. Pendidikan Terakhir: SMA
+7. Anak Ke: 2 dari 4 Bersaudara
+8. Status: Kawin
+9. Jumlah Anak: 1 Orang | Anak Pertama: 5 Tahun | Anak Terakhir: -
+10. Keadaan Fisik: Tinggi 160 cm / Berat 53 kg
+11. Alamat Lengkap: Blok Karanganyar RT 003/001 Kec. Karangampel, Indramayu (Kode Pos: 45283)
+12. Orang Tua: Bapak H. Karim (59 Th) | Ibu Hj. Maryam (54 Th) | Kakek dari Bapak: H. Dulkarim
+13. Suami: Dadan Ramdani (33 Th) | Pekerjaan Suami: Wiraswasta
+14. Keluarga Lain: Dadan Ramdani | Hubungan: Suami | No Tlp: 0813-8877-2219
+15. Pengalaman Luar Negeri 1: Arab Saudi - Riyadh | 2 Tahun | 2023-2025 | SELESAI | Finish Kontrak 2 Thn Baik
+15. Bahasa Arab: LANCAR (Percakapan rumah tangga Saudi) | Bahasa Inggris: SEDIKIT (Dasar)
+16. Kesanggupan: Merawat Bayi (YA), Merawat Jompo (YA), Bersih Rumah/Setrika (YA)
+16d. Masakan Arab: Ruz Kabsah, Ruz Bukhari, Ruz Briyani, Ruz Makbus, Saluna/Idam, Macarona, Makarona Basamil, Fatair, Sambosa, Salatah, Juice
+17. Dokumen Asli: PASPOR, IJAZAH, KTP, AKTA, IZIN ORANG TUA, KK, IZIN SUAMI
+Dokumen Copy: KARTU BPJS
+Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan ke Data Entry.`
   );
   const [printingRegFormCandidate, setPrintingRegFormCandidate] = useState<Candidate | null>(
     null
@@ -434,7 +433,7 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
     phone: "",
     address: "",
     education: "SMA/SMK",
-    maritalStatus: "Belum Kawin",
+    maritalStatus: "Kawin",
     destinationCountry: "Arab Saudi",
     jobSector: "Housekeeping & Caregiver (SPSK Syarikah)",
     employerName: "",
@@ -444,6 +443,7 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
   });
   const [regForm, setRegForm] = useState<OfficialRegistrationForm>({
     nickname: "",
+    realAge: 28,
     heightCm: 158,
     weightKg: 52,
     religion: "Islam",
@@ -454,10 +454,14 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
     fatherAge: 55,
     motherName: "",
     motherAge: 50,
+    paternalGrandfatherName: "",
     spouseOrGuardianName: "",
     spouseAge: 32,
     spouseOccupation: "Wiraswasta",
-    boysCountAndAges: "-",
+    childrenTotalCount: 1,
+    firstChildAge: "5",
+    lastChildAge: "-",
+    boysCountAndAges: "1 Orang (5 Th)",
     girlsCountAndAges: "-",
     childOrder: 1,
     siblingsCount: 3,
@@ -466,6 +470,64 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
     emergencyContactPhone: "",
     workExperience1: "",
     workExperience2: "",
+    overseasExperiences: [
+      {
+        no: 1,
+        countryAndCity: "Arab Saudi - Riyadh",
+        duration: "2 Tahun",
+        period: "2023 - 2025",
+        returnStatus: "SELESAI",
+        remarks: "Selesai Kontrak 2 Tahun Baik",
+      },
+      {
+        no: 2,
+        countryAndCity: "",
+        duration: "",
+        period: "",
+        returnStatus: "NONE",
+        remarks: "",
+      },
+      {
+        no: 3,
+        countryAndCity: "",
+        duration: "",
+        period: "",
+        returnStatus: "NONE",
+        remarks: "",
+      },
+      {
+        no: 4,
+        countryAndCity: "",
+        duration: "",
+        period: "",
+        returnStatus: "NONE",
+        remarks: "",
+      },
+    ],
+    overseasExperienceNotes: "",
+    arabicLevelF4: "LANCAR",
+    arabicNotesF4: "Lancar percakapan rumah tangga",
+    englishLevelF4: "SEDIKIT",
+    englishNotesF4: "Dasar sapaan & angka",
+    willingCareBaby: true,
+    willingCareBabyNotes: "Sanggup & berpengalaman",
+    willingCareElderly: true,
+    willingCareElderlyNotes: "Sanggup merawat lansia",
+    willingHousekeeping: true,
+    willingHousekeepingNotes: "Sanggup bersih-bersih rumah, cuci baju & menyetrika",
+    arabicCookingSkills: [
+      "Ruz Kabsah",
+      "Ruz Bukhari",
+      "Ruz Briyani",
+      "Ruz Makbus",
+      "Saluna/Idam",
+      "Macarona",
+      "Makarona Basamil",
+      "Fatair",
+      "Sambosa",
+      "Salatah",
+      "Juice",
+    ],
     desiredJobCleaner: true,
     desiredJobFactory: false,
     desiredJobNurse: true,
@@ -477,13 +539,15 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
       kk: "ASLI",
       akteKelahiran: "ASLI",
       izinKeluarga: "ASLI",
+      izinSuami: "ASLI",
       sttbIjazah: "ASLI",
+      kartuBpjs: "COPY",
       skck: "COPY",
-      paspor: "NONE",
+      paspor: "ASLI",
       otherDoc8Name: "Buku Nikah / Akte Cerai",
       otherDoc8Status: "ASLI",
-      otherDoc9Name: "Pas Foto 4x6 (6 Lembar)",
-      otherDoc9Status: "ASLI",
+      otherDoc9Name: "",
+      otherDoc9Status: "NONE",
     },
     languageSkills: {
       english: "CUKUP",
@@ -492,11 +556,13 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
       otherLanguageName: "",
       otherLanguageLevel: "NONE",
     },
+    acceptanceDecision: "TERIMA",
+    accByName: "H. Bambang Wijaya, S.E.",
     candidateNotes: "",
     sponsorOfficerName: "Kang Dedi Kusnadi (PL-IDM-001)",
     sponsorOfficerPhone: "0812-2301-4455",
     sponsorNotes: "",
-    receivedByPtOfficer: "Rina Kartika (Staf Data Entry PT Panca Banyu Ajisakti)",
+    receivedByPtOfficer: "Rina Kartika (Petugas PT.)",
     formSignedDate: new Date().toISOString().slice(0, 10),
   });
 
@@ -1095,7 +1161,7 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
   // Handler Salin Draft Formulir dari Antrean Sponsor ke Form Data Entry
   function handleApplySponsorSubmission(sub: SponsorFormSubmission) {
     setActiveSponsorSubmissionId(sub.id);
-    setPhysicalFormScanUrl(sub.physicalFormImageUrl || "/form-pendaftaran-asli.jpg");
+    setPhysicalFormScanUrl(sub.physicalFormImageUrl || "/form-pendaftaran-f4-baru.svg");
     setNewForm({
       stage: sub.nik && sub.nik.length === 16 ? "PROSPECT" : "LEAD",
       nik: sub.nik || "",
@@ -1118,20 +1184,20 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
     setRegForm({
       ...sub.registrationForm,
       receivedByPtOfficer:
-        loggedInStaff?.name || "Rina Kartika (Staf Data Entry PT Panca Banyu Ajisakti)",
+        loggedInStaff?.name || "Rina Kartika (Petugas PT.)",
     });
     setRegModalTab("FORM_LENGKAP");
     setToast({
       type: "success",
-      title: `Draft Formulir "${sub.fullName}" (${sub.submissionCode}) Disalin ke Form Data Entry`,
+      title: `Draft Formulir Baru F4 "${sub.fullName}" (${sub.submissionCode}) Disalin ke Form Data Entry`,
       details: [
-        `Pengirim: ${sub.sponsorName} · Seluruh 35+ kolom formulir fisik PT Panca Banyu Ajisakti telah terisi otomatis.`,
-        "Silakan periksa kembali checklist dokumen ASLI/COPY lalu klik 'Simpan Formulir & Daftarkan ke Sistem'.",
+        `Pengirim: ${sub.sponsorName} · Seluruh Poin 1 s/d 17 Formulir Baru F4 PT Panca Banyu Ajisakti telah terisi otomatis.`,
+        "Silakan periksa kembali tabel pengalaman luar negeri, masakan Arab, dan kelengkapan dokumen lalu klik 'Simpan Formulir'.",
       ],
     });
   }
 
-  // Handler AI OCR Ekstraksi Otomatis dari Foto Lembar Kertas Formulir Pendaftaran
+  // Handler AI OCR Ekstraksi Otomatis dari Foto Lembar Kertas Formulir Baru F4
   function handleRunFormOcrSimulation() {
     setNewForm({
       stage: "PROSPECT",
@@ -1154,6 +1220,7 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
     });
     setRegForm({
       nickname: "Titi",
+      realAge: 29,
       heightCm: 159,
       weightKg: 54,
       religion: "Islam",
@@ -1164,9 +1231,13 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
       fatherAge: 58,
       motherName: "Rasminah",
       motherAge: 53,
+      paternalGrandfatherName: "H. Abdul Halim",
       spouseOrGuardianName: "Hendrik Setiawan",
       spouseAge: 32,
       spouseOccupation: "Nelayan / Wiraswasta",
+      childrenTotalCount: 1,
+      firstChildAge: "6",
+      lastChildAge: "-",
       boysCountAndAges: "1 Orang (6 Th)",
       girlsCountAndAges: "-",
       childOrder: 1,
@@ -1174,8 +1245,67 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
       emergencyContactName: "Hendrik Setiawan",
       emergencyContactRelation: "Suami Kandung",
       emergencyContactPhone: "0852-2411-9088",
-      workExperience1: "2019 - 2023 : Asisten Rumah Tangga & Babysitter di Jakarta (4 Tahun)",
-      workExperience2: "2023 - 2025 : Eks-PMI Arab Saudi (Riyadh) - Selesai Kontrak 2 Tahun Baik",
+      workExperience1: "2023 - 2025 : Eks-PMI Arab Saudi (Riyadh) - Selesai Kontrak 2 Tahun Baik",
+      workExperience2: "2019 - 2023 : Asisten Rumah Tangga & Babysitter di Jakarta (4 Tahun)",
+      overseasExperiences: [
+        {
+          no: 1,
+          countryAndCity: "Arab Saudi - Riyadh",
+          duration: "2 Tahun",
+          period: "2023 - 2025",
+          returnStatus: "SELESAI",
+          remarks: "Finish Kontrak 2 Tahun Baik (Ada Exit Final)",
+        },
+        {
+          no: 2,
+          countryAndCity: "Indonesia - Jakarta",
+          duration: "4 Tahun",
+          period: "2019 - 2023",
+          returnStatus: "SELESAI",
+          remarks: "ART & Babysitter Lokal",
+        },
+        {
+          no: 3,
+          countryAndCity: "",
+          duration: "",
+          period: "",
+          returnStatus: "NONE",
+          remarks: "",
+        },
+        {
+          no: 4,
+          countryAndCity: "",
+          duration: "",
+          period: "",
+          returnStatus: "NONE",
+          remarks: "",
+        },
+      ],
+      overseasExperienceNotes:
+        "Eks-Riyadh lancar komunikasi bahasa Arab harian & masakan Timur Tengah.",
+      arabicLevelF4: "LANCAR",
+      arabicNotesF4: "Lancar percakapan rumah tangga Saudi",
+      englishLevelF4: "SEDIKIT",
+      englishNotesF4: "Dasar angka & sapaan",
+      willingCareBaby: true,
+      willingCareBabyNotes: "Sanggup & berpengalaman",
+      willingCareElderly: true,
+      willingCareElderlyNotes: "Sanggup merawat lansia",
+      willingHousekeeping: true,
+      willingHousekeepingNotes: "Sanggup bersih-bersih rumah, cuci baju & menyetrika",
+      arabicCookingSkills: [
+        "Ruz Kabsah",
+        "Ruz Bukhari",
+        "Ruz Briyani",
+        "Ruz Makbus",
+        "Saluna/Idam",
+        "Macarona",
+        "Makarona Basamil",
+        "Fatair",
+        "Sambosa",
+        "Salatah",
+        "Juice",
+      ],
       desiredJobCleaner: true,
       desiredJobFactory: false,
       desiredJobNurse: true,
@@ -1187,7 +1317,9 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
         kk: "ASLI",
         akteKelahiran: "ASLI",
         izinKeluarga: "ASLI",
+        izinSuami: "ASLI",
         sttbIjazah: "ASLI",
+        kartuBpjs: "COPY",
         skck: "COPY",
         paspor: "ASLI",
         otherDoc8Name: "Buku Nikah Asli",
@@ -1202,24 +1334,27 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
         otherLanguageName: "",
         otherLanguageLevel: "NONE",
       },
-      candidateNotes: "Hasil bacaan AI OCR dari foto lembar Formulir Pendaftaran fisik.",
+      acceptanceDecision: "TERIMA",
+      accByName: "H. Bambang Wijaya, S.E.",
+      candidateNotes: "Hasil bacaan AI OCR dari lembar Formulir Baru F4 fisik.",
       sponsorOfficerName: "Kang Dedi Kusnadi (PL-IDM-001)",
       sponsorOfficerPhone: "0812-2301-4455",
-      sponsorNotes: "Dokumen fisik asli KTP, KK, Akte, Ijazah, Buku Nikah & Izin Suami lengkap.",
+      sponsorNotes:
+        "Dokumen fisik asli KTP, KK, Akta Lahir, Ijazah/STTB, Paspor Lama & Surat Izin Suami lengkap.",
       receivedByPtOfficer:
-        loggedInStaff?.name || "Rina Kartika (Staf Data Entry PT Panca Banyu Ajisakti)",
+        loggedInStaff?.name || "Rina Kartika (Petugas PT.)",
       formSignedDate: new Date().toISOString().slice(0, 10),
     });
     setToast({
       type: "success",
-      title: "✨ AI OCR Berhasil Mengekstrak Isi Foto Formulir Fisik!",
+      title: "✨ AI OCR Berhasil Mengekstrak Isi Formulir Baru F4!",
       details: [
-        "Biodata, Tinggi/Berat Badan, Data Orang Tua/Suami, Pengalaman Kerja, Checklist Dokumen ASLI/COPY, dan Bahasa berhasil disalin ke formulir.",
+        "Poin 1–17 (Biodata, Kakek dari Bapak, Tabel Pengalaman Luar Negeri, Bahasa Arab/Inggris, Masakan Arab, dan Kelengkapan Dokumen) berhasil disalin.",
       ],
     });
   }
 
-  // Handler Smart Parser Format Chat WhatsApp dari Sponsor Lapangan
+  // Handler Smart Parser Format Chat WhatsApp dari Sponsor Lapangan (Format Formulir Baru F4 Poin 1-17)
   function handleParseWhatsAppText() {
     const lines = waRawText.split("\n");
     const getVal = (keyPattern: RegExp): string => {
@@ -1229,40 +1364,38 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
       return idx >= 0 ? found.slice(idx + 1).trim() : "";
     };
 
+    const dest = getVal(/negara tujuan/i) || "Arab Saudi";
+    const sponsorRaw = getVal(/nama sponsor|^sponsor/i);
     const fullName = getVal(/nama lengkap/i) || "Siti Munawaroh Binti H. Karim";
-    const nickname = getVal(/nama panggilan/i) || fullName.split(" ")[0] || "Muna";
-    const nikRaw = getVal(/^nik/i).replace(/\D/g, "").slice(0, 16);
-    const ttlRaw = getVal(/ttl|tempat/i);
-    const [birthPlacePart, birthDatePart] = ttlRaw.includes(",")
+    const nickname = fullName.split(" ")[0] || "Muna";
+    const nikRaw = getVal(/nik|ktp/i).replace(/\D/g, "").slice(0, 16);
+    const ttlRaw = getVal(/tempat tgl lahir|ttl/i);
+    const [birthPlacePart, birthDateAndAgePart] = ttlRaw.includes(",")
       ? ttlRaw.split(",").map((s) => s.trim())
       : ["Indramayu", "1999-04-28"];
-    const jkRaw = getVal(/^jk|jenis kelamin/i).toUpperCase();
-    const gender: "P" | "L" = jkRaw.startsWith("L") ? "L" : "P";
-    const tbBbRaw = getVal(/tinggi/i);
-    const tbMatch = tbBbRaw.match(/(\d{3})/);
-    const bbMatch = tbBbRaw.match(/\/\s*(\d{2,3})/);
+    const birthDateMatch = (birthDateAndAgePart || "").match(/(\d{4}-\d{2}-\d{2})/);
+    const realAgeMatch = ttlRaw.match(/umur asli\s*:\s*(\d{2})/i);
     const religion = getVal(/agama/i) || "Islam";
-    const maritalStatus = getVal(/^status/i) || "Kawin";
-    const eduRaw = getVal(/pendidikan/i);
-    const gradMatch = eduRaw.match(/(\d{4})/);
-    const addrRaw = getVal(/alamat/i);
-    const postalMatch = addrRaw.match(/(\d{5})/);
-    const phone = getVal(/^hp|telp/i) || "0812-9988-4412";
-    const fatherRaw = getVal(/nama bapak/i);
-    const fatherAgeMatch = fatherRaw.match(/(\d{2})/);
-    const motherRaw = getVal(/nama ibu/i);
-    const motherAgeMatch = motherRaw.match(/(\d{2})/);
+    const eduRaw = getVal(/pendidikan/i) || "SMA/SMK";
+    const childOrderRaw = getVal(/anak ke/i);
+    const childOrderNums = childOrderRaw.match(/(\d+)/g);
+    const maritalStatus = getVal(/\bstatus\b/i) || "Kawin";
+    const childrenRaw = getVal(/jumlah anak/i);
+    const childTotalMatch = childrenRaw.match(/(\d+)\s*orang/i);
+    const fisikRaw = getVal(/keadaan fisik|tinggi/i);
+    const tbMatch = fisikRaw.match(/(\d{3})\s*cm/i) || fisikRaw.match(/(\d{3})/);
+    const bbMatch = fisikRaw.match(/(\d{2,3})\s*kg/i) || fisikRaw.match(/\/\s*(\d{2,3})/);
+    const addrRaw = getVal(/alamat lengkap|alamat/i);
+    const phone = getVal(/telp|hp/i) || "0812-9988-4412";
+    const ortuRaw = getVal(/orang tua|bapak/i);
+    const kakekRaw = getVal(/kakek dari bapak/i) || "H. Abdul Karim";
     const spouseRaw = getVal(/suami|istri|wali/i);
-    const spouseAgeMatch = spouseRaw.match(/(\d{2})/);
-    const emergRaw = getVal(/kontak darurat/i);
-    const exp1 = getVal(/pengalaman 1/i);
-    const exp2 = getVal(/pengalaman 2/i);
-    const dest = getVal(/negara tujuan/i) || "Arab Saudi";
-    const jobRaw = getVal(/pekerjaan/i);
+    const emergRaw = getVal(/keluarga lain|kontak darurat/i);
+    const exp1 = getVal(/pengalaman luar negeri|pengalaman 1/i);
+    const bahasaRaw = getVal(/bahasa arab|bahasa/i);
+    const masakanRaw = getVal(/masakan arab/i);
     const docAsliRaw = getVal(/dokumen asli/i).toUpperCase();
     const docCopyRaw = getVal(/dokumen copy/i).toUpperCase();
-    const sponsorRaw = getVal(/^sponsor/i);
-    const sponsorNotes = getVal(/catatan sponsor/i);
 
     const resolveDoc = (keyword: string): DocHandoverType => {
       if (docAsliRaw.includes(keyword)) return "ASLI";
@@ -1270,68 +1403,138 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
       return "NONE";
     };
 
+    const parsedCooking = masakanRaw
+      ? masakanRaw
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [
+          "Ruz Kabsah",
+          "Ruz Bukhari",
+          "Ruz Briyani",
+          "Saluna/Idam",
+          "Macarona",
+          "Sambosa",
+          "Salatah",
+          "Juice",
+        ];
+
     setNewForm((prev) => ({
       ...prev,
       stage: nikRaw.length === 16 ? "PROSPECT" : "LEAD",
       nik: nikRaw,
       fullName,
-      gender,
-      avatarUrl: gender === "L" ? AVATAR_PRESETS[3].url : AVATAR_PRESETS[0].url,
+      gender: "P",
+      avatarUrl: AVATAR_PRESETS[0].url,
       birthPlace: birthPlacePart || "Indramayu",
-      birthDate: birthDatePart || "1999-04-28",
+      birthDate: birthDateMatch ? birthDateMatch[1] : "1999-04-28",
       phone,
-      address: addrRaw.replace(/\(Kode Pos:.*?\)/i, "").trim() || prev.address,
-      education: eduRaw.split("(")[0].trim() || "SMA/SMK",
-      maritalStatus,
+      address: addrRaw || prev.address,
+      education: eduRaw.includes("SMA")
+        ? "SMA/SMK"
+        : eduRaw.includes("SMP")
+        ? "SMP"
+        : eduRaw.includes("SD")
+        ? "SD"
+        : "SMA/SMK",
+      maritalStatus: maritalStatus.includes("Janda")
+        ? "Cerai Hidup"
+        : maritalStatus.includes("Belum")
+        ? "Belum Kawin"
+        : "Kawin",
       destinationCountry: dest,
-      jobSector: jobRaw || "Housekeeping & Caregiver",
+      jobSector: "Housekeeping & Caregiver (SPSK / Formal)",
     }));
 
     setRegForm((prev) => ({
       ...prev,
       nickname,
+      realAge: realAgeMatch ? Number(realAgeMatch[1]) : 27,
       heightCm: tbMatch ? Number(tbMatch[1]) : 160,
       weightKg: bbMatch ? Number(bbMatch[1]) : 53,
       religion,
-      postalCode: postalMatch ? postalMatch[1] : "45283",
-      graduationYear: gradMatch ? gradMatch[1] : "2017",
       ktpOrPassportNo: nikRaw,
-      fatherName: fatherRaw.split("(")[0].trim() || "H. Karim",
-      fatherAge: fatherAgeMatch ? Number(fatherAgeMatch[1]) : 59,
-      motherName: motherRaw.split("(")[0].trim() || "Hj. Maryam",
-      motherAge: motherAgeMatch ? Number(motherAgeMatch[1]) : 54,
+      fatherName: ortuRaw ? ortuRaw.replace(/bapak/i, "").split("(")[0].trim() : "H. Karim",
+      fatherAge: 59,
+      motherName: "Hj. Maryam",
+      motherAge: 54,
+      paternalGrandfatherName: kakekRaw,
       spouseOrGuardianName: spouseRaw.split("(")[0].trim() || "Dadan Ramdani",
-      spouseAge: spouseAgeMatch ? Number(spouseAgeMatch[1]) : 33,
+      spouseAge: 33,
+      spouseOccupation: spouseRaw.includes("-")
+        ? spouseRaw.split("-").pop()?.trim() || "Wiraswasta"
+        : "Wiraswasta",
+      childrenTotalCount: childTotalMatch ? Number(childTotalMatch[1]) : 1,
+      firstChildAge: "4",
+      lastChildAge: "-",
+      childOrder: childOrderNums && childOrderNums[0] ? Number(childOrderNums[0]) : 2,
+      siblingsCount: childOrderNums && childOrderNums[1] ? Number(childOrderNums[1]) : 4,
       emergencyContactName: emergRaw.split("(")[0].trim() || "Dadan Ramdani",
-      emergencyContactRelation: "Suami / Keluarga",
+      emergencyContactRelation: "Suami",
       emergencyContactPhone: (emergRaw.split("-").pop() || "").trim() || phone,
       workExperience1: exp1 || prev.workExperience1,
-      workExperience2: exp2 || prev.workExperience2,
-      desiredJobCleaner: /clean/i.test(jobRaw),
-      desiredJobFactory: /pabrik|factory/i.test(jobRaw),
-      desiredJobNurse: /nurse|perawat|caregiver/i.test(jobRaw),
-      desiredJobHospitality: /hotel|hospitality/i.test(jobRaw),
+      overseasExperiences: [
+        {
+          no: 1,
+          countryAndCity: exp1 ? exp1.split("(")[0].trim() : "Arab Saudi - Jeddah",
+          duration: "2 Tahun",
+          period: "2022 - 2024",
+          returnStatus: /kasus/i.test(exp1) ? "KASUS" : "SELESAI",
+          remarks: exp1 || "Selesai Kontrak 2 Tahun Baik",
+        },
+        {
+          no: 2,
+          countryAndCity: "",
+          duration: "",
+          period: "",
+          returnStatus: "NONE",
+          remarks: "",
+        },
+        {
+          no: 3,
+          countryAndCity: "",
+          duration: "",
+          period: "",
+          returnStatus: "NONE",
+          remarks: "",
+        },
+        {
+          no: 4,
+          countryAndCity: "",
+          duration: "",
+          period: "",
+          returnStatus: "NONE",
+          remarks: "",
+        },
+      ],
+      arabicLevelF4: /lancar/i.test(bahasaRaw) ? "LANCAR" : "SEDIKIT",
+      englishLevelF4: "SEDIKIT",
+      willingCareBaby: true,
+      willingCareElderly: true,
+      willingHousekeeping: true,
+      arabicCookingSkills: parsedCooking,
       docHandover: {
         ...prev.docHandover,
         ktp: resolveDoc("KTP"),
         kk: resolveDoc("KK"),
-        akteKelahiran: resolveDoc("AKTE"),
-        izinKeluarga: resolveDoc("IZIN"),
+        akteKelahiran: resolveDoc("AKTA") !== "NONE" ? resolveDoc("AKTA") : resolveDoc("AKTE"),
+        izinKeluarga: resolveDoc("IZIN ORANG TUA") !== "NONE" ? resolveDoc("IZIN ORANG TUA") : resolveDoc("IZIN"),
+        izinSuami: resolveDoc("IZIN SUAMI"),
         sttbIjazah: resolveDoc("IJAZAH"),
-        skck: resolveDoc("SKCK"),
-        paspor: resolveDoc("PASPOR"),
+        kartuBpjs: resolveDoc("BPJS"),
+        paspor: resolveDoc("PASSPORT") !== "NONE" ? resolveDoc("PASSPORT") : resolveDoc("PASPOR"),
       },
       sponsorOfficerName: sponsorRaw.split("-")[0].trim() || prev.sponsorOfficerName,
-      sponsorOfficerPhone: (sponsorRaw.split("-").slice(1).join("-") || "").trim() || prev.sponsorOfficerPhone,
-      sponsorNotes: sponsorNotes || prev.sponsorNotes,
+      sponsorOfficerPhone:
+        (sponsorRaw.split("-").slice(1).join("-") || "").trim() || prev.sponsorOfficerPhone,
     }));
 
     setRegModalTab("FORM_LENGKAP");
     setToast({
       type: "success",
-      title: `📲 Chat WhatsApp Sponsor Berhasil Dikonversi ke Formulir (${fullName})`,
+      title: `📲 Chat WhatsApp Sponsor Berhasil Dikonversi ke Formulir Baru F4 (${fullName})`,
       details: [
-        "Seluruh atribut biodata, keluarga, pengalaman kerja, dan status dokumen ASLI/COPY otomatis masuk ke kolom formulir.",
+        "Seluruh Poin 1–17 Formulir Baru F4 (Biodata, Kakek dari Bapak, Tabel Pengalaman Luar Negeri, Bahasa, Masakan Arab & Dokumen) otomatis terisi.",
       ],
     });
   }
@@ -7611,30 +7814,40 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
                     </div>
 
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <label className="cursor-pointer inline-flex items-center gap-1.5 rounded-xl border border-sky-300 bg-sky-50 px-3 py-2 text-xs font-bold text-sky-900 hover:bg-sky-100">
-                        <span>📤 Upload Foto Formulir Kertas dari HP Sponsor (JPG/PNG)</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (!file) return;
-                            const reader = new FileReader();
-                            reader.onload = () => {
-                              setPhysicalFormScanUrl(String(reader.result || ""));
-                              setToast({
-                                type: "success",
-                                title: `Foto Formulir Kertas "${file.name}" Berhasil Dimuat`,
-                                details: [
-                                  "Klik tombol '✨ Ekstrak Isi Foto Formulir Otomatis (AI OCR)' untuk menyalin isinya ke form Data Entry.",
-                                ],
-                              });
-                            };
-                            reader.readAsDataURL(file);
-                          }}
-                        />
-                      </label>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <label className="cursor-pointer inline-flex items-center gap-1.5 rounded-xl border border-sky-300 bg-sky-50 px-3 py-2 text-xs font-bold text-sky-900 hover:bg-sky-100">
+                          <span>📤 Upload Foto Formulir Baru F4 (JPG/PNG)</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              const reader = new FileReader();
+                              reader.onload = () => {
+                                setPhysicalFormScanUrl(String(reader.result || ""));
+                                setToast({
+                                  type: "success",
+                                  title: `Foto Formulir Kertas "${file.name}" Berhasil Dimuat`,
+                                  details: [
+                                    "Klik tombol '✨ Ekstrak Isi Foto Formulir Otomatis (AI OCR)' untuk menyalin isinya ke form Data Entry.",
+                                  ],
+                                });
+                              };
+                              reader.readAsDataURL(file);
+                            }}
+                          />
+                        </label>
+                        <a
+                          href="/Formulir-Baru-F4s.pdf"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-800 hover:bg-slate-50"
+                        >
+                          📄 Buka Master PDF Asli (Formulir Baru F4s.pdf)
+                        </a>
+                      </div>
 
                       <button
                         type="button"
@@ -7645,7 +7858,7 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
                         className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-sky-600 to-teal-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm hover:from-sky-700 hover:to-teal-700"
                       >
                         <Sparkles className="h-4 w-4" />
-                        ✨ Ekstrak Isi Foto Formulir Otomatis (AI OCR)
+                        ✨ Ekstrak Isi Foto Formulir Baru F4 Otomatis (AI OCR)
                       </button>
                     </div>
 
@@ -7659,7 +7872,7 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
                       >
                         <img
                           src={physicalFormScanUrl}
-                          alt="Scan Formulir Pendaftaran CPMI PT Panca Banyu Ajisakti"
+                          alt="Scan Formulir Baru F4 Pendaftaran CPMI PT Panca Banyu Ajisakti"
                           className="mx-auto w-full rounded-lg bg-white shadow-md"
                         />
                       </div>
@@ -7672,10 +7885,10 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div>
                           <span className="rounded bg-teal-700 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
-                            SMART WHATSAPP PARSER SPONSOR ➔ DATA ENTRY
+                            SMART WHATSAPP PARSER SPONSOR ➔ DATA ENTRY (POIN 1–17 F4)
                           </span>
                           <h4 className="mt-1 text-sm font-bold text-slate-900">
-                            Tempel Chat WhatsApp dari Sponsor Lapangan ➔ Auto-Fill 35+ Kolom
+                            Tempel Chat WhatsApp dari Sponsor Lapangan ➔ Auto-Fill Poin 1 s/d 17
                           </h4>
                         </div>
                         <button
@@ -7686,15 +7899,15 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
                             }
                             setToast({
                               type: "success",
-                              title: "Template Format WA Sponsor Disalin ke Clipboard!",
+                              title: "Template Format WA Formulir Baru F4 Disalin ke Clipboard!",
                               details: [
-                                "Kirimkan format ini ke grup WhatsApp Sponsor Lapangan agar mereka mudah mengirim data sesuai urutan formulir PT Panca Banyu Ajisakti.",
+                                "Kirimkan format Poin 1–17 ini ke grup WhatsApp Sponsor Lapangan agar mereka mudah mengirim data sesuai urutan Formulir Baru F4 PT Panca Banyu Ajisakti.",
                               ],
                             });
                           }}
                           className="rounded-lg border border-teal-300 bg-white px-2.5 py-1.5 text-[11px] font-bold text-teal-800 hover:bg-teal-100"
                         >
-                          📋 Copy Template WA untuk Sponsor
+                          📋 Copy Template WA F4 untuk Sponsor
                         </button>
                       </div>
 
@@ -7702,20 +7915,20 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
                         rows={11}
                         value={waRawText}
                         onChange={(e) => setWaRawText(e.target.value)}
-                        placeholder="Tempel (Paste) pesan WhatsApp berisi biodata CPMI dari Sponsor di sini..."
+                        placeholder="Tempel (Paste) pesan WhatsApp berisi Poin 1–17 biodata CPMI dari Sponsor di sini..."
                         className="w-full rounded-xl border border-slate-300 bg-white p-3 font-mono text-[11px] leading-relaxed text-slate-800"
                       />
 
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <span className="text-[11px] text-slate-600">
-                          Otomatis mengenali Biodata, Tinggi/Berat, Orang Tua, Suami/Wali, Pengalaman, Dokumen ASLI/COPY & Bahasa.
+                          Otomatis mengenali Poin 1–17: Biodata, Umur Asli, Kakek dari Bapak, Pengalaman LN, Bahasa, Masakan Arab & Dokumen.
                         </span>
                         <button
                           type="button"
                           onClick={handleParseWhatsAppText}
                           className="inline-flex items-center gap-1.5 rounded-xl bg-teal-700 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-teal-800"
                         >
-                          ⚡ Konversi Chat WA ke Formulir Lengkap →
+                          ⚡ Konversi Chat WA ke Formulir Baru F4 →
                         </button>
                       </div>
                     </div>
@@ -7724,22 +7937,21 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
                     <div className="rounded-2xl border border-slate-200 bg-white p-4 text-xs space-y-2">
                       <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                         <strong className="text-slate-900">
-                          Status Data di Memori Formulir Saat Ini:
+                          Status Data di Memori Formulir Baru F4 Saat Ini:
                         </strong>
                         <button
                           type="button"
                           onClick={() => setRegModalTab("FORM_LENGKAP")}
                           className="font-bold text-sky-700 hover:underline"
                         >
-                          Buka Formulir Lengkap (35+ Kolom) →
+                          Buka Formulir Baru F4 Lengkap (Poin 1–17) →
                         </button>
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-[11px]">
                         <div>
-                          <span className="text-slate-400 block">Nama Lengkap & Panggilan:</span>
+                          <span className="text-slate-400 block">3. Nama Lengkap & Umur Asli:</span>
                           <strong className="text-slate-900">
-                            {newForm.fullName || "(Belum diisi)"}{" "}
-                            {regForm.nickname ? `(${regForm.nickname})` : ""}
+                            {newForm.fullName || "(Belum diisi)"} ({regForm.realAge} Th)
                           </strong>
                         </div>
                         <div>
@@ -7749,14 +7961,13 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
                           </strong>
                         </div>
                         <div>
-                          <span className="text-slate-400 block">Tinggi / Berat & Tujuan:</span>
+                          <span className="text-slate-400 block">1. Negara Tujuan & 10. Fisik:</span>
                           <strong className="text-slate-900">
-                            {regForm.heightCm} cm / {regForm.weightKg} kg ·{" "}
-                            {newForm.destinationCountry}
+                            {newForm.destinationCountry} · {regForm.heightCm} cm / {regForm.weightKg} kg
                           </strong>
                         </div>
                         <div>
-                          <span className="text-slate-400 block">Sponsor Pengirim:</span>
+                          <span className="text-slate-400 block">2. Nama Sponsor Pengirim:</span>
                           <strong className="text-slate-900">{regForm.sponsorOfficerName}</strong>
                         </div>
                       </div>
@@ -7766,14 +7977,14 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
               )}
 
               {/* =========================================================
-                  TAB 3: FORMULIR LENGKAP PT PANCA BANYU AJISAKTI (100% MEWAKILI KERTAS FISIK)
+                  TAB 3: FORMULIR BARU F4 PT PANCA BANYU AJISAKTI (100% MEWAKILI FORMULIR BARU F4s.pdf POIN 1-17)
                  ========================================================= */}
               {regModalTab === "FORM_LENGKAP" && (
                 <form onSubmit={handleCreateCandidate} className="space-y-6 text-xs">
                   {activeSponsorSubmissionId && (
                     <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-xs text-emerald-950">
                       <div>
-                        <strong>✓ Mode Verifikasi Serah-Terima Sponsor Aktif:</strong> Data di bawah disalin otomatis dari draft Sponsor. Setelah Anda klik{" "}
+                        <strong>✓ Mode Verifikasi Serah-Terima Sponsor Aktif:</strong> Data di bawah disalin otomatis dari draft Formulir Baru F4 Sponsor. Setelah Anda klik{" "}
                         <strong>Simpan Formulir</strong>, status kiriman Sponsor otomatis berubah menjadi{" "}
                         <code className="rounded bg-emerald-200 px-1.5 py-0.5 font-bold">
                           SUDAH_DIINPUT
@@ -7790,24 +8001,26 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
                     </div>
                   )}
 
-                  {/* BAGIAN A: PAS FOTO 4x6 & IDENTITAS PRIBADI + FISIK (SESUAI BARIS ATAS FORMULIR) */}
+                  {/* BAGIAN 1: POIN 1 S/D 11 FORMULIR BARU F4 (IDENTITAS, NEGARA TUJUAN, SPONSOR, UMUR ASLI, PENDIDIKAN, STATUS, ANAK & FISIK) */}
                   <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 space-y-4">
                     <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-2.5">
                       <div>
                         <span className="rounded bg-slate-900 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
-                          BAGIAN 1 · IDENTITAS PRIBADI & FISIK CPMI/CTKI
+                          POIN 1 s/d 11 · IDENTITAS PRIBADI, SPONSOR, PENDIDIKAN & KEADAAN FISIK (FORMULIR BARU F4)
                         </span>
                         <h4 className="mt-1 text-sm font-bold text-slate-900">
-                          Biodata Diri, Tinggi/Berat Badan, Pendidikan & Nomor KTP/Paspor
+                          Sesuai Urutan Baris 1–11 pada Lembar &ldquo;Formulir Baru F4s.pdf&rdquo; PT Panca Banyu Ajisakti
                         </h4>
                       </div>
-                      <span className="font-mono text-xs font-bold text-sky-800 bg-sky-100 px-2.5 py-1 rounded-lg">
-                        No. Pendaftaran Otomatis: P3MI-2026-
-                        {String((db.candidates?.length || 11) + 101).padStart(4, "0")}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs font-bold text-sky-800 bg-sky-100 px-2.5 py-1 rounded-lg">
+                          No. Reg.: P3MI-2026-
+                          {String((db.candidates?.length || 11) + 101).padStart(4, "0")}
+                        </span>
+                      </div>
                     </div>
 
-                    {/* Pilihan Pas Foto 4x6 */}
+                    {/* Pilihan Pas Foto */}
                     <div className="flex flex-wrap items-center gap-4 rounded-xl border border-slate-200 bg-white p-3">
                       <img
                         src={newForm.avatarUrl || AVATAR_PRESETS[0].url}
@@ -7817,7 +8030,7 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
                       <div className="flex-1 space-y-2">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <span className="font-bold text-slate-800">
-                            📷 Kotak Pas Foto Resmi 4x6 (Tampil di Sudut Kanan Atas Formulir Cetak, e-KTP & Paspor)
+                            📷 Pas Foto Resmi CPMI (Tampil di Profil, e-KTP & Biodata Paspor)
                           </span>
                           <label className="cursor-pointer inline-flex items-center gap-1 rounded-lg border border-sky-300 bg-sky-50 px-2.5 py-1 text-[11px] font-bold text-sky-800 hover:bg-sky-100">
                             📤 Upload Foto Asli
@@ -7852,7 +8065,7 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
                                 className={`inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] font-semibold transition ${
                                   isSelected
                                     ? "border-sky-600 bg-sky-600 text-white"
-                                    : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
+                                    : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
                                 }`}
                               >
                                 <img
@@ -7869,503 +8082,18 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
                     </div>
 
                     <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
-                      <div className="lg:col-span-2">
-                        <label className="font-bold text-slate-700 block mb-1">
-                          Nama Lengkap (Sesuai KTP) *
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={newForm.fullName}
-                          onChange={(e) => setNewForm({ ...newForm, fullName: e.target.value })}
-                          placeholder="Nama lengkap sesuai lembar formulir"
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-bold text-slate-900"
-                        />
-                      </div>
-
                       <div>
                         <label className="font-bold text-slate-700 block mb-1">
-                          Nama Panggilan
-                        </label>
-                        <input
-                          type="text"
-                          value={regForm.nickname}
-                          onChange={(e) => setRegForm({ ...regForm, nickname: e.target.value })}
-                          placeholder="Nama panggilan"
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="font-bold text-slate-700 block mb-1">
-                          Tahap Awal Sistem
-                        </label>
-                        <select
-                          value={newForm.stage}
-                          onChange={(e) =>
-                            setNewForm({ ...newForm, stage: e.target.value as JourneyStage })
-                          }
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-semibold"
-                        >
-                          <option value="LEAD">Lead (NIK Boleh Menyusul)</option>
-                          <option value="PROSPECT">Prospect (NIK 16 Digit Wajib)</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="font-bold text-slate-700 block mb-1">
-                          Tempat Lahir
-                        </label>
-                        <input
-                          type="text"
-                          value={newForm.birthPlace}
-                          onChange={(e) => setNewForm({ ...newForm, birthPlace: e.target.value })}
-                          placeholder="Contoh: Indramayu"
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="font-bold text-slate-700 block mb-1">
-                          Tanggal Lahir (DD-MM-YYYY)
-                        </label>
-                        <input
-                          type="date"
-                          value={newForm.birthDate}
-                          onChange={(e) => setNewForm({ ...newForm, birthDate: e.target.value })}
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="font-bold text-slate-700 block mb-1">
-                          Tinggi Badan (Cm)
-                        </label>
-                        <input
-                          type="number"
-                          value={regForm.heightCm || ""}
-                          onChange={(e) =>
-                            setRegForm({ ...regForm, heightCm: Number(e.target.value) })
-                          }
-                          placeholder="158"
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="font-bold text-slate-700 block mb-1">
-                          Berat Badan (Kg)
-                        </label>
-                        <input
-                          type="number"
-                          value={regForm.weightKg || ""}
-                          onChange={(e) =>
-                            setRegForm({ ...regForm, weightKg: Number(e.target.value) })
-                          }
-                          placeholder="52"
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="font-bold text-slate-700 block mb-1">Agama</label>
-                        <select
-                          value={regForm.religion}
-                          onChange={(e) => setRegForm({ ...regForm, religion: e.target.value })}
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
-                        >
-                          <option value="Islam">Islam</option>
-                          <option value="Kristen">Kristen</option>
-                          <option value="Katolik">Katolik</option>
-                          <option value="Hindu">Hindu</option>
-                          <option value="Buddha">Buddha</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="font-bold text-slate-700 block mb-1">
-                          Jenis Kelamin
-                        </label>
-                        <select
-                          value={newForm.gender}
-                          onChange={(e) =>
-                            setNewForm({ ...newForm, gender: e.target.value as "P" | "L" })
-                          }
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
-                        >
-                          <option value="P">Perempuan (P)</option>
-                          <option value="L">Laki-Laki (L)</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="font-bold text-slate-700 block mb-1">
-                          Status Perkawinan
-                        </label>
-                        <select
-                          value={newForm.maritalStatus}
-                          onChange={(e) =>
-                            setNewForm({ ...newForm, maritalStatus: e.target.value })
-                          }
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
-                        >
-                          <option value="Belum Kawin">Belum Kawin</option>
-                          <option value="Kawin">Kawin</option>
-                          <option value="Cerai Hidup">Cerai Hidup</option>
-                          <option value="Cerai Mati">Cerai Mati</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="font-bold text-slate-700 block mb-1">
-                          Telp / HP Aktif *
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={newForm.phone}
-                          onChange={(e) => setNewForm({ ...newForm, phone: e.target.value })}
-                          placeholder="0812-xxxx-xxxx"
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono"
-                        />
-                      </div>
-
-                      <div className="lg:col-span-3">
-                        <label className="font-bold text-slate-700 block mb-1">
-                          Alamat Lengkap (Sesuai KTP / Formulir)
-                        </label>
-                        <input
-                          type="text"
-                          value={newForm.address}
-                          onChange={(e) => setNewForm({ ...newForm, address: e.target.value })}
-                          placeholder="Nama Jalan/Blok, RT/RW, Desa/Kelurahan, Kecamatan, Kabupaten"
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="font-bold text-slate-700 block mb-1">Kode Pos</label>
-                        <input
-                          type="text"
-                          value={regForm.postalCode}
-                          onChange={(e) => setRegForm({ ...regForm, postalCode: e.target.value })}
-                          placeholder="45282"
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="font-bold text-slate-700 block mb-1">
-                          Pendidikan Terakhir
-                        </label>
-                        <select
-                          value={newForm.education}
-                          onChange={(e) => setNewForm({ ...newForm, education: e.target.value })}
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
-                        >
-                          <option value="SD">SD / Sederajat</option>
-                          <option value="SMP">SMP / MTs</option>
-                          <option value="SMA/SMK">SMA / SMK / MA</option>
-                          <option value="D3/S1">Diploma / Sarjana (D3/S1)</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="font-bold text-slate-700 block mb-1">
-                          Lulus Tahun
-                        </label>
-                        <input
-                          type="text"
-                          value={regForm.graduationYear}
-                          onChange={(e) =>
-                            setRegForm({ ...regForm, graduationYear: e.target.value })
-                          }
-                          placeholder="2018"
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono"
-                        />
-                      </div>
-
-                      <div className="lg:col-span-2">
-                        <label className="font-bold text-slate-700 block mb-1">
-                          No. KTP (NIK 16 Digit Unik) / Paspor{" "}
-                          {newForm.stage === "LEAD" ? "(Opsional di Tahap Lead)" : "*"}
-                        </label>
-                        <input
-                          type="text"
-                          maxLength={16}
-                          value={newForm.nik}
-                          onChange={(e) => {
-                            setNewForm({ ...newForm, nik: e.target.value });
-                            setRegForm({ ...regForm, ktpOrPassportNo: e.target.value });
-                          }}
-                          placeholder="Contoh: 3212155408980001"
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono font-bold text-teal-800"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* BAGIAN B: DATA KELUARGA (BAPAK, IBU, SUAMI/ISTRI/WALI, ANAK, BERSAUDARA & KONTAK DARURAT) */}
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 space-y-4">
-                    <div className="border-b border-slate-200 pb-2">
-                      <span className="rounded bg-slate-900 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
-                        BAGIAN 2 · DATA ORANG TUA, SUAMI/ISTRI/WALI, ANAK & KONTAK DARURAT
-                      </span>
-                      <h4 className="mt-1 text-sm font-bold text-slate-900">
-                        Keluarga Kandung & Keluarga yang Mudah Dihubungi (Sesuai Lembar Formulir)
-                      </h4>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
-                      <div>
-                        <label className="font-bold text-slate-700 block mb-1">Nama Bapak</label>
-                        <input
-                          type="text"
-                          value={regForm.fatherName}
-                          onChange={(e) => setRegForm({ ...regForm, fatherName: e.target.value })}
-                          placeholder="Nama ayah kandung"
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
-                        />
-                      </div>
-                      <div>
-                        <label className="font-bold text-slate-700 block mb-1">
-                          Umur Bapak (Th)
-                        </label>
-                        <input
-                          type="number"
-                          value={regForm.fatherAge || ""}
-                          onChange={(e) =>
-                            setRegForm({ ...regForm, fatherAge: Number(e.target.value) })
-                          }
-                          placeholder="58"
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono"
-                        />
-                      </div>
-                      <div>
-                        <label className="font-bold text-slate-700 block mb-1">Nama Ibu</label>
-                        <input
-                          type="text"
-                          value={regForm.motherName}
-                          onChange={(e) => setRegForm({ ...regForm, motherName: e.target.value })}
-                          placeholder="Nama ibu kandung"
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
-                        />
-                      </div>
-                      <div>
-                        <label className="font-bold text-slate-700 block mb-1">
-                          Umur Ibu (Th)
-                        </label>
-                        <input
-                          type="number"
-                          value={regForm.motherAge || ""}
-                          onChange={(e) =>
-                            setRegForm({ ...regForm, motherAge: Number(e.target.value) })
-                          }
-                          placeholder="53"
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono"
-                        />
-                      </div>
-
-                      <div className="lg:col-span-2">
-                        <label className="font-bold text-slate-700 block mb-1">
-                          Nama Suami / Istri / Wali Pemberi Izin
-                        </label>
-                        <input
-                          type="text"
-                          value={regForm.spouseOrGuardianName}
-                          onChange={(e) =>
-                            setRegForm({ ...regForm, spouseOrGuardianName: e.target.value })
-                          }
-                          placeholder="Nama suami / istri / wali resmi"
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
-                        />
-                      </div>
-                      <div>
-                        <label className="font-bold text-slate-700 block mb-1">
-                          Umur Suami/Istri/Wali (Th)
-                        </label>
-                        <input
-                          type="number"
-                          value={regForm.spouseAge || ""}
-                          onChange={(e) =>
-                            setRegForm({ ...regForm, spouseAge: Number(e.target.value) })
-                          }
-                          placeholder="33"
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono"
-                        />
-                      </div>
-                      <div>
-                        <label className="font-bold text-slate-700 block mb-1">
-                          Pekerjaan Suami/Istri/Wali
-                        </label>
-                        <input
-                          type="text"
-                          value={regForm.spouseOccupation}
-                          onChange={(e) =>
-                            setRegForm({ ...regForm, spouseOccupation: e.target.value })
-                          }
-                          placeholder="Wiraswasta / Petani"
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
-                        />
-                      </div>
-
-                      <div className="lg:col-span-2">
-                        <label className="font-bold text-slate-700 block mb-1">
-                          Jumlah dan Umur Anak Laki-laki
-                        </label>
-                        <input
-                          type="text"
-                          value={regForm.boysCountAndAges}
-                          onChange={(e) =>
-                            setRegForm({ ...regForm, boysCountAndAges: e.target.value })
-                          }
-                          placeholder="Contoh: 1 Orang (6 Th) atau -"
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
-                        />
-                      </div>
-                      <div className="lg:col-span-2">
-                        <label className="font-bold text-slate-700 block mb-1">
-                          Jumlah dan Umur Anak Perempuan
-                        </label>
-                        <input
-                          type="text"
-                          value={regForm.girlsCountAndAges}
-                          onChange={(e) =>
-                            setRegForm({ ...regForm, girlsCountAndAges: e.target.value })
-                          }
-                          placeholder="Contoh: 1 Orang (4 Th) atau -"
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="font-bold text-slate-700 block mb-1">
-                          Saya Anak Ke- ... Dari ... Bersaudara
-                        </label>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="number"
-                            value={regForm.childOrder || ""}
-                            onChange={(e) =>
-                              setRegForm({ ...regForm, childOrder: Number(e.target.value) })
-                            }
-                            placeholder="1"
-                            className="w-20 rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-center font-mono"
-                          />
-                          <span className="text-slate-500 font-semibold">dari</span>
-                          <input
-                            type="number"
-                            value={regForm.siblingsCount || ""}
-                            onChange={(e) =>
-                              setRegForm({ ...regForm, siblingsCount: Number(e.target.value) })
-                            }
-                            placeholder="3"
-                            className="w-20 rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-center font-mono"
-                          />
-                          <span className="text-slate-500 text-[11px]">Bersaudara</span>
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="font-bold text-slate-700 block mb-1">
-                          Nama Keluarga yg Mudah Dihubungi
-                        </label>
-                        <input
-                          type="text"
-                          value={regForm.emergencyContactName}
-                          onChange={(e) =>
-                            setRegForm({ ...regForm, emergencyContactName: e.target.value })
-                          }
-                          placeholder="Nama kontak darurat"
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="font-bold text-slate-700 block mb-1">
-                          Hubungan Keluarga
-                        </label>
-                        <input
-                          type="text"
-                          value={regForm.emergencyContactRelation}
-                          onChange={(e) =>
-                            setRegForm({ ...regForm, emergencyContactRelation: e.target.value })
-                          }
-                          placeholder="Suami / Orang Tua / Kakak"
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="font-bold text-slate-700 block mb-1">
-                          No. Telp / HP Keluarga Darurat
-                        </label>
-                        <input
-                          type="text"
-                          value={regForm.emergencyContactPhone}
-                          onChange={(e) =>
-                            setRegForm({ ...regForm, emergencyContactPhone: e.target.value })
-                          }
-                          placeholder="0852-xxxx-xxxx"
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* BAGIAN C: PENGALAMAN KERJA 1 & 2, NEGARA TUJUAN, DAN CHECKBOX PEKERJAAN YANG DIINGINKAN */}
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 space-y-4">
-                    <div className="border-b border-slate-200 pb-2">
-                      <span className="rounded bg-slate-900 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
-                        BAGIAN 3 · PENGALAMAN KERJA, NEGARA TUJUAN & PEKERJAAN YANG DIINGINKAN
-                      </span>
-                      <h4 className="mt-1 text-sm font-bold text-slate-900">
-                        Riwayat Pengalaman Kerja 1 & 2 serta Pilihan Sektor Pekerjaan
-                      </h4>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
-                      <div>
-                        <label className="font-bold text-slate-700 block mb-1">
-                          Pengalaman Kerja 1
-                        </label>
-                        <input
-                          type="text"
-                          value={regForm.workExperience1}
-                          onChange={(e) =>
-                            setRegForm({ ...regForm, workExperience1: e.target.value })
-                          }
-                          placeholder="Tahun, Tempat & Posisi Pengalaman Kerja 1"
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
-                        />
-                      </div>
-                      <div>
-                        <label className="font-bold text-slate-700 block mb-1">
-                          Pengalaman Kerja 2
-                        </label>
-                        <input
-                          type="text"
-                          value={regForm.workExperience2}
-                          onChange={(e) =>
-                            setRegForm({ ...regForm, workExperience2: e.target.value })
-                          }
-                          placeholder="Tahun, Tempat & Posisi Pengalaman Kerja 2"
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="font-bold text-slate-700 block mb-1">
-                          Negara Tujuan Penempatan
+                          1. Negara Tujuan Penempatan *
                         </label>
                         <select
                           value={newForm.destinationCountry}
                           onChange={(e) =>
                             setNewForm({ ...newForm, destinationCountry: e.target.value })
                           }
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-bold"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-bold text-slate-900"
                         >
-                          <optgroup label="Timur Tengah (SPSK / Tadbeer / Formal / QIZ)">
+                          <optgroup label="Timur Tengah (SPSK / Tadbeer / Formal)">
                             <option value="Arab Saudi">Arab Saudi (SPSK / Musaned)</option>
                             <option value="Uni Emirat Arab (UAE)">Uni Emirat Arab (UAE)</option>
                             <option value="Kuwait">Kuwait</option>
@@ -8378,380 +8106,13 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
                             <option value="Jepang">Jepang</option>
                             <option value="Singapura">Singapura</option>
                             <option value="Malaysia">Malaysia</option>
-                            <option value="Korea Selatan">Korea Selatan</option>
                           </optgroup>
                         </select>
                       </div>
 
                       <div>
                         <label className="font-bold text-slate-700 block mb-1">
-                          Sektor / Jabatan Spesifik di Sistem
-                        </label>
-                        <input
-                          type="text"
-                          value={newForm.jobSector}
-                          onChange={(e) => setNewForm({ ...newForm, jobSector: e.target.value })}
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
-                        />
-                      </div>
-                    </div>
-
-                    {/* 5 CHECKBOX PEKERJAAN YANG DIINGINKAN SESUAI FORMULIR ASLI */}
-                    <div className="rounded-xl border border-slate-200 bg-white p-3">
-                      <label className="font-bold text-slate-800 block mb-2">
-                        Kotak Centang &ldquo;Pekerjaan yang diinginkan&rdquo; (Sesuai Lembar Formulir PT Panca Banyu Ajisakti):
-                      </label>
-                      <div className="flex flex-wrap items-center gap-4">
-                        {[
-                          { key: "desiredJobCleaner", label: "Cleaner (Kebersihan / PRT)" },
-                          { key: "desiredJobFactory", label: "Pekerja Pabrik (Manufaktur)" },
-                          { key: "desiredJobNurse", label: "Nurse / Caregiver (Perawat)" },
-                          { key: "desiredJobHospitality", label: "Hospitality (Perhotelan)" },
-                          { key: "desiredJobOther", label: "Pekerja Lain" },
-                        ].map((item) => {
-                          const checked = Boolean(
-                            regForm[item.key as keyof OfficialRegistrationForm]
-                          );
-                          return (
-                            <label
-                              key={item.key}
-                              className={`inline-flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-1.5 font-semibold transition ${
-                                checked
-                                  ? "border-sky-600 bg-sky-50 text-sky-900"
-                                  : "border-slate-200 bg-slate-50 text-slate-600"
-                              }`}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={checked}
-                                onChange={(e) =>
-                                  setRegForm({
-                                    ...regForm,
-                                    [item.key]: e.target.checked,
-                                  })
-                                }
-                                className="h-4 w-4 rounded text-sky-600"
-                              />
-                              {item.label}
-                            </label>
-                          );
-                        })}
-                        {regForm.desiredJobOther && (
-                          <input
-                            type="text"
-                            value={regForm.desiredJobOtherText}
-                            onChange={(e) =>
-                              setRegForm({ ...regForm, desiredJobOtherText: e.target.value })
-                            }
-                            placeholder="Sebutkan pekerjaan lain..."
-                            className="rounded-lg border border-slate-300 px-3 py-1.5"
-                          />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* BAGIAN D & E: TABEL DOKUMEN (ASLI / COPY) & TABEL KEMAMPUAN BAHASA (BAIK / CUKUP / BURUK) */}
-                  <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-                    {/* TABEL 9 DOKUMEN SERAH TERIMA (ASLI / COPY) */}
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 lg:col-span-7 space-y-3">
-                      <div>
-                        <span className="rounded bg-teal-700 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
-                          BAGIAN 4 · DOKUMEN YANG DISERAHKAN (ASLI / COPY)
-                        </span>
-                        <h4 className="mt-1 text-sm font-bold text-slate-900">
-                          Checklist Serah-Terima 9 Dokumen Fisik (Otomatis Sinkron ke Berkas Digital)
-                        </h4>
-                      </div>
-
-                      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-                        <table className="w-full text-left text-xs">
-                          <thead className="border-b border-slate-200 bg-slate-100 text-[10px] font-bold uppercase text-slate-700">
-                            <tr>
-                              <th className="px-3 py-2">No.</th>
-                              <th className="px-3 py-2">Nama Dokumen</th>
-                              <th className="px-3 py-2 text-center">ASLI</th>
-                              <th className="px-3 py-2 text-center">COPY</th>
-                              <th className="px-3 py-2 text-center">Belum Ada</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100">
-                            {[
-                              { no: 1, key: "ktp", label: "KTP" },
-                              { no: 2, key: "kk", label: "KARTU KELUARGA" },
-                              { no: 3, key: "akteKelahiran", label: "AKTE KELAHIRAN" },
-                              { no: 4, key: "izinKeluarga", label: "IZIN KELUARGA" },
-                              { no: 5, key: "sttbIjazah", label: "STTB / IJAZAH" },
-                              { no: 6, key: "skck", label: "S K C K" },
-                              { no: 7, key: "paspor", label: "PASPOR" },
-                            ].map((docRow) => {
-                              const curVal =
-                                regForm.docHandover[
-                                  docRow.key as keyof typeof regForm.docHandover
-                                ] as DocHandoverType;
-                              return (
-                                <tr key={docRow.key} className="hover:bg-slate-50">
-                                  <td className="px-3 py-2 font-mono font-bold text-slate-500">
-                                    {docRow.no}.
-                                  </td>
-                                  <td className="px-3 py-2 font-bold text-slate-900">
-                                    {docRow.label}
-                                  </td>
-                                  {(["ASLI", "COPY", "NONE"] as DocHandoverType[]).map((opt) => (
-                                    <td key={opt} className="px-3 py-2 text-center">
-                                      <input
-                                        type="radio"
-                                        name={`doc-${docRow.key}`}
-                                        checked={curVal === opt}
-                                        onChange={() =>
-                                          setRegForm({
-                                            ...regForm,
-                                            docHandover: {
-                                              ...regForm.docHandover,
-                                              [docRow.key]: opt,
-                                            },
-                                          })
-                                        }
-                                        className="h-4 w-4 cursor-pointer accent-teal-600"
-                                      />
-                                    </td>
-                                  ))}
-                                </tr>
-                              );
-                            })}
-                            {/* Baris 8 & 9 (Dokumen Tambahan) */}
-                            <tr className="hover:bg-slate-50">
-                              <td className="px-3 py-2 font-mono font-bold text-slate-500">8.</td>
-                              <td className="px-3 py-1.5">
-                                <input
-                                  type="text"
-                                  value={regForm.docHandover.otherDoc8Name}
-                                  onChange={(e) =>
-                                    setRegForm({
-                                      ...regForm,
-                                      docHandover: {
-                                        ...regForm.docHandover,
-                                        otherDoc8Name: e.target.value,
-                                      },
-                                    })
-                                  }
-                                  placeholder="Dokumen 8 (Misal: Buku Nikah)"
-                                  className="w-full rounded border border-slate-200 px-2 py-1 text-xs"
-                                />
-                              </td>
-                              {(["ASLI", "COPY", "NONE"] as DocHandoverType[]).map((opt) => (
-                                <td key={opt} className="px-3 py-2 text-center">
-                                  <input
-                                    type="radio"
-                                    name="doc-other8"
-                                    checked={regForm.docHandover.otherDoc8Status === opt}
-                                    onChange={() =>
-                                      setRegForm({
-                                        ...regForm,
-                                        docHandover: {
-                                          ...regForm.docHandover,
-                                          otherDoc8Status: opt,
-                                        },
-                                      })
-                                    }
-                                    className="h-4 w-4 cursor-pointer accent-teal-600"
-                                  />
-                                </td>
-                              ))}
-                            </tr>
-                            <tr className="hover:bg-slate-50">
-                              <td className="px-3 py-2 font-mono font-bold text-slate-500">9.</td>
-                              <td className="px-3 py-1.5">
-                                <input
-                                  type="text"
-                                  value={regForm.docHandover.otherDoc9Name}
-                                  onChange={(e) =>
-                                    setRegForm({
-                                      ...regForm,
-                                      docHandover: {
-                                        ...regForm.docHandover,
-                                        otherDoc9Name: e.target.value,
-                                      },
-                                    })
-                                  }
-                                  placeholder="Dokumen 9 (Misal: Paspor Lama)"
-                                  className="w-full rounded border border-slate-200 px-2 py-1 text-xs"
-                                />
-                              </td>
-                              {(["ASLI", "COPY", "NONE"] as DocHandoverType[]).map((opt) => (
-                                <td key={opt} className="px-3 py-2 text-center">
-                                  <input
-                                    type="radio"
-                                    name="doc-other9"
-                                    checked={regForm.docHandover.otherDoc9Status === opt}
-                                    onChange={() =>
-                                      setRegForm({
-                                        ...regForm,
-                                        docHandover: {
-                                          ...regForm.docHandover,
-                                          otherDoc9Status: opt,
-                                        },
-                                      })
-                                    }
-                                    className="h-4 w-4 cursor-pointer accent-teal-600"
-                                  />
-                                </td>
-                              ))}
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-
-                    {/* TABEL KEMAMPUAN BAHASA (BAIK / CUKUP / BURUK) + CATATAN CPMI */}
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 lg:col-span-5 space-y-3">
-                      <div>
-                        <span className="rounded bg-sky-700 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
-                          BAGIAN 5 · KEMAMPUAN BAHASA
-                        </span>
-                        <h4 className="mt-1 text-sm font-bold text-slate-900">
-                          Matriks Bahasa (Baik / Cukup / Buruk)
-                        </h4>
-                      </div>
-
-                      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-                        <table className="w-full text-left text-xs">
-                          <thead className="border-b border-slate-200 bg-slate-100 text-[10px] font-bold uppercase text-slate-700">
-                            <tr>
-                              <th className="px-3 py-2">Bahasa</th>
-                              <th className="px-2.5 py-2 text-center">Baik</th>
-                              <th className="px-2.5 py-2 text-center">Cukup</th>
-                              <th className="px-2.5 py-2 text-center">Buruk</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100">
-                            {[
-                              { key: "english", label: "Bahasa Inggris" },
-                              { key: "mandarin", label: "Bahasa Mandarin" },
-                              { key: "arabic", label: "Bahasa Arab" },
-                            ].map((lang) => {
-                              const val =
-                                regForm.languageSkills[
-                                  lang.key as keyof typeof regForm.languageSkills
-                                ] as LangSkillLevel;
-                              return (
-                                <tr key={lang.key} className="hover:bg-slate-50">
-                                  <td className="px-3 py-2.5 font-bold text-slate-900">
-                                    {lang.label}
-                                  </td>
-                                  {(["BAIK", "CUKUP", "BURUK"] as LangSkillLevel[]).map((lv) => (
-                                    <td key={lv} className="px-2.5 py-2.5 text-center">
-                                      <input
-                                        type="radio"
-                                        name={`lang-${lang.key}`}
-                                        checked={val === lv}
-                                        onChange={() =>
-                                          setRegForm({
-                                            ...regForm,
-                                            languageSkills: {
-                                              ...regForm.languageSkills,
-                                              [lang.key]: lv,
-                                            },
-                                          })
-                                        }
-                                        className="h-4 w-4 cursor-pointer accent-sky-600"
-                                      />
-                                    </td>
-                                  ))}
-                                </tr>
-                              );
-                            })}
-                            <tr className="hover:bg-slate-50">
-                              <td className="px-3 py-1.5">
-                                <input
-                                  type="text"
-                                  value={regForm.languageSkills.otherLanguageName}
-                                  onChange={(e) =>
-                                    setRegForm({
-                                      ...regForm,
-                                      languageSkills: {
-                                        ...regForm.languageSkills,
-                                        otherLanguageName: e.target.value,
-                                      },
-                                    })
-                                  }
-                                  placeholder="Bahasa Lain (Jepang/Korea)"
-                                  className="w-full rounded border border-slate-200 px-2 py-1 text-xs"
-                                />
-                              </td>
-                              {(["BAIK", "CUKUP", "BURUK"] as LangSkillLevel[]).map((lv) => (
-                                <td key={lv} className="px-2.5 py-2 text-center">
-                                  <input
-                                    type="radio"
-                                    name="lang-other"
-                                    checked={regForm.languageSkills.otherLanguageLevel === lv}
-                                    onChange={() =>
-                                      setRegForm({
-                                        ...regForm,
-                                        languageSkills: {
-                                          ...regForm.languageSkills,
-                                          otherLanguageLevel: lv,
-                                        },
-                                      })
-                                    }
-                                    className="h-4 w-4 cursor-pointer accent-sky-600"
-                                  />
-                                </td>
-                              ))}
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-
-                      <div>
-                        <label className="font-bold text-slate-700 block mb-1">
-                          Catatan Biodata / Dokumen
-                        </label>
-                        <textarea
-                          rows={2}
-                          value={regForm.candidateNotes}
-                          onChange={(e) =>
-                            setRegForm({ ...regForm, candidateNotes: e.target.value })
-                          }
-                          placeholder="Catatan tambahan terkait dokumen yang diserahkan..."
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* BAGIAN F: PETUGAS LAPANGAN / REKRUT / SPONSOR & PETUGAS PT PENERIMA (DATA ENTRY) */}
-                  <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-4 space-y-4">
-                    <div className="border-b border-amber-200/80 pb-2">
-                      <span className="rounded bg-amber-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
-                        BAGIAN 6 · DATA SPONSOR PENGIRIM & PENGESAHAN PETUGAS PT (DATA ENTRY)
-                      </span>
-                      <h4 className="mt-1 text-sm font-bold text-slate-900">
-                        Kolom Bawah Formulir: Petugas Lapangan / Rekrut / Sponsor & Petugas PT Penerima CPMI
-                      </h4>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
-                      <div>
-                        <label className="font-bold text-slate-700 block mb-1">
-                          Cabang P3MI Penerima
-                        </label>
-                        <select
-                          value={newForm.branchId}
-                          onChange={(e) => setNewForm({ ...newForm, branchId: e.target.value })}
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-semibold"
-                        >
-                          {db.branches.map((b) => (
-                            <option key={b.id} value={b.id}>
-                              {b.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="font-bold text-slate-700 block mb-1">
-                          Pilih Master Sponsor / PL
+                          2. Nama Sponsor / PL Pengirim
                         </label>
                         <select
                           value={newForm.sponsorId}
@@ -8778,9 +8139,1041 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
                         </select>
                       </div>
 
+                      <div className="lg:col-span-2">
+                        <label className="font-bold text-slate-700 block mb-1">
+                          3. Nama Lengkap (Sesuai KTP & Formulir F4) *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={newForm.fullName}
+                          onChange={(e) => setNewForm({ ...newForm, fullName: e.target.value })}
+                          placeholder="Nama lengkap sesuai lembar formulir"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-bold text-slate-900"
+                        />
+                      </div>
+
                       <div>
                         <label className="font-bold text-slate-700 block mb-1">
-                          Nama Petugas Lapangan / Sponsor (Tercetak)
+                          3b. Telp / HP Aktif CPMI *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={newForm.phone}
+                          onChange={(e) => setNewForm({ ...newForm, phone: e.target.value })}
+                          placeholder="0812-xxxx-xxxx"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          4a. Tempat Lahir
+                        </label>
+                        <input
+                          type="text"
+                          value={newForm.birthPlace}
+                          onChange={(e) => setNewForm({ ...newForm, birthPlace: e.target.value })}
+                          placeholder="Contoh: Indramayu"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          4b. Tanggal Lahir
+                        </label>
+                        <input
+                          type="date"
+                          value={newForm.birthDate}
+                          onChange={(e) => setNewForm({ ...newForm, birthDate: e.target.value })}
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          4c. Umur Asli (Tahun)
+                        </label>
+                        <input
+                          type="number"
+                          value={regForm.realAge || ""}
+                          onChange={(e) =>
+                            setRegForm({ ...regForm, realAge: Number(e.target.value) })
+                          }
+                          placeholder="28"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono font-bold text-sky-900"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">5. Agama</label>
+                        <select
+                          value={regForm.religion}
+                          onChange={(e) => setRegForm({ ...regForm, religion: e.target.value })}
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                        >
+                          <option value="Islam">Islam</option>
+                          <option value="Kristen">Kristen</option>
+                          <option value="Katolik">Katolik</option>
+                          <option value="Hindu">Hindu</option>
+                          <option value="Buddha">Buddha</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          6. Pendidikan Terakhir (A. SD / B. SMP / C. SMA / D. Univ)
+                        </label>
+                        <select
+                          value={newForm.education}
+                          onChange={(e) => setNewForm({ ...newForm, education: e.target.value })}
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-semibold"
+                        >
+                          <option value="SD">A. SD</option>
+                          <option value="SMP">B. SMP</option>
+                          <option value="SMA/SMK">C. SMA / SMK</option>
+                          <option value="D3/S1">D. Diploma / Universitas</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          7. Anak ke : ... dari ... bersaudara
+                        </label>
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="number"
+                            value={regForm.childOrder || ""}
+                            onChange={(e) =>
+                              setRegForm({ ...regForm, childOrder: Number(e.target.value) })
+                            }
+                            placeholder="1"
+                            className="w-16 rounded-lg border border-slate-300 bg-white px-2 py-2 text-center font-mono"
+                          />
+                          <span className="text-slate-500">dari</span>
+                          <input
+                            type="number"
+                            value={regForm.siblingsCount || ""}
+                            onChange={(e) =>
+                              setRegForm({ ...regForm, siblingsCount: Number(e.target.value) })
+                            }
+                            placeholder="3"
+                            className="w-16 rounded-lg border border-slate-300 bg-white px-2 py-2 text-center font-mono"
+                          />
+                          <span className="text-[11px] text-slate-500">bersaudara</span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          8. Status (A. Belum Kawin / B. Kawin / C. Janda)
+                        </label>
+                        <select
+                          value={newForm.maritalStatus}
+                          onChange={(e) =>
+                            setNewForm({ ...newForm, maritalStatus: e.target.value })
+                          }
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-semibold"
+                        >
+                          <option value="Belum Kawin">A. Belum Kawin</option>
+                          <option value="Kawin">B. Kawin</option>
+                          <option value="Cerai Hidup">C. Janda (Cerai Hidup)</option>
+                          <option value="Cerai Mati">C. Janda (Cerai Mati)</option>
+                        </select>
+                      </div>
+
+                      <div className="lg:col-span-2">
+                        <label className="font-bold text-slate-700 block mb-1">
+                          9. Jumlah Anak (... Orang), Anak Pertama (... Tahun), Anak Terakhir (... Tahun)
+                        </label>
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="flex items-center gap-1">
+                            <input
+                              type="number"
+                              value={regForm.childrenTotalCount}
+                              onChange={(e) =>
+                                setRegForm({
+                                  ...regForm,
+                                  childrenTotalCount: Number(e.target.value),
+                                })
+                              }
+                              className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-center font-mono"
+                            />
+                            <span className="text-[11px] text-slate-600 shrink-0">Orang</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-[10px] text-slate-500 shrink-0">ke-1:</span>
+                            <input
+                              type="text"
+                              value={regForm.firstChildAge}
+                              onChange={(e) =>
+                                setRegForm({ ...regForm, firstChildAge: e.target.value })
+                              }
+                              placeholder="6"
+                              className="w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-center font-mono"
+                            />
+                            <span className="text-[10px] text-slate-500 shrink-0">Th</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-[10px] text-slate-500 shrink-0"> Akhir:</span>
+                            <input
+                              type="text"
+                              value={regForm.lastChildAge}
+                              onChange={(e) =>
+                                setRegForm({ ...regForm, lastChildAge: e.target.value })
+                              }
+                              placeholder="2 / -"
+                              className="w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-center font-mono"
+                            />
+                            <span className="text-[10px] text-slate-500 shrink-0">Th</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          10a. Tinggi Badan (cm)
+                        </label>
+                        <input
+                          type="number"
+                          value={regForm.heightCm || ""}
+                          onChange={(e) =>
+                            setRegForm({ ...regForm, heightCm: Number(e.target.value) })
+                          }
+                          placeholder="158"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          10b. Berat Badan (kg)
+                        </label>
+                        <input
+                          type="number"
+                          value={regForm.weightKg || ""}
+                          onChange={(e) =>
+                            setRegForm({ ...regForm, weightKg: Number(e.target.value) })
+                          }
+                          placeholder="52"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono"
+                        />
+                      </div>
+
+                      <div className="lg:col-span-2">
+                        <label className="font-bold text-slate-700 block mb-1">
+                          11. Alamat Lengkap (Sesuai KTP & Formulir F4)
+                        </label>
+                        <input
+                          type="text"
+                          value={newForm.address}
+                          onChange={(e) => setNewForm({ ...newForm, address: e.target.value })}
+                          placeholder="Blok/Jalan, RT/RW, Desa/Kelurahan, Kecamatan, Kabupaten"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                        />
+                      </div>
+
+                      <div className="lg:col-span-2">
+                        <label className="font-bold text-slate-700 block mb-1">
+                          NIK e-KTP (16 Digit Unik Sistem){" "}
+                          {newForm.stage === "LEAD" ? "(Opsional di Tahap Lead)" : "*"}
+                        </label>
+                        <input
+                          type="text"
+                          maxLength={16}
+                          value={newForm.nik}
+                          onChange={(e) => {
+                            setNewForm({ ...newForm, nik: e.target.value });
+                            setRegForm({ ...regForm, ktpOrPassportNo: e.target.value });
+                          }}
+                          placeholder="Contoh: 3212155408980001"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono font-bold text-teal-800"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* BAGIAN 2: POIN 12 S/D 14 FORMULIR BARU F4 (ORANG TUA, KAKEK DARI BAPAK, SUAMI & KELUARGA LAIN) */}
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 space-y-4">
+                    <div className="border-b border-slate-200 pb-2">
+                      <span className="rounded bg-slate-900 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+                        POIN 12 s/d 14 · DATA ORANG TUA (TERMASUK KAKEK DARI BAPAK), SUAMI & KELUARGA LAIN
+                      </span>
+                      <h4 className="mt-1 text-sm font-bold text-slate-900">
+                        Poin 12 (Bapak, Ibu & Kakek dari Bapak), Poin 13 (Suami & Pekerjaan) & Poin 14 (Keluarga Lain)
+                      </h4>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          12a. Nama Bapak
+                        </label>
+                        <input
+                          type="text"
+                          value={regForm.fatherName}
+                          onChange={(e) => setRegForm({ ...regForm, fatherName: e.target.value })}
+                          placeholder="Nama ayah kandung"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Umur Bapak (th)
+                        </label>
+                        <input
+                          type="number"
+                          value={regForm.fatherAge || ""}
+                          onChange={(e) =>
+                            setRegForm({ ...regForm, fatherAge: Number(e.target.value) })
+                          }
+                          placeholder="58"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">12b. Nama Ibu</label>
+                        <input
+                          type="text"
+                          value={regForm.motherName}
+                          onChange={(e) => setRegForm({ ...regForm, motherName: e.target.value })}
+                          placeholder="Nama ibu kandung"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">Umur Ibu (Th)</label>
+                        <input
+                          type="number"
+                          value={regForm.motherAge || ""}
+                          onChange={(e) =>
+                            setRegForm({ ...regForm, motherAge: Number(e.target.value) })
+                          }
+                          placeholder="53"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono"
+                        />
+                      </div>
+
+                      <div className="lg:col-span-2">
+                        <label className="font-bold text-sky-900 block mb-1">
+                          12c. Kakek dari Bapak (Wajib untuk Visa Timur Tengah / Nama 3 Suku Kata)
+                        </label>
+                        <input
+                          type="text"
+                          value={regForm.paternalGrandfatherName}
+                          onChange={(e) =>
+                            setRegForm({
+                              ...regForm,
+                              paternalGrandfatherName: e.target.value,
+                            })
+                          }
+                          placeholder="Nama kakek kandung dari pihak bapak"
+                          className="w-full rounded-lg border border-sky-300 bg-white px-3 py-2 font-semibold text-slate-900"
+                        />
+                      </div>
+
+                      <div className="lg:col-span-2">
+                        <label className="font-bold text-slate-700 block mb-1">
+                          13a. Nama Suami / Wali
+                        </label>
+                        <input
+                          type="text"
+                          value={regForm.spouseOrGuardianName}
+                          onChange={(e) =>
+                            setRegForm({ ...regForm, spouseOrGuardianName: e.target.value })
+                          }
+                          placeholder="Nama suami (atau '-' jika belum kawin)"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          13b. Umur Suami (Th.)
+                        </label>
+                        <input
+                          type="number"
+                          value={regForm.spouseAge || ""}
+                          onChange={(e) =>
+                            setRegForm({ ...regForm, spouseAge: Number(e.target.value) })
+                          }
+                          placeholder="32"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          13c. Pekerjaan Suami
+                        </label>
+                        <input
+                          type="text"
+                          value={regForm.spouseOccupation}
+                          onChange={(e) =>
+                            setRegForm({ ...regForm, spouseOccupation: e.target.value })
+                          }
+                          placeholder="Wiraswasta / Petani"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          14a. Keluarga Lain : Nama
+                        </label>
+                        <input
+                          type="text"
+                          value={regForm.emergencyContactName}
+                          onChange={(e) =>
+                            setRegForm({ ...regForm, emergencyContactName: e.target.value })
+                          }
+                          placeholder="Nama keluarga yang dihubungi"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          14b. Hubungan
+                        </label>
+                        <input
+                          type="text"
+                          value={regForm.emergencyContactRelation}
+                          onChange={(e) =>
+                            setRegForm({ ...regForm, emergencyContactRelation: e.target.value })
+                          }
+                          placeholder="Suami / Orang Tua / Kakak"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                        />
+                      </div>
+
+                      <div className="lg:col-span-2">
+                        <label className="font-bold text-slate-700 block mb-1">
+                          14c. No. Tlp Keluarga Lain
+                        </label>
+                        <input
+                          type="text"
+                          value={regForm.emergencyContactPhone}
+                          onChange={(e) =>
+                            setRegForm({ ...regForm, emergencyContactPhone: e.target.value })
+                          }
+                          placeholder="0852-xxxx-xxxx"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* BAGIAN 3: POIN 15 TABEL PENGALAMAN BEKERJA DILUAR NEGERI (Ex/Non) & 15. PEMAHAMAN BAHASA */}
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 space-y-4">
+                    <div className="border-b border-slate-200 pb-2">
+                      <span className="rounded bg-slate-900 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+                        POIN 15 · PENGALAMAN BEKERJA DILUAR NEGERI (Ex/Non) & PEMAHAMAN BAHASA
+                      </span>
+                      <h4 className="mt-1 text-sm font-bold text-slate-900">
+                        Tabel Negara & Kota, Lama, Periode, Status Pemulangan (SELESAI / KASUS / KETERANGAN) & Bahasa Arab/Inggris
+                      </h4>
+                    </div>
+
+                    <div className="overflow-x-auto rounded-xl border border-slate-300 bg-white">
+                      <table className="w-full text-left text-xs">
+                        <thead className="border-b border-slate-300 bg-slate-100 text-[10px] font-bold uppercase text-slate-800">
+                          <tr>
+                            <th className="px-2.5 py-2 w-10 text-center">No</th>
+                            <th className="px-3 py-2">NEGARA DAN KOTA</th>
+                            <th className="px-3 py-2 w-28">LAMA</th>
+                            <th className="px-3 py-2 w-32">PERIODE</th>
+                            <th className="px-2.5 py-2 text-center w-20">SELESAI</th>
+                            <th className="px-2.5 py-2 text-center w-20">KASUS</th>
+                            <th className="px-3 py-2">KETERANGAN</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200">
+                          {(regForm.overseasExperiences || []).map((row, idx) => (
+                            <tr key={row.no} className="hover:bg-slate-50">
+                              <td className="px-2.5 py-1.5 text-center font-mono font-bold text-slate-600">
+                                {row.no}.
+                              </td>
+                              <td className="px-2 py-1.5">
+                                <input
+                                  type="text"
+                                  value={row.countryAndCity}
+                                  onChange={(e) => {
+                                    const next = [...(regForm.overseasExperiences || [])];
+                                    next[idx] = { ...next[idx], countryAndCity: e.target.value };
+                                    setRegForm({
+                                      ...regForm,
+                                      overseasExperiences: next,
+                                      workExperience1:
+                                        idx === 0 && e.target.value
+                                          ? `${next[0].period} : ${e.target.value} (${next[0].duration})`
+                                          : regForm.workExperience1,
+                                    });
+                                  }}
+                                  placeholder={idx === 0 ? "Contoh: Arab Saudi - Riyadh" : ""}
+                                  className="w-full rounded border border-slate-200 px-2 py-1"
+                                />
+                              </td>
+                              <td className="px-2 py-1.5">
+                                <input
+                                  type="text"
+                                  value={row.duration}
+                                  onChange={(e) => {
+                                    const next = [...(regForm.overseasExperiences || [])];
+                                    next[idx] = { ...next[idx], duration: e.target.value };
+                                    setRegForm({ ...regForm, overseasExperiences: next });
+                                  }}
+                                  placeholder={idx === 0 ? "2 Tahun" : ""}
+                                  className="w-full rounded border border-slate-200 px-2 py-1 font-mono"
+                                />
+                              </td>
+                              <td className="px-2 py-1.5">
+                                <input
+                                  type="text"
+                                  value={row.period}
+                                  onChange={(e) => {
+                                    const next = [...(regForm.overseasExperiences || [])];
+                                    next[idx] = { ...next[idx], period: e.target.value };
+                                    setRegForm({ ...regForm, overseasExperiences: next });
+                                  }}
+                                  placeholder={idx === 0 ? "2022 - 2024" : ""}
+                                  className="w-full rounded border border-slate-200 px-2 py-1 font-mono"
+                                />
+                              </td>
+                              <td className="px-2.5 py-1.5 text-center">
+                                <input
+                                  type="checkbox"
+                                  checked={row.returnStatus === "SELESAI"}
+                                  onChange={(e) => {
+                                    const next = [...(regForm.overseasExperiences || [])];
+                                    next[idx] = {
+                                      ...next[idx],
+                                      returnStatus: e.target.checked ? "SELESAI" : "NONE",
+                                    };
+                                    setRegForm({ ...regForm, overseasExperiences: next });
+                                  }}
+                                  className="h-4 w-4 accent-emerald-600 cursor-pointer"
+                                />
+                              </td>
+                              <td className="px-2.5 py-1.5 text-center">
+                                <input
+                                  type="checkbox"
+                                  checked={row.returnStatus === "KASUS"}
+                                  onChange={(e) => {
+                                    const next = [...(regForm.overseasExperiences || [])];
+                                    next[idx] = {
+                                      ...next[idx],
+                                      returnStatus: e.target.checked ? "KASUS" : "NONE",
+                                    };
+                                    setRegForm({ ...regForm, overseasExperiences: next });
+                                  }}
+                                  className="h-4 w-4 accent-rose-600 cursor-pointer"
+                                />
+                              </td>
+                              <td className="px-2 py-1.5">
+                                <input
+                                  type="text"
+                                  value={row.remarks}
+                                  onChange={(e) => {
+                                    const next = [...(regForm.overseasExperiences || [])];
+                                    next[idx] = { ...next[idx], remarks: e.target.value };
+                                    setRegForm({ ...regForm, overseasExperiences: next });
+                                  }}
+                                  placeholder={idx === 0 ? "Finish Kontrak 2 Th Baik" : ""}
+                                  className="w-full rounded border border-slate-200 px-2 py-1"
+                                />
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div>
+                      <label className="font-bold text-slate-700 block mb-1">
+                        Keterangan Pengalaman Bekerja di Luar Negeri (Baris Bawah Tabel 15)
+                      </label>
+                      <input
+                        type="text"
+                        value={regForm.overseasExperienceNotes}
+                        onChange={(e) =>
+                          setRegForm({ ...regForm, overseasExperienceNotes: e.target.value })
+                        }
+                        placeholder="Keterangan tambahan pengalaman kerja luar negeri / lokal..."
+                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                      />
+                    </div>
+
+                    {/* 15. PEMAHAMAN BAHASA (A. Bahasa Arab & B. Bahasa Inggris) */}
+                    <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-3">
+                      <label className="font-bold text-slate-900 block">
+                        15. PEMAHAMAN BAHASA (Sesuai Lembar Formulir Baru F4):
+                      </label>
+                      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-2">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <span className="font-bold text-slate-800">A. Bahasa Arab :</span>
+                            <div className="flex items-center gap-2">
+                              {(
+                                [
+                                  { id: "TIDAK_BISA", label: "Tidak Bisa" },
+                                  { id: "SEDIKIT", label: "Sedikit" },
+                                  { id: "LANCAR", label: "Lancar" },
+                                ] as { id: F4LangLevel; label: string }[]
+                              ).map((opt) => (
+                                <label
+                                  key={opt.id}
+                                  className={`cursor-pointer rounded-lg border px-2.5 py-1 text-[11px] font-bold ${
+                                    regForm.arabicLevelF4 === opt.id
+                                      ? "border-sky-600 bg-sky-600 text-white"
+                                      : "border-slate-300 bg-white text-slate-700"
+                                  }`}
+                                >
+                                  <input
+                                    type="radio"
+                                    name="f4-arab"
+                                    className="hidden"
+                                    checked={regForm.arabicLevelF4 === opt.id}
+                                    onChange={() =>
+                                      setRegForm({
+                                        ...regForm,
+                                        arabicLevelF4: opt.id,
+                                        languageSkills: {
+                                          ...regForm.languageSkills,
+                                          arabic:
+                                            opt.id === "LANCAR"
+                                              ? "BAIK"
+                                              : opt.id === "SEDIKIT"
+                                              ? "CUKUP"
+                                              : "BURUK",
+                                        },
+                                      })
+                                    }
+                                  />
+                                  {opt.label}
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                          <input
+                            type="text"
+                            value={regForm.arabicNotesF4}
+                            onChange={(e) =>
+                              setRegForm({ ...regForm, arabicNotesF4: e.target.value })
+                            }
+                            placeholder="Ket. Bahasa Arab..."
+                            className="w-full rounded border border-slate-300 bg-white px-2.5 py-1.5"
+                          />
+                        </div>
+
+                        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-2">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <span className="font-bold text-slate-800">B. Bahasa Inggris :</span>
+                            <div className="flex items-center gap-2">
+                              {(
+                                [
+                                  { id: "TIDAK_BISA", label: "Tidak Bisa" },
+                                  { id: "SEDIKIT", label: "Sedikit" },
+                                  { id: "LANCAR", label: "Lancar" },
+                                ] as { id: F4LangLevel; label: string }[]
+                              ).map((opt) => (
+                                <label
+                                  key={opt.id}
+                                  className={`cursor-pointer rounded-lg border px-2.5 py-1 text-[11px] font-bold ${
+                                    regForm.englishLevelF4 === opt.id
+                                      ? "border-sky-600 bg-sky-600 text-white"
+                                      : "border-slate-300 bg-white text-slate-700"
+                                  }`}
+                                >
+                                  <input
+                                    type="radio"
+                                    name="f4-eng"
+                                    className="hidden"
+                                    checked={regForm.englishLevelF4 === opt.id}
+                                    onChange={() =>
+                                      setRegForm({
+                                        ...regForm,
+                                        englishLevelF4: opt.id,
+                                        languageSkills: {
+                                          ...regForm.languageSkills,
+                                          english:
+                                            opt.id === "LANCAR"
+                                              ? "BAIK"
+                                              : opt.id === "SEDIKIT"
+                                              ? "CUKUP"
+                                              : "BURUK",
+                                        },
+                                      })
+                                    }
+                                  />
+                                  {opt.label}
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                          <input
+                            type="text"
+                            value={regForm.englishNotesF4}
+                            onChange={(e) =>
+                              setRegForm({ ...regForm, englishNotesF4: e.target.value })
+                            }
+                            placeholder="Ket. Bahasa Inggris..."
+                            className="w-full rounded border border-slate-300 bg-white px-2.5 py-1.5"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* BAGIAN 4: POIN 16 KESANGGUPAN BEKERJA DILUAR NEGERI & MASAKAN ARAB (15 MENU) */}
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 space-y-4">
+                    <div className="border-b border-slate-200 pb-2">
+                      <span className="rounded bg-teal-700 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+                        POIN 16 · KESANGGUPAN BEKERJA DILUAR NEGERI & DAFTAR MASAKAN ARAB
+                      </span>
+                      <h4 className="mt-1 text-sm font-bold text-slate-900">
+                        a. Merawat Anak Bayi/Kecil · b. Merawat Orang Tua Jompo · c. Bersih-bersih Rumah/Cuci/Setrika · d. Memasak Masakan Arab
+                      </h4>
+                    </div>
+
+                    <div className="space-y-2.5">
+                      {[
+                        {
+                          boolKey: "willingCareBaby",
+                          noteKey: "willingCareBabyNotes",
+                          label: "a. Merawat Anak Bayi / Anak Kecil",
+                        },
+                        {
+                          boolKey: "willingCareElderly",
+                          noteKey: "willingCareElderlyNotes",
+                          label: "b. Merawat Orang Tua Jompo",
+                        },
+                        {
+                          boolKey: "willingHousekeeping",
+                          noteKey: "willingHousekeepingNotes",
+                          label: "c. Bersih-bersih Rumah / Cuci Baju / Menyetrika dll.",
+                        },
+                      ].map((item) => {
+                        const isChecked = Boolean(
+                          regForm[item.boolKey as keyof OfficialRegistrationForm]
+                        );
+                        const noteVal = String(
+                          regForm[item.noteKey as keyof OfficialRegistrationForm] || ""
+                        );
+                        return (
+                          <div
+                            key={item.boolKey}
+                            className="grid grid-cols-1 gap-2 rounded-xl border border-slate-200 bg-white p-3 sm:grid-cols-12 items-center"
+                          >
+                            <label className="sm:col-span-5 inline-flex items-center gap-2.5 font-bold text-slate-900 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={(e) =>
+                                  setRegForm({
+                                    ...regForm,
+                                    [item.boolKey]: e.target.checked,
+                                  })
+                                }
+                                className="h-4 w-4 accent-teal-600"
+                              />
+                              <span>{item.label}</span>
+                              <span className="rounded bg-slate-100 px-2 py-0.5 font-mono text-[11px]">
+                                ({isChecked ? "✓" : " "})
+                              </span>
+                            </label>
+                            <div className="sm:col-span-7 flex items-center gap-2">
+                              <span className="font-semibold text-slate-500 shrink-0">Ket :</span>
+                              <input
+                                type="text"
+                                value={noteVal}
+                                onChange={(e) =>
+                                  setRegForm({
+                                    ...regForm,
+                                    [item.noteKey]: e.target.value,
+                                  })
+                                }
+                                placeholder="Keterangan kesanggupan..."
+                                className="w-full rounded-lg border border-slate-200 px-3 py-1.5"
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* 16.d Memasak masakan Arab (15 Menu sesuai Formulir Baru F4s.pdf) */}
+                    <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-2.5">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <label className="font-bold text-slate-900">
+                          d. Memasak masakan Arab (Klik menu yang dikuasai CPMI — tercetak bergaris bawah/centang di Formulir F4):
+                        </label>
+                        <div className="flex gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setRegForm({
+                                ...regForm,
+                                arabicCookingSkills: [
+                                  "Ruz Kabsah",
+                                  "Ruz Bukhari",
+                                  "Ruz Briyani",
+                                  "Ruz Makbus",
+                                  "Saluna/Idam",
+                                  "Macarona",
+                                  "Makarona Basamil",
+                                  "Warag Enab",
+                                  "Fatair",
+                                  "Pizza",
+                                  "Sambosa",
+                                  "Salatah",
+                                  "Cake",
+                                  "Cream Caramel",
+                                  "Juice",
+                                ],
+                              })
+                            }
+                            className="rounded border border-teal-300 bg-teal-50 px-2 py-0.5 text-[10px] font-bold text-teal-800 hover:bg-teal-100"
+                          >
+                            Pilih Semua Menu
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setRegForm({ ...regForm, arabicCookingSkills: [] })}
+                            className="rounded border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-100"
+                          >
+                            Kosongkan
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+                        {[
+                          "Ruz Kabsah",
+                          "Ruz Bukhari",
+                          "Ruz Briyani",
+                          "Ruz Makbus",
+                          "Saluna/Idam",
+                          "Macarona",
+                          "Makarona Basamil",
+                          "Warag Enab",
+                          "Fatair",
+                          "Pizza",
+                          "Sambosa",
+                          "Salatah",
+                          "Cake",
+                          "Cream Caramel",
+                          "Juice",
+                        ].map((dish) => {
+                          const active = (regForm.arabicCookingSkills || []).includes(dish);
+                          return (
+                            <button
+                              key={dish}
+                              type="button"
+                              onClick={() => {
+                                const cur = regForm.arabicCookingSkills || [];
+                                const next = cur.includes(dish)
+                                  ? cur.filter((d) => d !== dish)
+                                  : [...cur, dish];
+                                setRegForm({ ...regForm, arabicCookingSkills: next });
+                              }}
+                              className={`flex items-center justify-between rounded-lg border px-2.5 py-1.5 text-left text-[11px] font-semibold transition ${
+                                active
+                                  ? "border-teal-600 bg-teal-50 text-teal-950 shadow-2xs"
+                                  : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
+                              }`}
+                            >
+                              <span>- {dish}</span>
+                              {active && <span className="font-bold text-teal-700">✓</span>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* BAGIAN 5: POIN 17 KELENGKAPAN DOKUMEN (copy / asli) + CATATAN + TERIMA / TIDAK DITERIMA + ACC & TANDA TANGAN */}
+                  <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-4 space-y-4">
+                    <div className="border-b border-amber-200/80 pb-2">
+                      <span className="rounded bg-amber-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+                        POIN 17 · KELENGKAPAN DOKUMEN (COPY / ASLI), KEPUTUSAN TERIMA / TIDAK DITERIMA & ACC PETUGAS PT
+                      </span>
+                      <h4 className="mt-1 text-sm font-bold text-slate-900">
+                        Checklist 9 Dokumen Poin 17 (a, b, c) + Catatan + Keputusan Terima / Tidak Diterima + ACC
+                      </h4>
+                    </div>
+
+                    <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+                      <table className="w-full text-left text-xs">
+                        <thead className="border-b border-slate-200 bg-slate-100 text-[10px] font-bold uppercase text-slate-700">
+                          <tr>
+                            <th className="px-3 py-2">Baris F4</th>
+                            <th className="px-3 py-2">Dokumen Poin 17</th>
+                            <th className="px-3 py-2 text-center">ASLI</th>
+                            <th className="px-3 py-2 text-center">COPY</th>
+                            <th className="px-3 py-2 text-center">Belum Ada</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {[
+                            { grp: "17.a", key: "paspor", label: "Passport Lama" },
+                            { grp: "17.a", key: "sttbIjazah", label: "Ijazah / STTB" },
+                            { grp: "17.a", key: "kartuBpjs", label: "Kartu BPJS" },
+                            { grp: "17.b", key: "ktp", label: "KTP" },
+                            { grp: "17.b", key: "akteKelahiran", label: "Akta Lahir" },
+                            { grp: "17.b", key: "izinKeluarga", label: "Surat Izin Orang Tua" },
+                            { grp: "17.c", key: "kk", label: "KK (Kartu Keluarga)" },
+                            { grp: "17.c", key: "izinSuami", label: "Surat Izin Suami" },
+                          ].map((docRow) => {
+                            const curVal =
+                              regForm.docHandover[
+                                docRow.key as keyof typeof regForm.docHandover
+                              ] as DocHandoverType;
+                            return (
+                              <tr key={docRow.key} className="hover:bg-slate-50">
+                                <td className="px-3 py-2 font-mono font-bold text-slate-500">
+                                  {docRow.grp}
+                                </td>
+                                <td className="px-3 py-2 font-bold text-slate-900">
+                                  {docRow.label}
+                                </td>
+                                {(["ASLI", "COPY", "NONE"] as DocHandoverType[]).map((opt) => (
+                                  <td key={opt} className="px-3 py-2 text-center">
+                                    <input
+                                      type="radio"
+                                      name={`doc-f4-${docRow.key}`}
+                                      checked={curVal === opt}
+                                      onChange={() =>
+                                        setRegForm({
+                                          ...regForm,
+                                          docHandover: {
+                                            ...regForm.docHandover,
+                                            [docRow.key]: opt,
+                                          },
+                                        })
+                                      }
+                                      className="h-4 w-4 cursor-pointer accent-teal-600"
+                                    />
+                                  </td>
+                                ))}
+                              </tr>
+                            );
+                          })}
+                          <tr className="hover:bg-slate-50">
+                            <td className="px-3 py-2 font-mono font-bold text-slate-500">17.c</td>
+                            <td className="px-3 py-1.5">
+                              <input
+                                type="text"
+                                value={regForm.docHandover.otherDoc8Name}
+                                onChange={(e) =>
+                                  setRegForm({
+                                    ...regForm,
+                                    docHandover: {
+                                      ...regForm.docHandover,
+                                      otherDoc8Name: e.target.value,
+                                    },
+                                  })
+                                }
+                                placeholder="Dokumen Lain (Misal: Buku Nikah / SKCK)"
+                                className="w-full rounded border border-slate-200 px-2.5 py-1 text-xs"
+                              />
+                            </td>
+                            {(["ASLI", "COPY", "NONE"] as DocHandoverType[]).map((opt) => (
+                              <td key={opt} className="px-3 py-2 text-center">
+                                <input
+                                  type="radio"
+                                  name="doc-f4-other8"
+                                  checked={regForm.docHandover.otherDoc8Status === opt}
+                                  onChange={() =>
+                                    setRegForm({
+                                      ...regForm,
+                                      docHandover: {
+                                        ...regForm.docHandover,
+                                        otherDoc8Status: opt,
+                                      },
+                                    })
+                                  }
+                                  className="h-4 w-4 cursor-pointer accent-teal-600"
+                                />
+                              </td>
+                            ))}
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+                      <div className="lg:col-span-2">
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Catatan (Tercetak pada 3 baris titik-titik di kiri bawah Formulir F4)
+                        </label>
+                        <textarea
+                          rows={2}
+                          value={regForm.sponsorNotes}
+                          onChange={(e) => setRegForm({ ...regForm, sponsorNotes: e.target.value })}
+                          placeholder="Catatan hasil wawancara / kelengkapan berkas..."
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Keputusan Seleksi: Terima / Tidak diterima
+                        </label>
+                        <select
+                          value={regForm.acceptanceDecision}
+                          onChange={(e) =>
+                            setRegForm({
+                              ...regForm,
+                              acceptanceDecision: e.target.value as
+                                | "TERIMA"
+                                | "TIDAK_DITERIMA"
+                                | "PENDING",
+                            })
+                          }
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-bold"
+                        >
+                          <option value="TERIMA">✓ Terima ( ✓ )</option>
+                          <option value="TIDAK_DITERIMA">✗ Tidak diterima ( ✓ )</option>
+                          <option value="PENDING">Belum Diputuskan ( )</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          ACC : (Pejabat Penyetuju PT)
+                        </label>
+                        <input
+                          type="text"
+                          value={regForm.accByName}
+                          onChange={(e) => setRegForm({ ...regForm, accByName: e.target.value })}
+                          placeholder="H. Bambang Wijaya, S.E."
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-bold"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Cabang P3MI Penerima
+                        </label>
+                        <select
+                          value={newForm.branchId}
+                          onChange={(e) => setNewForm({ ...newForm, branchId: e.target.value })}
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-semibold"
+                        >
+                          {db.branches.map((b) => (
+                            <option key={b.id} value={b.id}>
+                              {b.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          Mengetahui/Saksi (Petugas Lapangan/Rekrut)
                         </label>
                         <input
                           type="text"
@@ -8794,34 +9187,7 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
 
                       <div>
                         <label className="font-bold text-slate-700 block mb-1">
-                          Nomor Telp / HP Sponsor
-                        </label>
-                        <input
-                          type="text"
-                          value={regForm.sponsorOfficerPhone}
-                          onChange={(e) =>
-                            setRegForm({ ...regForm, sponsorOfficerPhone: e.target.value })
-                          }
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono"
-                        />
-                      </div>
-
-                      <div className="lg:col-span-2">
-                        <label className="font-bold text-slate-700 block mb-1">
-                          Catatan Petugas Lapangan / Sponsor
-                        </label>
-                        <input
-                          type="text"
-                          value={regForm.sponsorNotes}
-                          onChange={(e) => setRegForm({ ...regForm, sponsorNotes: e.target.value })}
-                          placeholder="Catatan hasil wawancara lapangan / kelengkapan izin keluarga..."
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="font-bold text-slate-700 block mb-1">
-                          Yang Menerima CPMI (Petugas PT / Data Entry)
+                          Yang Menerima CPMI (Petugas PT.)
                         </label>
                         <input
                           type="text"
@@ -8835,7 +9201,7 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
 
                       <div>
                         <label className="font-bold text-slate-700 block mb-1">
-                          Tanggal Tandatangan Formulir
+                          Tgl Pendaftaran (Kanan Atas F4)
                         </label>
                         <input
                           type="date"
@@ -8857,7 +9223,7 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
                         onClick={() => setRegModalTab("SCAN_DAN_WA")}
                         className="rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 font-semibold text-slate-700 hover:bg-slate-50"
                       >
-                        ← Lihat Foto Scan Formulir / WA Sponsor
+                        ← Lihat Foto Scan Formulir Baru F4 / WA Sponsor
                       </button>
                     </div>
 
@@ -8874,7 +9240,7 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
                         className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-6 py-2.5 text-sm font-bold text-white shadow-md hover:bg-slate-800"
                       >
                         <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                        Simpan Formulir PT Panca Banyu Ajisakti ke Sistem
+                        Simpan Formulir Baru F4 ke Sistem
                       </button>
                     </div>
                   </div>
@@ -8887,7 +9253,7 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
 
       {/* =========================================================
           IDE 3: MODAL CETAK LEMBAR FISIK "FORMULIR PENDAFTARAN CPMI/CTKI"
-          PT PANCA BANYU AJISAKTI (100% IDENTIK DENGAN KERTAS ASLI)
+          PT PANCA BANYU AJISAKTI (100% IDENTIK DENGAN FORMULIR BARU F4s.pdf)
          ========================================================= */}
       {printingRegFormCandidate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-3 sm:p-6 backdrop-blur-sm">
@@ -8896,21 +9262,29 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
             <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900 px-6 py-3.5 text-white">
               <div>
                 <span className="rounded bg-amber-500 px-2 py-0.5 text-[10px] font-extrabold uppercase text-slate-950">
-                  IDE 3 · CETAK LEMBAR FISIK IDENTIK 100%
+                  IDE 3 · CETAK LEMBAR FISIK IDENTIK 100% (FORMULIR BARU F4s.pdf)
                 </span>
                 <h3 className="mt-0.5 text-sm font-bold">
-                  Pratinjau Cetak: FORMULIR PENDAFTARAN CPMI/CTKI —{" "}
+                  Pratinjau Cetak F4: FORMULIR PENDAFTARAN CPMI/CTKI —{" "}
                   {printingRegFormCandidate.fullName} ({printingRegFormCandidate.regNumber})
                 </h3>
               </div>
               <div className="flex items-center gap-2">
+                <a
+                  href="/Formulir-Baru-F4s.pdf"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-xs font-bold text-white hover:bg-white/20"
+                >
+                  📄 Buka PDF Blanko Asli (F4s.pdf)
+                </a>
                 <button
                   type="button"
                   onClick={() => window.print()}
                   className="inline-flex items-center gap-1.5 rounded-xl bg-sky-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-sky-500"
                 >
                   <Printer className="h-4 w-4" />
-                  🖨️ Cetak / Simpan PDF (A4/F4)
+                  🖨️ Cetak / Simpan PDF (F4)
                 </button>
                 <button
                   type="button"
@@ -8922,583 +9296,784 @@ Catatan Sponsor: Berkas fisik asli sudah lengkap diserahkan ke Data Entry.`
               </div>
             </div>
 
-            {/* KERTAS FORMULIR PENDAFTARAN CPMI/CTKI PT PANCA BANYU AJISAKTI */}
+            {/* KERTAS FORMULIR BARU F4 PT PANCA BANYU AJISAKTI (100% IDENTIK DENGAN FORMULIR BARU F4s.pdf) */}
             <div className="flex-1 overflow-y-auto p-4 sm:p-8">
               {(() => {
                 const cand = printingRegFormCandidate;
                 const rf: OfficialRegistrationForm = cand.registrationForm || regForm;
+                const signedParts = (rf.formSignedDate || "2026-10-16").split("-");
+                const signedYyyy = signedParts[0] || "2026";
+                const signedMm = signedParts[1] || "10";
+                const signedDd = signedParts[2] || "16";
+
                 const bDateParts = (cand.birthDate || "1998-08-14").split("-");
-                const yyyy = bDateParts[0] || "1998";
-                const mm = bDateParts[1] || "08";
-                const dd = bDateParts[2] || "14";
-                const dateBoxes = [
-                  dd[0] || "1",
-                  dd[1] || "4",
-                  mm[0] || "0",
-                  mm[1] || "8",
-                  yyyy[0] || "1",
-                  yyyy[1] || "9",
-                  yyyy[2] || "9",
-                  yyyy[3] || "8",
-                ];
+                const bFormatted = `${bDateParts[2] || "14"}-${bDateParts[1] || "08"}-${
+                  bDateParts[0] || "1998"
+                }`;
+
+                const eduUpper = (cand.education || "").toUpperCase();
+                const isSd = eduUpper.includes("SD");
+                const isSmp = eduUpper.includes("SMP") || eduUpper.includes("MTS");
+                const isSma =
+                  eduUpper.includes("SMA") ||
+                  eduUpper.includes("SMK") ||
+                  eduUpper.includes("MA") ||
+                  (!isSd && !isSmp && !eduUpper.includes("D3") && !eduUpper.includes("S1"));
+                const isUniv =
+                  eduUpper.includes("D3") ||
+                  eduUpper.includes("S1") ||
+                  eduUpper.includes("DIPLOMA") ||
+                  eduUpper.includes("UNIV");
+
+                const marUpper = (cand.maritalStatus || "").toUpperCase();
+                const isBelumKawin = marUpper.includes("BELUM");
+                const isJanda = marUpper.includes("CERAI") || marUpper.includes("JANDA");
+                const isKawin = !isBelumKawin && !isJanda;
+
+                const expRows =
+                  rf.overseasExperiences && rf.overseasExperiences.length > 0
+                    ? rf.overseasExperiences
+                    : [
+                        {
+                          no: 1,
+                          countryAndCity: rf.workExperience1 || "-",
+                          duration: "2 Tahun",
+                          period: "2022 - 2024",
+                          returnStatus: "SELESAI" as const,
+                          remarks: "Finish Kontrak",
+                        },
+                        {
+                          no: 2,
+                          countryAndCity: "",
+                          duration: "",
+                          period: "",
+                          returnStatus: "NONE" as const,
+                          remarks: "",
+                        },
+                        {
+                          no: 3,
+                          countryAndCity: "",
+                          duration: "",
+                          period: "",
+                          returnStatus: "NONE" as const,
+                          remarks: "",
+                        },
+                        {
+                          no: 4,
+                          countryAndCity: "",
+                          duration: "",
+                          period: "",
+                          returnStatus: "NONE" as const,
+                          remarks: "",
+                        },
+                      ];
+
+                const cookingSet = new Set(rf.arabicCookingSkills || []);
+
+                const renderDocStatus = (st?: DocHandoverType) => (
+                  <span>
+                    (
+                    <span
+                      className={
+                        st === "COPY"
+                          ? "font-extrabold underline decoration-2 text-blue-900"
+                          : ""
+                      }
+                    >
+                      copy
+                    </span>{" "}
+                    /{" "}
+                    <span
+                      className={
+                        st === "ASLI"
+                          ? "font-extrabold underline decoration-2 text-blue-900"
+                          : ""
+                      }
+                    >
+                      asli
+                    </span>
+                    )
+                  </span>
+                );
 
                 return (
-                  <div className="mx-auto max-w-[820px] rounded-sm border-2 border-slate-800 bg-white p-6 sm:p-8 text-[11px] leading-snug text-slate-900 shadow-2xl">
-                    {/* KOP SURAT PT PANCA BANYU AJISAKTI + KOTAK PAS FOTO 4x6 */}
-                    <div className="grid grid-cols-12 gap-3 items-start">
-                      <div className="col-span-9">
-                        <div className="flex items-center gap-3">
-                          {/* Logo Segitiga Merah Panca Banyu Ajisakti */}
-                          <div className="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-full border-2 border-slate-800 bg-white p-1 text-center">
-                            <span className="text-[7px] font-black tracking-tighter text-slate-900 uppercase">
-                              PANCA BANYU
-                            </span>
-                            <span className="text-2xl font-black leading-none text-red-600">
-                              ▲
-                            </span>
-                            <span className="text-[7px] font-black tracking-tighter text-slate-900 uppercase">
-                              AJISAKTI
-                            </span>
-                          </div>
-                          <div className="flex-1 text-center">
-                            <h2 className="text-xl sm:text-2xl font-black tracking-wider text-blue-900 uppercase">
-                              PANCA BANYU AJISAKTI
-                            </h2>
-                            <p className="text-[11px] font-extrabold tracking-widest text-blue-950 uppercase">
-                              JASA TENAGA KERJA - INDONESIA MANPOWER SERVICE
-                            </p>
-                            <p className="mt-0.5 text-[10px] text-slate-700">
-                              Jl. Kayu Manis No. 51, Kel. Balekambang, Kec. Kramatjati, Jakarta Timur
-                            </p>
-                            <p className="text-[10px] text-slate-700">
-                              Telp. +62-21 29373673, Fax.: +62-21 29826026, Email : pancabanyu@yahoo.com
-                            </p>
-                          </div>
+                  <div className="mx-auto max-w-[850px] rounded-xs border border-slate-400 bg-white px-7 py-6 font-serif text-[11.5px] leading-[1.38] text-slate-950 shadow-2xl">
+                    {/* KOP SURAT FORMULIR BARU F4s.pdf: LOGO KIRI + NAMA PT TENGAH + KOTAK No. Reg. & Tgl KANAN */}
+                    <div className="grid grid-cols-12 items-start gap-2 border-b-2 border-slate-900 pb-2.5">
+                      {/* Logo Bulat Segitiga Merah Panca Banyu Ajisakti */}
+                      <div className="col-span-2 flex justify-start">
+                        <div className="flex h-20 w-20 flex-col items-center justify-center rounded-full border-2 border-slate-800 bg-white p-1 text-center">
+                          <span className="font-sans text-[7.5px] font-black tracking-tight text-slate-900 uppercase">
+                            PANCA BANYU
+                          </span>
+                          <span className="font-sans text-3xl font-black leading-none text-red-600">
+                            ▲
+                          </span>
+                          <span className="font-sans text-[7.5px] font-black tracking-tight text-slate-900 uppercase">
+                            AJISAKTI
+                          </span>
                         </div>
+                      </div>
 
-                        {/* Banner Biru FORMULIR PENDAFTARAN CPMI/CTKI + Nomor Pendaftaran */}
-                        <div className="mt-3 flex items-stretch gap-2">
-                          <div className="flex-1 bg-sky-600 px-3 py-1.5 text-center text-sm font-black tracking-wider text-white uppercase border border-sky-700">
-                            FORMULIR PENDAFTARAN CPMI/CTKI
-                          </div>
-                          <div className="w-48 border-2 border-slate-800 px-2 py-1 text-center">
-                            <span className="block text-[9px] font-semibold text-slate-600">
-                              Nomor Pendaftaran :
-                            </span>
-                            <strong className="font-mono text-xs font-black text-slate-950">
-                              {cand.regNumber}
-                            </strong>
-                          </div>
-                        </div>
-
-                        {/* Paragraf Pernyataan */}
-                        <p className="mt-2 text-justify text-[10.5px] leading-tight text-slate-800">
-                          Saya yang mengisi Biodata ini dengan sebenar-benarnya dan tanpa paksaan dari pihak manapun. Saya bertanggung jawab tentang kebenaran isinya dan bersedia menanggung kerugian pihak lain atau tuntutan hukum apa bila dikemudian hari saya terbukti memalsukan data-data pribadi saya. Data pribadi saya adalah sebagai berikut :
+                      {/* Teks Kop Tengah */}
+                      <div className="col-span-7 text-center font-sans">
+                        <h2 className="text-[21px] font-black tracking-wide text-slate-950 uppercase">
+                          PANCA BANYU AJISAKTI
+                        </h2>
+                        <p className="text-[11.5px] font-extrabold tracking-wider text-slate-900 uppercase">
+                          JASA TENAGA KERJA-INDONESIA MANPOWER SERVICE
+                        </p>
+                        <p className="mt-0.5 font-serif text-[11px] font-semibold text-slate-900">
+                          Jl. kayu manis No. 51 Kel. Bale Kambang Kec. Keramat Jati Jakarta Timur
+                        </p>
+                        <p className="font-serif text-[11px] font-semibold text-slate-900">
+                          Telp. +62-21 2937373 Fax +62-2129826026 Email pancabanyu@yahoo.com
                         </p>
                       </div>
 
-                      {/* Kotak Pas Foto 4x6 Biru di Kanan Atas */}
-                      <div className="col-span-3 flex justify-end">
-                        <div className="flex h-40 w-32 flex-col items-center justify-center overflow-hidden border-[3px] border-blue-900 bg-slate-50 p-1">
-                          <img
-                            src={getCandidateAvatarUrl(cand)}
-                            alt={cand.fullName}
-                            className="h-full w-full object-cover"
-                          />
+                      {/* Kotak No. Reg. & Tgl Kanan Atas */}
+                      <div className="col-span-3 flex flex-col items-end">
+                        <div className="w-full rounded-xl border-[1.5px] border-slate-900 px-2.5 py-1.5">
+                          <span className="block font-sans text-[10px] font-bold text-slate-900">
+                            No. Reg.
+                          </span>
+                          <strong className="block text-center font-mono text-[11.5px] font-black text-blue-950">
+                            {cand.regNumber}
+                          </strong>
+                        </div>
+                        <div className="mt-1.5 w-full text-right text-[11px] font-semibold">
+                          Tgl{" "}
+                          <span className="border-b border-dotted border-slate-800 px-1 font-mono font-bold text-blue-950">
+                            {signedDd}
+                          </span>{" "}
+                          /{" "}
+                          <span className="border-b border-dotted border-slate-800 px-1 font-mono font-bold text-blue-950">
+                            {signedMm}
+                          </span>{" "}
+                          /{" "}
+                          <span className="border-b border-dotted border-slate-800 px-1.5 font-mono font-bold text-blue-950">
+                            {signedYyyy}
+                          </span>
                         </div>
                       </div>
                     </div>
 
-                    {/* BARIS-BARIS KOTAK FORMULIR IDENTIK DENGAN KERTAS FISIK */}
-                    <div className="mt-3 space-y-1.5">
-                      {/* Baris 1: Nama Lengkap & Nama Panggilan */}
-                      <div className="grid grid-cols-12 gap-2 items-center">
-                        <div className="col-span-2 font-bold">Nama Lengkap :</div>
-                        <div className="col-span-5 border border-slate-700 px-2 py-1 font-bold uppercase">
+                    {/* JUDUL FORMULIR & PARAGRAF PERNYATAAN SESUAI FORMULIR BARU F4s.pdf */}
+                    <div className="mt-2 text-center">
+                      <h3 className="inline-block border-b-2 border-slate-950 font-sans text-[13px] font-black tracking-wide uppercase">
+                        FORMULIR PENDAFTARAN CPMI/CTKI
+                      </h3>
+                    </div>
+                    <p className="mt-1.5 text-justify text-[11px] leading-snug text-slate-900">
+                      Saya yang mengisi Biodata ini bertanggung jawab dan tanpa unsur paksaan dari pihak manapun terhadap isinya serta bersedia menanggung kerugian pihak lain atau tuntutan hukum apabila dikemudian hari terbukti memalsukan atau berbohong. Data diri saya adalah sebagai berikut :
+                    </p>
+
+                    {/* POIN 1 S/D 14 SESUAI URUTAN FORMULIR BARU F4s.pdf */}
+                    <div className="mt-2.5 space-y-1 text-[11.5px]">
+                      {/* 1. Negara Tujuan */}
+                      <div className="flex items-baseline">
+                        <span className="w-6 shrink-0">1.</span>
+                        <span className="w-36 shrink-0">Negara Tujuan</span>
+                        <span className="mr-2">:</span>
+                        <div className="flex-1 border-b border-dotted border-slate-800 font-bold text-blue-950 uppercase">
+                          {cand.destinationCountry} ({cand.jobSector})
+                        </div>
+                      </div>
+
+                      {/* 2. Nama Sponsor */}
+                      <div className="flex items-baseline">
+                        <span className="w-6 shrink-0">2.</span>
+                        <span className="w-36 shrink-0">Nama Sponsor</span>
+                        <span className="mr-2">:</span>
+                        <div className="flex-1 border-b border-dotted border-slate-800 font-bold text-blue-950">
+                          {rf.sponsorOfficerName}{" "}
+                          {rf.sponsorOfficerPhone ? `— Telp: ${rf.sponsorOfficerPhone}` : ""}
+                        </div>
+                      </div>
+
+                      {/* 3. Nama Lengkap ... Telp. ... */}
+                      <div className="flex items-baseline gap-2">
+                        <span className="w-6 shrink-0">3.</span>
+                        <span className="w-36 shrink-0">Nama Lengkap</span>
+                        <span className="mr-1">:</span>
+                        <div className="flex-1 border-b border-dotted border-slate-800 font-bold text-blue-950 uppercase">
                           {cand.fullName}
                         </div>
-                        <div className="col-span-2 text-right font-bold">Nama Panggilan :</div>
-                        <div className="col-span-3 border border-slate-700 px-2 py-1 font-bold">
-                          {rf.nickname || cand.fullName.split(" ")[0]}
-                        </div>
-                      </div>
-
-                      {/* Baris 2: Tempat & Tanggal Lahir (Kotak 8 Digit) + Tinggi Badan + Berat Badan */}
-                      <div className="grid grid-cols-12 gap-1.5 items-center">
-                        <div className="col-span-2 text-[10px] font-bold leading-tight">
-                          Tempat, dan Tanggal lahir :
-                        </div>
-                        <div className="col-span-3 border border-slate-700 px-2 py-1 font-semibold">
-                          {cand.birthPlace || "Indramayu"}
-                        </div>
-                        <div className="col-span-3 flex items-center gap-0.5">
-                          {dateBoxes.map((digit, i) => (
-                            <span
-                              key={i}
-                              className="flex h-6 w-5 items-center justify-center border border-slate-700 font-mono text-[11px] font-bold"
-                            >
-                              {digit}
-                            </span>
-                          ))}
-                        </div>
-                        <div className="col-span-2 flex items-center gap-1">
-                          <span className="text-[9.5px] font-bold leading-none">
-                            Tinggi Badan :
-                          </span>
-                          <div className="flex-1 border border-slate-700 px-1.5 py-1 text-center font-mono font-bold">
-                            {rf.heightCm} <span className="font-normal text-[9px]">Cm</span>
-                          </div>
-                        </div>
-                        <div className="col-span-2 flex items-center gap-1">
-                          <span className="text-[9.5px] font-bold leading-none">
-                            Berat Badan :
-                          </span>
-                          <div className="flex-1 border border-slate-700 px-1.5 py-1 text-center font-mono font-bold">
-                            {rf.weightKg} <span className="font-normal text-[9px]">Kg</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Baris 3: Agama, Jenis Kelamin, Status Perkawinan, Alamat lengkap label */}
-                      <div className="grid grid-cols-12 gap-2 items-center">
-                        <div className="col-span-1 font-bold">Agama :</div>
-                        <div className="col-span-2 border border-slate-700 px-2 py-1">
-                          {rf.religion}
-                        </div>
-                        <div className="col-span-2 text-right font-bold">Jenis Kelamin :</div>
-                        <div className="col-span-2 border border-slate-700 px-2 py-1">
-                          {cand.gender === "L" ? "Laki-laki" : "Perempuan"}
-                        </div>
-                        <div className="col-span-2 text-right font-bold">Status Perkawinan :</div>
-                        <div className="col-span-3 border border-slate-700 px-2 py-1">
-                          {cand.maritalStatus}
-                        </div>
-                      </div>
-
-                      {/* Baris 4 & 5: Alamat Lengkap + Kode Pos + Telp / Hp */}
-                      <div className="grid grid-cols-12 gap-2 items-center">
-                        <div className="col-span-2 font-bold">Alamat lengkap :</div>
-                        <div className="col-span-10 border border-slate-700 px-2 py-1">
-                          {cand.address}
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-12 gap-2 items-center">
-                        <div className="col-span-5 border border-slate-700 px-2 py-1 text-slate-600">
-                          Cabang P3MI: {db.branches.find((b) => b.id === cand.branchId)?.name}
-                        </div>
-                        <div className="col-span-1 text-right font-bold">Kode Pos :</div>
-                        <div className="col-span-2 border border-slate-700 px-2 py-1 font-mono">
-                          {rf.postalCode}
-                        </div>
-                        <div className="col-span-1 text-right font-bold">Telp / Hp :</div>
-                        <div className="col-span-3 border border-slate-700 px-2 py-1 font-mono font-bold">
+                        <span className="shrink-0">Telp.</span>
+                        <div className="w-44 border-b border-dotted border-slate-800 font-mono font-bold text-blue-950">
                           {cand.phone}
                         </div>
                       </div>
 
-                      {/* Baris 6: Pendidikan Terakhir, Lulus Tahun, No. KTP / Paspor */}
-                      <div className="grid grid-cols-12 gap-2 items-center">
-                        <div className="col-span-2 font-bold">Pendidikan Terakhir :</div>
-                        <div className="col-span-2 border border-slate-700 px-2 py-1">
-                          {cand.education}
+                      {/* 4. Tempat Tgl Lahir ... Umur Asli ... */}
+                      <div className="flex items-baseline gap-2">
+                        <span className="w-6 shrink-0">4.</span>
+                        <span className="w-36 shrink-0">Tempat Tgl Lahir</span>
+                        <span className="mr-1">:</span>
+                        <div className="flex-1 border-b border-dotted border-slate-800 font-semibold text-blue-950">
+                          {cand.birthPlace || "Indramayu"}, {bFormatted}
                         </div>
-                        <div className="col-span-2 text-right font-bold">Lulus Tahun :</div>
-                        <div className="col-span-1 border border-slate-700 px-2 py-1 font-mono text-center">
-                          {rf.graduationYear}
-                        </div>
-                        <div className="col-span-2 text-right font-bold">No. KTP / Paspor :</div>
-                        <div className="col-span-3 border border-slate-700 px-2 py-1 font-mono font-bold">
-                          {cand.nik || rf.ktpOrPassportNo}
+                        <span className="shrink-0">Umur Asli</span>
+                        <div className="w-36 border-b border-dotted border-slate-800 text-center font-mono font-bold text-blue-950">
+                          {rf.realAge || 28} Tahun
                         </div>
                       </div>
 
-                      {/* Baris 7: Nama Bapak + Umur & Nama Ibu + Umur */}
-                      <div className="grid grid-cols-12 gap-2 items-center">
-                        <div className="col-span-2 font-bold">Nama Bapak :</div>
-                        <div className="col-span-3 border border-slate-700 px-2 py-1">
-                          {rf.fatherName}
-                        </div>
-                        <div className="col-span-1 text-right font-bold">Umur :</div>
-                        <div className="col-span-1 border border-slate-700 px-1.5 py-1 text-center font-mono">
-                          {rf.fatherAge} Th.
-                        </div>
-                        <div className="col-span-1 text-right font-bold">Nama Ibu :</div>
-                        <div className="col-span-2 border border-slate-700 px-2 py-1">
-                          {rf.motherName}
-                        </div>
-                        <div className="col-span-1 text-right font-bold">Umur :</div>
-                        <div className="col-span-1 border border-slate-700 px-1.5 py-1 text-center font-mono">
-                          {rf.motherAge} Th.
+                      {/* 5. Agama */}
+                      <div className="flex items-baseline">
+                        <span className="w-6 shrink-0">5.</span>
+                        <span className="w-36 shrink-0">Agama</span>
+                        <span className="mr-2">:</span>
+                        <div className="flex-1 border-b border-dotted border-slate-800 font-semibold text-blue-950">
+                          {rf.religion || "Islam"}
                         </div>
                       </div>
 
-                      {/* Baris 8: Nama Suami / Istri / Wali + Umur + Pekerjaan */}
-                      <div className="grid grid-cols-12 gap-2 items-center">
-                        <div className="col-span-2 font-bold text-[10px]">
-                          Nama Suami / Istri / Wali :
+                      {/* 6. Pendidikan terakhir : A. SD  B. SMP  C. SMA  D. Diploma/Universitas */}
+                      <div className="flex items-baseline">
+                        <span className="w-6 shrink-0">6.</span>
+                        <span className="w-36 shrink-0">Pendidikan terakhir</span>
+                        <span className="mr-2">:</span>
+                        <div className="flex flex-1 flex-wrap items-center gap-8">
+                          <span
+                            className={
+                              isSd
+                                ? "rounded-full border-2 border-blue-900 px-2 py-0.2 font-bold text-blue-950"
+                                : ""
+                            }
+                          >
+                            A. SD
+                          </span>
+                          <span
+                            className={
+                              isSmp
+                                ? "rounded-full border-2 border-blue-900 px-2 py-0.2 font-bold text-blue-950"
+                                : ""
+                            }
+                          >
+                            B. SMP
+                          </span>
+                          <span
+                            className={
+                              isSma
+                                ? "rounded-full border-2 border-blue-900 px-2 py-0.2 font-bold text-blue-950"
+                                : ""
+                            }
+                          >
+                            C. SMA
+                          </span>
+                          <span
+                            className={
+                              isUniv
+                                ? "rounded-full border-2 border-blue-900 px-2 py-0.2 font-bold text-blue-950"
+                                : ""
+                            }
+                          >
+                            D. Diploma/Universitas
+                          </span>
                         </div>
-                        <div className="col-span-4 border border-slate-700 px-2 py-1">
+                      </div>
+
+                      {/* 7. Anak ke : ... dari ... bersaudara */}
+                      <div className="flex items-baseline">
+                        <span className="w-6 shrink-0">7.</span>
+                        <span className="w-36 shrink-0">Anak ke</span>
+                        <span className="mr-2">:</span>
+                        <div className="flex items-baseline gap-2">
+                          <span className="inline-block w-16 border-b border-dotted border-slate-800 text-center font-mono font-bold text-blue-950">
+                            {rf.childOrder || 1}
+                          </span>
+                          <span>dari</span>
+                          <span className="inline-block w-16 border-b border-dotted border-slate-800 text-center font-mono font-bold text-blue-950">
+                            {rf.siblingsCount || 3}
+                          </span>
+                          <span>bersaudara</span>
+                        </div>
+                      </div>
+
+                      {/* 8. Status : A. Belum Kawin  B. Kawin  C. Janda */}
+                      <div className="flex items-baseline">
+                        <span className="w-6 shrink-0">8.</span>
+                        <span className="w-36 shrink-0">Status</span>
+                        <span className="mr-2">:</span>
+                        <div className="flex flex-1 flex-wrap items-center gap-10">
+                          <span
+                            className={
+                              isBelumKawin
+                                ? "rounded-full border-2 border-blue-900 px-2.5 py-0.2 font-bold text-blue-950"
+                                : ""
+                            }
+                          >
+                            A. Belum Kawin
+                          </span>
+                          <span
+                            className={
+                              isKawin
+                                ? "rounded-full border-2 border-blue-900 px-2.5 py-0.2 font-bold text-blue-950"
+                                : ""
+                            }
+                          >
+                            B. Kawin
+                          </span>
+                          <span
+                            className={
+                              isJanda
+                                ? "rounded-full border-2 border-blue-900 px-2.5 py-0.2 font-bold text-blue-950"
+                                : ""
+                            }
+                          >
+                            C. Janda
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* 9. Jumlah Anak : ... Orang, Anak Pertama ... Tahun, Anak Terakhir ... Tahun */}
+                      <div className="flex items-baseline">
+                        <span className="w-6 shrink-0">9.</span>
+                        <span className="w-36 shrink-0">Jumlah Anak</span>
+                        <span className="mr-2">:</span>
+                        <div className="flex flex-1 flex-wrap items-baseline gap-1.5">
+                          <span className="inline-block w-14 border-b border-dotted border-slate-800 text-center font-mono font-bold text-blue-950">
+                            {rf.childrenTotalCount ?? 0}
+                          </span>
+                          <span>Orang, Anak Pertama</span>
+                          <span className="inline-block w-14 border-b border-dotted border-slate-800 text-center font-mono font-bold text-blue-950">
+                            {rf.firstChildAge || "-"}
+                          </span>
+                          <span>Tahun, Anak Terakhir</span>
+                          <span className="inline-block w-14 border-b border-dotted border-slate-800 text-center font-mono font-bold text-blue-950">
+                            {rf.lastChildAge || "-"}
+                          </span>
+                          <span>Tahun</span>
+                        </div>
+                      </div>
+
+                      {/* 10. Keadaan Fisik : Tinggi Badan ... cm  Berat Badan ... kg */}
+                      <div className="flex items-baseline">
+                        <span className="w-6 shrink-0">10.</span>
+                        <span className="w-36 shrink-0">Keadaan Fisik</span>
+                        <span className="mr-2">:</span>
+                        <div className="flex flex-1 items-baseline gap-2">
+                          <span>Tinggi Badan</span>
+                          <span className="inline-block w-24 border-b border-dotted border-slate-800 text-center font-mono font-bold text-blue-950">
+                            {rf.heightCm}
+                          </span>
+                          <span className="mr-6">cm</span>
+                          <span>Berat Badan</span>
+                          <span className="inline-block w-24 border-b border-dotted border-slate-800 text-center font-mono font-bold text-blue-950">
+                            {rf.weightKg}
+                          </span>
+                          <span>kg</span>
+                        </div>
+                      </div>
+
+                      {/* 11. Alamat Lengkap */}
+                      <div className="flex items-baseline">
+                        <span className="w-6 shrink-0">11.</span>
+                        <span className="w-36 shrink-0">Alamat Lengkap</span>
+                        <span className="mr-2">:</span>
+                        <div className="flex-1 border-b border-dotted border-slate-800 font-semibold text-blue-950">
+                          {cand.address}{" "}
+                          {cand.nik ? `(NIK: ${cand.nik})` : ""}
+                        </div>
+                      </div>
+
+                      {/* 12. Orang Tua : Bapak ... Umur ... th  Ibu ... Umur ... Th + Kakek dari Bapak ... */}
+                      <div className="space-y-1">
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="w-6 shrink-0">12.</span>
+                          <span className="w-36 shrink-0">Orang Tua</span>
+                          <span className="mr-1">:</span>
+                          <span>Bapak</span>
+                          <span className="flex-1 border-b border-dotted border-slate-800 font-semibold text-blue-950">
+                            {rf.fatherName}
+                          </span>
+                          <span>Umur</span>
+                          <span className="w-10 border-b border-dotted border-slate-800 text-center font-mono font-bold text-blue-950">
+                            {rf.fatherAge}
+                          </span>
+                          <span className="mr-2">th</span>
+                          <span>Ibu</span>
+                          <span className="flex-1 border-b border-dotted border-slate-800 font-semibold text-blue-950">
+                            {rf.motherName}
+                          </span>
+                          <span>Umur</span>
+                          <span className="w-10 border-b border-dotted border-slate-800 text-center font-mono font-bold text-blue-950">
+                            {rf.motherAge}
+                          </span>
+                          <span>Th</span>
+                        </div>
+                        <div className="flex items-baseline pl-[176px]">
+                          <span className="mr-2 shrink-0">Kakek dari Bapak</span>
+                          <span className="flex-1 border-b border-dotted border-slate-800 font-semibold text-blue-950">
+                            {rf.paternalGrandfatherName || "H. Abdul Karim"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* 13. Suami : ... Umur ... Th. Pekerjaan Suami ... */}
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="w-6 shrink-0">13.</span>
+                        <span className="w-36 shrink-0">Suami</span>
+                        <span className="mr-1">:</span>
+                        <span className="flex-1 border-b border-dotted border-slate-800 font-semibold text-blue-950">
                           {rf.spouseOrGuardianName}
-                        </div>
-                        <div className="col-span-1 text-right font-bold">Umur :</div>
-                        <div className="col-span-1 border border-slate-700 px-1.5 py-1 text-center font-mono">
-                          {rf.spouseAge} Th.
-                        </div>
-                        <div className="col-span-1 text-right font-bold">Pekerjaan :</div>
-                        <div className="col-span-3 border border-slate-700 px-2 py-1">
-                          {rf.spouseOccupation}
-                        </div>
+                        </span>
+                        <span>Umur</span>
+                        <span className="w-12 border-b border-dotted border-slate-800 text-center font-mono font-bold text-blue-950">
+                          {rf.spouseAge || "-"}
+                        </span>
+                        <span className="mr-2">Th.</span>
+                        <span>Pekerjaan Suami</span>
+                        <span className="w-48 border-b border-dotted border-slate-800 font-semibold text-blue-950">
+                          {rf.spouseOccupation || "-"}
+                        </span>
                       </div>
 
-                      {/* Baris 9: Jumlah & umur anak Laki-laki & Perempuan */}
-                      <div className="grid grid-cols-12 gap-2 items-center">
-                        <div className="col-span-3 font-bold text-[10px]">
-                          Jumlah dan umur anak Laki-laki :
-                        </div>
-                        <div className="col-span-3 border border-slate-700 px-2 py-1">
-                          {rf.boysCountAndAges}
-                        </div>
-                        <div className="col-span-3 text-right font-bold text-[10px]">
-                          Jumlah dan umur anak Perempuan :
-                        </div>
-                        <div className="col-span-3 border border-slate-700 px-2 py-1">
-                          {rf.girlsCountAndAges}
-                        </div>
-                      </div>
-
-                      {/* Baris 10: Saya anak ke ... dari ... Bersaudara + Keluarga yg mudah dihubungi + Hubungan */}
-                      <div className="grid grid-cols-12 gap-2 items-center">
-                        <div className="col-span-4 flex items-center gap-1">
-                          <span className="font-bold text-[10px]">Saya anak ke :</span>
-                          <span className="border border-slate-700 px-2 py-0.5 font-mono font-bold">
-                            {rf.childOrder}
-                          </span>
-                          <span className="text-[10px]">dari :</span>
-                          <span className="border border-slate-700 px-2 py-0.5 font-mono font-bold">
-                            {rf.siblingsCount}
-                          </span>
-                          <span className="text-[10px]">Bersaudara</span>
-                        </div>
-                        <div className="col-span-2 font-bold text-[9.5px] leading-none">
-                          Nama Keluarga yang mudah di hubungi :
-                        </div>
-                        <div className="col-span-3 border border-slate-700 px-2 py-1">
+                      {/* 14. Keluarga Lain : nama ... hubungan ... no tlp ... */}
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="w-6 shrink-0">14.</span>
+                        <span className="w-36 shrink-0">Keluarga Lain</span>
+                        <span className="mr-1">:</span>
+                        <span>nama</span>
+                        <span className="flex-1 border-b border-dotted border-slate-800 font-semibold text-blue-950">
                           {rf.emergencyContactName}
-                        </div>
-                        <div className="col-span-1 text-right font-bold text-[10px]">
-                          Hubungan :
-                        </div>
-                        <div className="col-span-2 border border-slate-700 px-2 py-1">
+                        </span>
+                        <span>hubungan</span>
+                        <span className="w-28 border-b border-dotted border-slate-800 text-center font-semibold text-blue-950">
                           {rf.emergencyContactRelation}
-                        </div>
-                      </div>
-
-                      {/* Baris 11: Nomor Telp / Hp keluarga yang mudah dihubungi */}
-                      <div className="grid grid-cols-12 gap-2 items-center">
-                        <div className="col-span-3 font-bold text-[10px] leading-tight">
-                          Nomor Telp / Hp keluarga yang mudah di hubungi :
-                        </div>
-                        <div className="col-span-9 border border-slate-700 px-2 py-1 font-mono font-bold">
+                        </span>
+                        <span>no tlp</span>
+                        <span className="w-36 border-b border-dotted border-slate-800 font-mono font-bold text-blue-950">
                           {rf.emergencyContactPhone}
-                        </div>
-                      </div>
-
-                      {/* Baris 12 & 13: Pengalaman Kerja 1 & 2 */}
-                      <div className="grid grid-cols-12 gap-2 items-center">
-                        <div className="col-span-2 font-bold">Pengalaman Kerja 1 :</div>
-                        <div className="col-span-10 border border-slate-700 px-2 py-1">
-                          {rf.workExperience1 || "-"}
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-12 gap-2 items-center">
-                        <div className="col-span-2 font-bold">Pengalaman Kerja 2 :</div>
-                        <div className="col-span-10 border border-slate-700 px-2 py-1">
-                          {rf.workExperience2 || "-"}
-                        </div>
-                      </div>
-
-                      {/* Baris 14 & 15: Negara Tujuan & Pekerjaan yang diinginkan (Kotak Centang) */}
-                      <div className="grid grid-cols-12 gap-2 items-center pt-1">
-                        <div className="col-span-2 font-bold">Negara Tujuan :</div>
-                        <div className="col-span-3 border border-slate-700 px-2 py-1 font-bold uppercase">
-                          {cand.destinationCountry}
-                        </div>
-                        <div className="col-span-2 text-right font-bold text-[10px]">
-                          Pekerjaan yang diinginkan :
-                        </div>
-                        <div className="col-span-5 flex flex-wrap items-center gap-3">
-                          <span className="inline-flex items-center gap-1">
-                            <span className="flex h-4 w-4 items-center justify-center border border-slate-800 font-bold">
-                              {rf.desiredJobCleaner ? "✓" : ""}
-                            </span>
-                            Cleaner
-                          </span>
-                          <span className="inline-flex items-center gap-1">
-                            <span className="flex h-4 w-4 items-center justify-center border border-slate-800 font-bold">
-                              {rf.desiredJobFactory ? "✓" : ""}
-                            </span>
-                            Pekerja Pabrik
-                          </span>
-                          <span className="inline-flex items-center gap-1">
-                            <span className="flex h-4 w-4 items-center justify-center border border-slate-800 font-bold">
-                              {rf.desiredJobNurse ? "✓" : ""}
-                            </span>
-                            Nurse
-                          </span>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-12 gap-2 items-center">
-                        <div className="col-span-2 flex items-center gap-1">
-                          <span className="flex h-4 w-4 items-center justify-center border border-slate-800 font-bold">
-                            {rf.desiredJobHospitality ? "✓" : ""}
-                          </span>
-                          Hospitality
-                        </div>
-                        <div className="col-span-2 flex items-center gap-1">
-                          <span className="flex h-4 w-4 items-center justify-center border border-slate-800 font-bold">
-                            {rf.desiredJobOther ? "✓" : ""}
-                          </span>
-                          Pekerja Lain :
-                        </div>
-                        <div className="col-span-8 border border-slate-700 px-2 py-1">
-                          {cand.jobSector}
-                        </div>
+                        </span>
                       </div>
                     </div>
 
-                    {/* TABEL DOKUMEN (1-9 ASLI/COPY) & TABEL BAHASA (BAIK/CUKUP/BURUK) */}
-                    <div className="mt-3 grid grid-cols-12 gap-3 items-start">
-                      <div className="col-span-8">
-                        <p className="font-bold text-[10.5px] mb-1">
-                          Dokumen-dokumen yang saya serahkan untuk proses sebagai berikut :
-                        </p>
-                        <div className="grid grid-cols-3 gap-2 text-[9.5px]">
-                          {/* Kolom Dokumen 1-3 */}
-                          <table className="w-full border-collapse border border-slate-700">
-                            <thead>
-                              <tr className="bg-slate-100">
-                                <th className="border border-slate-700 px-1 py-0.5">NO.</th>
-                                <th className="border border-slate-700 px-1 py-0.5">DOKUMEN</th>
-                                <th className="border border-slate-700 px-1 py-0.5">ASLI</th>
-                                <th className="border border-slate-700 px-1 py-0.5">COPY</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {[
-                                { no: "1.", name: "KTP", val: rf.docHandover.ktp },
-                                { no: "2.", name: "KARTU KELUARGA", val: rf.docHandover.kk },
-                                {
-                                  no: "3.",
-                                  name: "AKTE KELAHIRAN",
-                                  val: rf.docHandover.akteKelahiran,
-                                },
-                              ].map((r) => (
-                                <tr key={r.no}>
-                                  <td className="border border-slate-700 px-1 py-1 text-center">
-                                    {r.no}
-                                  </td>
-                                  <td className="border border-slate-700 px-1 py-1 font-semibold">
-                                    {r.name}
-                                  </td>
-                                  <td className="border border-slate-700 px-1 py-1 text-center font-bold">
-                                    {r.val === "ASLI" ? "✓" : ""}
-                                  </td>
-                                  <td className="border border-slate-700 px-1 py-1 text-center font-bold">
-                                    {r.val === "COPY" ? "✓" : ""}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-
-                          {/* Kolom Dokumen 4-6 */}
-                          <table className="w-full border-collapse border border-slate-700">
-                            <thead>
-                              <tr className="bg-slate-100">
-                                <th className="border border-slate-700 px-1 py-0.5">NO.</th>
-                                <th className="border border-slate-700 px-1 py-0.5">DOKUMEN</th>
-                                <th className="border border-slate-700 px-1 py-0.5">ASLI</th>
-                                <th className="border border-slate-700 px-1 py-0.5">COPY</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {[
-                                {
-                                  no: "4.",
-                                  name: "IZIN KELUARGA",
-                                  val: rf.docHandover.izinKeluarga,
-                                },
-                                {
-                                  no: "5.",
-                                  name: "STTB / IJAZAH",
-                                  val: rf.docHandover.sttbIjazah,
-                                },
-                                { no: "6.", name: "S K C K", val: rf.docHandover.skck },
-                              ].map((r) => (
-                                <tr key={r.no}>
-                                  <td className="border border-slate-700 px-1 py-1 text-center">
-                                    {r.no}
-                                  </td>
-                                  <td className="border border-slate-700 px-1 py-1 font-semibold">
-                                    {r.name}
-                                  </td>
-                                  <td className="border border-slate-700 px-1 py-1 text-center font-bold">
-                                    {r.val === "ASLI" ? "✓" : ""}
-                                  </td>
-                                  <td className="border border-slate-700 px-1 py-1 text-center font-bold">
-                                    {r.val === "COPY" ? "✓" : ""}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-
-                          {/* Kolom Dokumen 7-9 */}
-                          <table className="w-full border-collapse border border-slate-700">
-                            <thead>
-                              <tr className="bg-slate-100">
-                                <th className="border border-slate-700 px-1 py-0.5">NO.</th>
-                                <th className="border border-slate-700 px-1 py-0.5">DOKUMEN</th>
-                                <th className="border border-slate-700 px-1 py-0.5">ASLI</th>
-                                <th className="border border-slate-700 px-1 py-0.5">COPY</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {[
-                                { no: "7.", name: "PASPOR", val: rf.docHandover.paspor },
-                                {
-                                  no: "8.",
-                                  name: rf.docHandover.otherDoc8Name || "................",
-                                  val: rf.docHandover.otherDoc8Status,
-                                },
-                                {
-                                  no: "9.",
-                                  name: rf.docHandover.otherDoc9Name || "................",
-                                  val: rf.docHandover.otherDoc9Status,
-                                },
-                              ].map((r) => (
-                                <tr key={r.no}>
-                                  <td className="border border-slate-700 px-1 py-1 text-center">
-                                    {r.no}
-                                  </td>
-                                  <td className="border border-slate-700 px-1 py-1 font-semibold truncate max-w-[80px]">
-                                    {r.name}
-                                  </td>
-                                  <td className="border border-slate-700 px-1 py-1 text-center font-bold">
-                                    {r.val === "ASLI" ? "✓" : ""}
-                                  </td>
-                                  <td className="border border-slate-700 px-1 py-1 text-center font-bold">
-                                    {r.val === "COPY" ? "✓" : ""}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-
-                      {/* Tabel Kemampuan Bahasa */}
-                      <div className="col-span-4">
-                        <table className="w-full border-collapse border border-slate-700 text-[9.5px] mt-4">
-                          <thead>
-                            <tr className="bg-slate-100">
-                              <th className="border border-slate-700 px-1.5 py-0.5 text-left">
-                                Bahasa
-                              </th>
-                              <th className="border border-slate-700 px-1 py-0.5">Baik</th>
-                              <th className="border border-slate-700 px-1 py-0.5">Cukup</th>
-                              <th className="border border-slate-700 px-1 py-0.5">Buruk</th>
+                    {/* 15. PENGALAMAN BEKERJA DILUAR NEGERI (Ex/Non) TABEL IDENTIK F4s.pdf */}
+                    <div className="mt-2.5">
+                      <p className="font-sans text-[11px] font-bold">
+                        15. PENGALAMAN BEKERJA DILUAR NEGERI (Ex/Non)
+                      </p>
+                      <table className="mt-1 w-full border-collapse border border-slate-900 font-sans text-[10px]">
+                        <thead>
+                          <tr className="bg-slate-50 text-center font-bold">
+                            <th rowSpan={2} className="w-8 border border-slate-900 px-1 py-0.5">
+                              no
+                            </th>
+                            <th rowSpan={2} className="border border-slate-900 px-2 py-0.5">
+                              NEGARA DAN KOTA
+                            </th>
+                            <th rowSpan={2} className="w-24 border border-slate-900 px-1 py-0.5">
+                              LAMA
+                            </th>
+                            <th rowSpan={2} className="w-28 border border-slate-900 px-1 py-0.5">
+                              PERIODE
+                            </th>
+                            <th colSpan={3} className="border border-slate-900 px-1 py-0.5">
+                              STATUS PEMULANGAN
+                            </th>
+                          </tr>
+                          <tr className="bg-slate-50 text-center font-bold">
+                            <th className="w-16 border border-slate-900 px-1 py-0.5">SELESAI</th>
+                            <th className="w-16 border border-slate-900 px-1 py-0.5">KASUS</th>
+                            <th className="border border-slate-900 px-2 py-0.5">KETERANGAN</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {expRows.map((r, i) => (
+                            <tr key={i} className="h-5">
+                              <td className="border border-slate-900 px-1 text-center font-mono">
+                                {r.countryAndCity ? `${r.no}.` : ""}
+                              </td>
+                              <td className="border border-slate-900 px-2 font-semibold text-blue-950">
+                                {r.countryAndCity}
+                              </td>
+                              <td className="border border-slate-900 px-1.5 text-center font-mono text-blue-950">
+                                {r.duration}
+                              </td>
+                              <td className="border border-slate-900 px-1.5 text-center font-mono text-blue-950">
+                                {r.period}
+                              </td>
+                              <td className="border border-slate-900 px-1 text-center font-bold text-blue-950">
+                                {r.returnStatus === "SELESAI" ? "✓" : ""}
+                              </td>
+                              <td className="border border-slate-900 px-1 text-center font-bold text-rose-700">
+                                {r.returnStatus === "KASUS" ? "✓" : ""}
+                              </td>
+                              <td className="border border-slate-900 px-2 text-blue-950">
+                                {r.remarks}
+                              </td>
                             </tr>
-                          </thead>
-                          <tbody>
+                          ))}
+                        </tbody>
+                      </table>
+                      <div className="mt-1 flex items-baseline text-[11px]">
+                        <span className="mr-2 shrink-0">Keterangan</span>
+                        <div className="flex-1 border-b border-dotted border-slate-800 text-blue-950">
+                          {rf.overseasExperienceNotes || "-"}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 15. PEMAHAMAN BAHASA (A. Bahasa Arab & B. Bahasa Inggris) */}
+                    <div className="mt-2">
+                      <p className="font-sans text-[11px] font-bold">15. PEMAHAMAN BAHASA</p>
+                      <div className="mt-0.5 space-y-1 pl-4 text-[11px]">
+                        <div className="flex items-baseline gap-2">
+                          <span className="w-36 shrink-0">A. Bahasa Arab</span>
+                          <span>
+                            (
+                            <span
+                              className={
+                                rf.arabicLevelF4 === "TIDAK_BISA"
+                                  ? "font-extrabold underline decoration-2 text-blue-950"
+                                  : ""
+                              }
+                            >
+                              Tidak Bisa
+                            </span>{" "}
+                            /{" "}
+                            <span
+                              className={
+                                rf.arabicLevelF4 === "SEDIKIT"
+                                  ? "font-extrabold underline decoration-2 text-blue-950"
+                                  : ""
+                              }
+                            >
+                              Sedikit
+                            </span>{" "}
+                            /{" "}
+                            <span
+                              className={
+                                rf.arabicLevelF4 === "LANCAR"
+                                  ? "font-extrabold underline decoration-2 text-blue-950"
+                                  : ""
+                              }
+                            >
+                              lancar
+                            </span>
+                            )
+                          </span>
+                          <span className="ml-2 shrink-0">Ket</span>
+                          <div className="flex-1 border-b border-dotted border-slate-800 text-blue-950">
+                            {rf.arabicNotesF4 || "-"}
+                          </div>
+                        </div>
+
+                        <div className="flex items-baseline gap-2">
+                          <span className="w-36 shrink-0">B. Bahasa Inggris</span>
+                          <span>
+                            (
+                            <span
+                              className={
+                                rf.englishLevelF4 === "TIDAK_BISA"
+                                  ? "font-extrabold underline decoration-2 text-blue-950"
+                                  : ""
+                              }
+                            >
+                              Tidak Bisa
+                            </span>{" "}
+                            /{" "}
+                            <span
+                              className={
+                                rf.englishLevelF4 === "SEDIKIT"
+                                  ? "font-extrabold underline decoration-2 text-blue-950"
+                                  : ""
+                              }
+                            >
+                              Sedikit
+                            </span>{" "}
+                            /{" "}
+                            <span
+                              className={
+                                rf.englishLevelF4 === "LANCAR"
+                                  ? "font-extrabold underline decoration-2 text-blue-950"
+                                  : ""
+                              }
+                            >
+                              lancar
+                            </span>
+                            )
+                          </span>
+                          <span className="ml-2 shrink-0">Ket</span>
+                          <div className="flex-1 border-b border-dotted border-slate-800 text-blue-950">
+                            {rf.englishNotesF4 || "-"}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 16. KESANGGUPAN BEKERJA DILUAR NEGERI (a, b, c, d Masakan Arab 6 Kolom) */}
+                    <div className="mt-2">
+                      <p className="font-sans text-[11px] font-bold">
+                        16. KESANGGUPAN BEKERJA DILUAR NEGERI
+                      </p>
+                      <div className="mt-0.5 space-y-1 pl-4 text-[11px]">
+                        <div className="flex items-baseline gap-2">
+                          <span className="w-72 shrink-0">a. Merawat Anak Bayi / Anak Kecil</span>
+                          <span className="font-mono font-bold text-blue-950">
+                            ( {rf.willingCareBaby ? "✓" : " "} )
+                          </span>
+                          <span className="ml-2 shrink-0">Ket</span>
+                          <div className="flex-1 border-b border-dotted border-slate-800 text-blue-950">
+                            {rf.willingCareBabyNotes || "-"}
+                          </div>
+                        </div>
+
+                        <div className="flex items-baseline gap-2">
+                          <span className="w-72 shrink-0">b. Merawat Orang Tua Jompo</span>
+                          <span className="font-mono font-bold text-blue-950">
+                            ( {rf.willingCareElderly ? "✓" : " "} )
+                          </span>
+                          <span className="ml-2 shrink-0">Ket</span>
+                          <div className="flex-1 border-b border-dotted border-slate-800 text-blue-950">
+                            {rf.willingCareElderlyNotes || "-"}
+                          </div>
+                        </div>
+
+                        <div className="flex items-baseline gap-2">
+                          <span className="w-72 shrink-0">
+                            c. Bersih-bersih Rumah / Cuci Baju/Menyertrika dll.
+                          </span>
+                          <span className="font-mono font-bold text-blue-950">
+                            ( {rf.willingHousekeeping ? "✓" : " "} )
+                          </span>
+                          <span className="ml-2 shrink-0">Ket</span>
+                          <div className="flex-1 border-b border-dotted border-slate-800 text-blue-950">
+                            {rf.willingHousekeepingNotes || "-"}
+                          </div>
+                        </div>
+
+                        <div className="pt-0.5">
+                          <p>d. Memasak masakan Arab :</p>
+                          <div className="mt-1 grid grid-cols-6 gap-x-2 gap-y-0.5 pl-3 text-[10.5px]">
                             {[
-                              { name: "Bahasa Inggris", val: rf.languageSkills.english },
-                              { name: "Bahasa Mandarin", val: rf.languageSkills.mandarin },
-                              { name: "Bahasa Arab", val: rf.languageSkills.arabic },
-                              {
-                                name: rf.languageSkills.otherLanguageName || "................",
-                                val: rf.languageSkills.otherLanguageLevel,
-                              },
-                            ].map((l, idx) => (
-                              <tr key={idx}>
-                                <td className="border border-slate-700 px-1.5 py-1 font-semibold">
-                                  {l.name}
-                                </td>
-                                <td className="border border-slate-700 px-1 py-1 text-center font-bold">
-                                  {l.val === "BAIK" ? "✓" : ""}
-                                </td>
-                                <td className="border border-slate-700 px-1 py-1 text-center font-bold">
-                                  {l.val === "CUKUP" ? "✓" : ""}
-                                </td>
-                                <td className="border border-slate-700 px-1 py-1 text-center font-bold">
-                                  {l.val === "BURUK" ? "✓" : ""}
-                                </td>
-                              </tr>
+                              ["Ruz Kabsah", "Ruz Bukhari", "Ruz Briyani"],
+                              ["Ruz Makbus", "Saluna/Idam", "Macarona"],
+                              ["Makarona Basamil", "Warag Enab", "Fatair"],
+                              ["Pizza", "Sambosa", "Salatah"],
+                              ["Cake", "Salatah", "Cream Caramel"],
+                              ["Juice"],
+                            ].map((col, cIdx) => (
+                              <div key={cIdx} className="space-y-0.5">
+                                {col.map((dish, dIdx) => {
+                                  const selected = cookingSet.has(dish);
+                                  return (
+                                    <div
+                                      key={`${cIdx}-${dIdx}`}
+                                      className={
+                                        selected
+                                          ? "font-bold text-blue-950 underline decoration-2"
+                                          : "text-slate-700"
+                                      }
+                                    >
+                                      - {dish} {selected ? "✓" : ""}
+                                    </div>
+                                  );
+                                })}
+                              </div>
                             ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-
-                    {/* CATATAN & DATA PETUGAS LAPANGAN / REKRUT / SPONSOR */}
-                    <div className="mt-2.5 space-y-1.5">
-                      <div className="grid grid-cols-12 gap-2 items-center">
-                        <div className="col-span-2 font-bold">Catatan :</div>
-                        <div className="col-span-10 border border-slate-700 px-2 py-1">
-                          {rf.candidateNotes || "-"}
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-12 gap-2 items-center">
-                        <div className="col-span-3 font-bold text-[10px] leading-tight">
-                          Nama Petugas Lapangan / Petugas Rekrut / Sponsor :
-                        </div>
-                        <div className="col-span-4 border border-slate-700 px-2 py-1 font-bold">
-                          {rf.sponsorOfficerName}
-                        </div>
-                        <div className="col-span-2 text-right font-bold">Nomor Telp / Hp :</div>
-                        <div className="col-span-3 border border-slate-700 px-2 py-1 font-mono font-bold">
-                          {rf.sponsorOfficerPhone}
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-12 gap-2 items-center">
-                        <div className="col-span-2 font-bold">Catatan :</div>
-                        <div className="col-span-10 border border-slate-700 px-2 py-1.5">
-                          {rf.sponsorNotes || "-"}
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* 3 KOLOM TANDA TANGAN BAWAH (CALON PMI, PETUGAS LAPANGAN/REKRUT, PETUGAS PT) */}
-                    <div className="mt-6 grid grid-cols-3 gap-6 text-center text-[11px]">
-                      <div>
-                        <p className="border-t border-slate-700 pt-1 font-semibold">
-                          Yang mengisi biodata
-                        </p>
-                        <div className="h-14 flex items-center justify-center text-[10px] italic text-slate-400">
-                          (Ttd. {rf.formSignedDate})
+                    {/* 17. KELENGKAPAN DOKUMEN (a, b, c) */}
+                    <div className="mt-2">
+                      <p className="font-sans text-[11px] font-bold">17. KELENGKAPAN DOKUMEN</p>
+                      <div className="mt-0.5 space-y-1 pl-4 text-[11px]">
+                        <div className="grid grid-cols-3 gap-2">
+                          <div>
+                            a. Passport Lama {renderDocStatus(rf.docHandover.paspor)}
+                          </div>
+                          <div>Ijazah/STTB {renderDocStatus(rf.docHandover.sttbIjazah)}</div>
+                          <div>Kartu BPJS {renderDocStatus(rf.docHandover.kartuBpjs)}</div>
                         </div>
-                        <p className="font-bold underline">( {cand.fullName} )</p>
-                        <p className="text-[10px] font-bold">Calon PMI</p>
+                        <div className="grid grid-cols-3 gap-2">
+                          <div>b. KTP {renderDocStatus(rf.docHandover.ktp)}</div>
+                          <div>Akta Lahir {renderDocStatus(rf.docHandover.akteKelahiran)}</div>
+                          <div>
+                            Surat Izin Orang Tua {renderDocStatus(rf.docHandover.izinKeluarga)}
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 items-baseline">
+                          <div>c. KK {renderDocStatus(rf.docHandover.kk)}</div>
+                          <div>
+                            Surat Izin Suami {renderDocStatus(rf.docHandover.izinSuami)}
+                          </div>
+                          <div className="flex items-baseline gap-1">
+                            <span className="shrink-0">Dokumen Lain</span>
+                            <span className="flex-1 border-b border-dotted border-slate-800 text-[10px] font-semibold text-blue-950 truncate">
+                              {rf.docHandover.otherDoc8Name || "-"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* BARIS CATATAN (KIRI) & TERIMA / TIDAK DITERIMA / ACC (KANAN) */}
+                    <div className="mt-3 grid grid-cols-12 gap-4 items-start text-[11px]">
+                      <div className="col-span-7 space-y-2">
+                        <div className="flex items-baseline gap-2">
+                          <span className="font-semibold shrink-0">Catatan :</span>
+                          <div className="flex-1 border-b border-dotted border-slate-800 font-semibold text-blue-950">
+                            {rf.sponsorNotes || rf.candidateNotes || "-"}
+                          </div>
+                        </div>
+                        <div className="border-b border-dotted border-slate-800 h-4" />
+                        <div className="border-b border-dotted border-slate-800 h-4" />
+                      </div>
+
+                      <div className="col-span-5 space-y-1.5 pl-4">
+                        <div className="flex items-center justify-between">
+                          <span>Terima</span>
+                          <span className="font-mono font-bold text-blue-950">
+                            ( {rf.acceptanceDecision === "TERIMA" ? "✓" : "   "} )
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span>Tidak diterima</span>
+                          <span className="font-mono font-bold text-rose-700">
+                            ( {rf.acceptanceDecision === "TIDAK_DITERIMA" ? "✓" : "   "} )
+                          </span>
+                        </div>
+                        <div className="pt-1">
+                          <span>ACC: </span>
+                          <span className="font-bold text-blue-950">
+                            ( {rf.accByName || "..................................."} )
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 3 KOLOM TANDA TANGAN BAWAH SESUAI FORMULIR BARU F4s.pdf */}
+                    <div className="mt-5 grid grid-cols-3 gap-6 text-center text-[11px]">
+                      <div>
+                        <p className="font-semibold">Yang Mengisi Data</p>
+                        <div className="h-12 flex items-center justify-center text-[9.5px] italic text-slate-400">
+                          Ttd. {rf.formSignedDate}
+                        </div>
+                        <p className="font-bold text-blue-950">( {cand.fullName} )</p>
+                        <p className="text-[10.5px]">calon PMI</p>
                       </div>
 
                       <div>
-                        <p className="pt-1 font-semibold">Mengetahui / Saksi</p>
-                        <div className="h-14 flex items-center justify-center text-[10px] italic text-slate-400">
-                          (Terverifikasi Sponsor)
+                        <p className="font-semibold">Mengetahui/Saksi</p>
+                        <div className="h-12 flex items-center justify-center text-[9.5px] italic text-slate-400">
+                          Terverifikasi Sponsor
                         </div>
-                        <p className="font-bold underline">( {rf.sponsorOfficerName} )</p>
-                        <p className="text-[10px] font-bold">Petugas Lapangan / Rekrut</p>
+                        <p className="font-bold text-blue-950">( {rf.sponsorOfficerName} )</p>
+                        <p className="text-[10.5px]">Petugas Lapangan/Rekrut</p>
                       </div>
 
                       <div>
-                        <p className="pt-1 font-semibold">Yang menerima CPMI</p>
-                        <div className="h-14 flex items-center justify-center text-[10px] italic text-teal-700 font-semibold">
-                          ✓ Diterima & Diinput Sistem
+                        <p className="font-semibold">Yang Menerima CPMI</p>
+                        <div className="h-12 flex items-center justify-center text-[9.5px] italic text-teal-700 font-semibold">
+                          ✓ Diinput ke Sistem
                         </div>
-                        <p className="font-bold underline">( {rf.receivedByPtOfficer} )</p>
-                        <p className="text-[10px] font-bold">Petugas PT</p>
+                        <p className="font-bold text-blue-950">( {rf.receivedByPtOfficer} )</p>
+                        <p className="text-[10.5px]">Petugas PT.</p>
                       </div>
                     </div>
                   </div>
