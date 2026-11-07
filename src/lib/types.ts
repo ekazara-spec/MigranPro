@@ -469,11 +469,12 @@ export interface OfficialRegistrationForm {
   };
   acceptanceDecision?: "TERIMA" | "TIDAK_DITERIMA" | "PENDING"; // Terima ( ) / Tidak diterima ( )
   accByName?: string; // ACC: (...................................)
+  interviewMethod?: "TELEPON" | "VIDEO_CALL" | "DATANG_LANGSUNG"; // Metode Interview oleh Petugas PT Panca
   candidateNotes: string; // Catatan berkas
   sponsorOfficerName: string; // 2. Nama Sponsor & Petugas Lapangan/Rekrut
   sponsorOfficerPhone: string; // Nomor Telp / Hp Sponsor
-  sponsorNotes: string; // Catatan Sponsor
-  receivedByPtOfficer: string; // Yang menerima CPMI (Petugas PT.)
+  sponsorNotes: string; // Catatan Hasil Interview Petugas PT
+  receivedByPtOfficer: string; // Yang menerima / menginterview CPMI (Petugas PT.)
   formSignedDate: string; // Tgl ......... / ........ / .................
 }
 
@@ -487,6 +488,7 @@ export interface SponsorFormSubmission {
   branchId: string;
   status: "MENUNGGU_DATA_ENTRY" | "SUDAH_DIINPUT";
   sourceMethod: "SCAN_FORM_FISIK" | "FORM_DIGITAL_SPONSOR" | "PARSE_WA_SPONSOR";
+  interviewMethod?: "TELEPON" | "VIDEO_CALL" | "DATANG_LANGSUNG";
   physicalFormImageUrl?: string;
   processedCandidateId?: string;
   processedRegNumber?: string;

@@ -7403,17 +7403,17 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="rounded bg-sky-500 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-white">
-                      FORMULIR PENDAFTARAN CPMI/CTKI RESMI
+                      SOP PENERIMAAN & INTERVIEW CPMI/PMI
                     </span>
                     <span className="text-xs font-bold text-amber-300">
                       PT. PANCA BANYU AJISAKTI — Indonesia Manpower Service
                     </span>
                   </div>
                   <h3 className="mt-0.5 text-base sm:text-lg font-bold text-white">
-                    Pusat Akuisisi Formulir Sponsor & Input Data Entry Terpadu
+                    Info Sponsor ➔ Interview Petugas PT (Isi Blanko F4) ➔ Scan & Input ke Sistem
                   </h3>
                   <p className="text-[11px] text-slate-300">
-                    Jl. Kayu Manis No. 51, Kel. Balekambang, Kec. Kramatjati, Jakarta Timur · NIK 16 Digit Dijaga Unik Lintas Cabang
+                    1. Sponsor beri info CPMI ➔ 2. Petugas PT interview (Telepon / Video Call / Datang ke Kantor) & isi manual Blanko F4 ➔ 3. Scan & ekstrak ke sistem ➔ 4. Terbitkan No. Reg.
                   </p>
                 </div>
               </div>
@@ -7468,7 +7468,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
               </div>
             </div>
 
-            {/* 3 TAB MODE PENYALINAN DATA SPONSOR -> USER DATA ENTRY */}
+            {/* 3 TAB SESUAI SOP PT PANCA BANYU AJISAKTI: INFO SPONSOR & INTERVIEW -> SCAN FORMULIR HASIL INTERVIEW -> INPUT DATA ENTRY */}
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-slate-100 px-6 py-2.5">
               <div className="flex flex-wrap items-center gap-2">
                 <button
@@ -7480,7 +7480,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                       : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
                   }`}
                 >
-                  <span>📥 1. Antrean Draft Formulir dari Sponsor</span>
+                  <span>📞 1. Info Awal Sponsor & Interview Petugas PT</span>
                   <span
                     className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold ${
                       regModalTab === "INBOX_SPONSOR"
@@ -7490,7 +7490,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   >
                     {db.sponsorSubmissions?.filter((s) => s.status === "MENUNGGU_DATA_ENTRY")
                       .length || 0}{" "}
-                    Menunggu
+                    Antrean
                   </span>
                 </button>
 
@@ -7503,7 +7503,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                       : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
                   }`}
                 >
-                  <span>📸 2. Scan Foto Kertas Formulir & Tempel WA Sponsor (Auto-Fill)</span>
+                  <span>📠 2. Scan Formulir Hasil Interview ➔ Ekstrak ke Sistem</span>
                 </button>
 
                 <button
@@ -7515,7 +7515,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                       : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
                   }`}
                 >
-                  <span>📝 3. Formulir Lengkap PT Panca Banyu Ajisakti (Verifikasi Data Entry)</span>
+                  <span>📝 3. Input Data Entry & Terbitkan No. Reg. Sistem</span>
                 </button>
               </div>
 
@@ -7577,77 +7577,87 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
               )}
 
               {/* =========================================================
-                  TAB 1: ANTREAN SERAH-TERIMA DRAFT FORMULIR SPONSOR -> DATA ENTRY (IDE 2)
+                  TAB 1: INFO AWAL SPONSOR -> INTERVIEW PETUGAS PT PANCA (ISI BLANKO MANUAL) -> SCAN KE SISTEM
                  ========================================================= */}
               {regModalTab === "INBOX_SPONSOR" && (
                 <div className="space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4">
-                    <div>
-                      <span className="rounded bg-emerald-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
-                        ALUR SERAH-TERIMA SPONSOR LAPANGAN ➔ USER DATA ENTRY
+                    <div className="max-w-3xl">
+                      <span className="rounded bg-emerald-700 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+                        SOP RESMI PENERIMAAN & INTERVIEW PT. PANCA BANYU AJISAKTI
                       </span>
                       <h4 className="mt-1 text-sm font-bold text-slate-900">
-                        Daftar Formulir Pendaftaran CPMI yang Dikirim oleh Sponsor (Siap Disalin 1-Klik)
+                        1. Sponsor Beri Info CPMI ➔ 2. Petugas PT Interview (Telepon / Video Call / Datang ke Kantor) & Isi Blanko F4 ➔ 3. Scan & Input Sistem
                       </h4>
-                      <p className="text-xs text-slate-600">
-                        Sponsor mengisi/mengunggah formulir dari lapangan. User Data Entry cukup klik{" "}
-                        <strong>&ldquo;⚡ Salin ke Form Data Entry&rdquo;</strong> tanpa perlu mengetik ulang puluhan kolom dari awal.
+                      <p className="mt-0.5 text-xs text-slate-600">
+                        Sponsor menyerahkan informasi awal CPMI kepada Petugas PT Panca. Petugas melakukan interview (via Telepon, Video Call, atau Tatap Muka di Kantor) sambil mengisi manual pada <strong>Blanko Formulir F4 Kosong</strong>. Hasil formulir yang telah diisi manual kemudian di-scan untuk dimasukkan ke sistem.
                       </p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        const randNum = Math.floor(1000 + Math.random() * 8999);
-                        const { data } = await callApi("CREATE_SPONSOR_SUBMISSION", {
-                          sponsorId: "sp-1",
-                          branchId: "br-idm",
-                          sourceMethod: "FORM_DIGITAL_SPONSOR",
-                          physicalFormImageUrl: "/form-pendaftaran-f4-baru.svg",
-                          fullName: `Nengsih Rahayu (${randNum})`,
-                          nik: `321215580998${randNum}`,
-                          gender: "P",
-                          avatarUrl: AVATAR_PRESETS[1].url,
-                          birthPlace: "Indramayu",
-                          birthDate: "1998-09-18",
-                          phone: `0812-8844-${randNum}`,
-                          address: "Desa Karangampel Kidul RT 005/002 Kec. Karangampel, Indramayu",
-                          maritalStatus: "Kawin",
-                          education: "SMA/SMK",
-                          destinationCountry: "Arab Saudi",
-                          jobSector: "Housekeeping & Caregiver (SPSK)",
-                          registrationForm: {
-                            ...regForm,
-                            nickname: "Nengsih",
-                            heightCm: 158,
-                            weightKg: 52,
-                            ktpOrPassportNo: `321215580998${randNum}`,
-                            fatherName: "H. 워노 (Wono)",
-                            fatherAge: 57,
-                            motherName: "Hj. রোহিত (Rohimah)",
-                            motherAge: 52,
-                            spouseOrGuardianName: "Asep Saepudin",
-                            spouseAge: 34,
-                            spouseOccupation: "Wiraswasta",
-                            workExperience1:
-                              "2021 - 2024 : Asisten Rumah Tangga & Lansia di Jakarta",
-                            workExperience2: "2024 - 2025 : Pelatihan Bahasa Arab & Caregiving",
-                            sponsorOfficerName: "Kang Dedi Kusnadi (PL-IDM-001)",
-                            sponsorOfficerPhone: "0812-2301-4455",
-                            sponsorNotes:
-                              "Formulir fisik dan berkas ASLI KTP, KK, Akte, Ijazah, Buku Nikah diserahkan ke meja Data Entry.",
-                          },
-                        });
-                        if (data.ok) {
-                          setToast({
-                            type: "success",
-                            title: `Simulasi Kiriman Formulir Sponsor (${data.submission.submissionCode}) Masuk ke Antrean!`,
+                    <div className="flex flex-wrap items-center gap-2">
+                      <a
+                        href="/Formulir-Baru-F4s.pdf"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-800 shadow-2xs hover:bg-slate-50"
+                      >
+                        🖨️ Cetak Blanko Kosong F4 (Untuk Interview)
+                      </a>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const randNum = Math.floor(1000 + Math.random() * 8999);
+                          const { data } = await callApi("CREATE_SPONSOR_SUBMISSION", {
+                            sponsorId: "sp-1",
+                            branchId: "br-idm",
+                            sourceMethod: "SCAN_FORM_FISIK",
+                            physicalFormImageUrl: "/form-sudah-terisi.jpg",
+                            fullName: `Nengsih Rahayu (${randNum})`,
+                            nik: `321215580998${randNum}`,
+                            gender: "P",
+                            avatarUrl: AVATAR_PRESETS[1].url,
+                            birthPlace: "Indramayu",
+                            birthDate: "1998-09-18",
+                            phone: `0812-8844-${randNum}`,
+                            address: "Desa Karangampel Kidul RT 005/002 Kec. Karangampel, Indramayu",
+                            maritalStatus: "Kawin",
+                            education: "SMA/SMK",
+                            destinationCountry: "Arab Saudi",
+                            jobSector: "Housekeeping & Caregiver (SPSK)",
+                            registrationForm: {
+                              ...regForm,
+                              nickname: "Nengsih",
+                              interviewMethod: "VIDEO_CALL",
+                              heightCm: 158,
+                              weightKg: 52,
+                              ktpOrPassportNo: `321215580998${randNum}`,
+                              fatherName: "H. Wono",
+                              fatherAge: 57,
+                              motherName: "Hj. Rohimah",
+                              motherAge: 52,
+                              spouseOrGuardianName: "Asep Saepudin",
+                              spouseAge: 34,
+                              spouseOccupation: "Wiraswasta",
+                              workExperience1:
+                                "2021 - 2024 : Asisten Rumah Tangga & Lansia di Jakarta",
+                              workExperience2: "2024 - 2025 : Pelatihan Bahasa Arab & Caregiving",
+                              sponsorOfficerName: "Kang Dedi Kusnadi (PL-IDM-001)",
+                              sponsorOfficerPhone: "0812-2301-4455",
+                              sponsorNotes:
+                                "Sudah di-interview via Video Call oleh Petugas PT Panca, blanko F4 fisik telah diisi manual & di-scan untuk diinput ke sistem.",
+                            },
                           });
-                        }
-                      }}
-                      className="rounded-xl bg-emerald-700 px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-800"
-                    >
-                      + Simulasikan Sponsor Kirim Formulir Baru
-                    </button>
+                          if (data.ok) {
+                            setToast({
+                              type: "success",
+                              title: `Data Hasil Interview (${data.submission.submissionCode}) Masuk ke Antrean Input Sistem!`,
+                            });
+                          }
+                        }}
+                        className="rounded-xl bg-emerald-700 px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-800"
+                      >
+                        + Tambah Antrean Hasil Interview Baru
+                      </button>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -7785,10 +7795,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                     <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-900 p-3 text-white">
                       <div>
                         <span className="text-[10px] font-bold uppercase tracking-wider text-sky-300 block">
-                          IDE 1 · SPLIT-SCREEN SCAN FORMULIR FISIK
+                          TAHAP 2 SOP · SCAN BLANKO HASIL INTERVIEW PETUGAS PT. PANCA
                         </span>
                         <h4 className="text-xs font-bold">
-                          Lembar Kertas &ldquo;FORMULIR PENDAFTARAN CPMI/CTKI&rdquo; dari Sponsor
+                          Scan Blanko F4 yang Diisi Manual oleh Petugas PT Saat Interview CPMI
                         </h4>
                       </div>
                       <div className="flex items-center gap-1.5">
@@ -9196,6 +9206,31 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
 
                       <div>
                         <label className="font-bold text-slate-700 block mb-1">
+                          Metode Interview oleh Petugas PT. Panca
+                        </label>
+                        <select
+                          value={regForm.interviewMethod || "TELEPON"}
+                          onChange={(e) =>
+                            setRegForm({
+                              ...regForm,
+                              interviewMethod: e.target.value as
+                                | "TELEPON"
+                                | "VIDEO_CALL"
+                                | "DATANG_LANGSUNG",
+                            })
+                          }
+                          className="w-full rounded-lg border border-sky-300 bg-white px-3 py-2 font-bold text-sky-950"
+                        >
+                          <option value="TELEPON">📞 Interview via Telepon</option>
+                          <option value="VIDEO_CALL">📹 Interview via Video Call</option>
+                          <option value="DATANG_LANGSUNG">
+                            🏢 Datang Langsung ke Kantor PT. Panca
+                          </option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
                           ACC : (Pejabat Penyetuju PT)
                         </label>
                         <input
@@ -9226,7 +9261,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
 
                       <div>
                         <label className="font-bold text-slate-700 block mb-1">
-                          Mengetahui/Saksi (Petugas Lapangan/Rekrut)
+                          Mengetahui/Saksi (Sponsor / Petugas Lapangan)
                         </label>
                         <input
                           type="text"
@@ -9240,7 +9275,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
 
                       <div>
                         <label className="font-bold text-slate-700 block mb-1">
-                          Yang Menerima CPMI (Petugas PT.)
+                          Pewawancara & Penerima CPMI (Petugas PT.)
                         </label>
                         <input
                           type="text"
@@ -9254,7 +9289,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
 
                       <div>
                         <label className="font-bold text-slate-700 block mb-1">
-                          Tgl Pendaftaran (Kanan Atas F4)
+                          Tgl Interview & Pengisian Blanko (Kanan Atas F4)
                         </label>
                         <input
                           type="date"
