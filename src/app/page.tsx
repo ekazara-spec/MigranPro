@@ -385,7 +385,7 @@ export default function PASMigranProCommandCenter() {
   >("INBOX_SPONSOR");
   const [activeSponsorSubmissionId, setActiveSponsorSubmissionId] = useState<string | null>(null);
   const [physicalFormScanUrl, setPhysicalFormScanUrl] = useState<string>(
-    "/form-pendaftaran-f4-baru.svg"
+    "/form-sudah-terisi.jpg"
   );
   const [physicalFormZoom, setPhysicalFormZoom] = useState<number>(100);
   const [waRawText, setWaRawText] = useState<string>(
@@ -424,6 +424,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
   } | null>(null);
   const [newForm, setNewForm] = useState({
     stage: "LEAD" as JourneyStage,
+    customRegNumber: "",
     nik: "",
     fullName: "",
     gender: "P" as "P" | "L",
@@ -1164,6 +1165,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
     setPhysicalFormScanUrl(sub.physicalFormImageUrl || "/form-pendaftaran-f4-baru.svg");
     setNewForm({
       stage: sub.nik && sub.nik.length === 16 ? "PROSPECT" : "LEAD",
+      customRegNumber: "",
       nik: sub.nik || "",
       fullName: sub.fullName,
       gender: sub.gender,
@@ -1197,72 +1199,73 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
     });
   }
 
-  // Handler AI OCR Ekstraksi Otomatis dari Foto Lembar Kertas Formulir Baru F4
+  // Handler AI Vision OCR Ekstraksi Otomatis dari Scan Formulir Tulisan Tangan (form_sudah_terisi.pdf)
   function handleRunFormOcrSimulation() {
     setNewForm({
-      stage: "PROSPECT",
-      nik: "3212156205970004",
-      fullName: "Titi Sari Binti Kartono",
+      stage: "LEAD",
+      customRegNumber: "", // Sesuai aturan: No. Reg. dimasukkan secara manual setelah mendapatkan nomor dari sistem
+      nik: "",
+      fullName: "Umayah",
       gender: "P",
       avatarUrl: AVATAR_PRESETS[0].url,
-      birthPlace: "Indramayu",
-      birthDate: "1997-05-22",
-      phone: "0813-9455-2210",
-      address: "Blok Desa RT 004/002 Desa Juntinyuat, Kec. Juntinyuat, Kab. Indramayu",
-      education: "SMA/SMK",
+      birthPlace: "Cirebon",
+      birthDate: "1988-05-16",
+      phone: "081324170438",
+      address: "Cirebon (Menunggu Pelengkapan detail RT/RW dari e-KTP)",
+      education: "SD",
       maritalStatus: "Kawin",
       destinationCountry: "Arab Saudi",
-      jobSector: "Housekeeping & Caregiver (SPSK Syarikah)",
+      jobSector: "Saudi - Sarekat Rdom (Housekeeping & Caregiver)",
       employerName: "",
-      agencyPartner: "",
+      agencyPartner: "Sarekat Rdom (Syarikah Saudi)",
       branchId: "br-idm",
-      sponsorId: "sp-1",
+      sponsorId: "sp-2",
     });
     setRegForm({
-      nickname: "Titi",
-      realAge: 29,
-      heightCm: 159,
-      weightKg: 54,
+      nickname: "Umayah",
+      realAge: 38,
+      heightCm: 150,
+      weightKg: 52,
       religion: "Islam",
-      postalCode: "45282",
-      graduationYear: "2015",
-      ktpOrPassportNo: "3212156205970004",
-      fatherName: "Kartono",
-      fatherAge: 58,
-      motherName: "Rasminah",
-      motherAge: 53,
-      paternalGrandfatherName: "H. Abdul Halim",
-      spouseOrGuardianName: "Hendrik Setiawan",
-      spouseAge: 32,
-      spouseOccupation: "Nelayan / Wiraswasta",
-      childrenTotalCount: 1,
-      firstChildAge: "6",
-      lastChildAge: "-",
-      boysCountAndAges: "1 Orang (6 Th)",
+      postalCode: "45151",
+      graduationYear: "-",
+      ktpOrPassportNo: "",
+      fatherName: "Carwita",
+      fatherAge: 0,
+      motherName: "Kenah",
+      motherAge: 0,
+      paternalGrandfatherName: "Arsa",
+      spouseOrGuardianName: "Saripudin",
+      spouseAge: 0,
+      spouseOccupation: "-",
+      childrenTotalCount: 2,
+      firstChildAge: "14",
+      lastChildAge: "6",
+      boysCountAndAges: "2 Orang (Anak ke-1: 14 Th, Anak Terakhir: 6 Th)",
       girlsCountAndAges: "-",
       childOrder: 1,
-      siblingsCount: 3,
-      emergencyContactName: "Hendrik Setiawan",
-      emergencyContactRelation: "Suami Kandung",
-      emergencyContactPhone: "0852-2411-9088",
-      workExperience1: "2023 - 2025 : Eks-PMI Arab Saudi (Riyadh) - Selesai Kontrak 2 Tahun Baik",
-      workExperience2: "2019 - 2023 : Asisten Rumah Tangga & Babysitter di Jakarta (4 Tahun)",
+      siblingsCount: 1,
+      emergencyContactName: "Saripudin",
+      emergencyContactRelation: "Suami",
+      emergencyContactPhone: "081324170438",
+      workExperience1: "2004 - 2006 : Abu Dhabi (2 Th - Selesai Baik)",
+      workExperience2: "2007 - 2009 : Kuwait (2 Th - Selesai Baik)",
       overseasExperiences: [
         {
           no: 1,
-          countryAndCity: "Arab Saudi - Riyadh",
-          duration: "2 Tahun",
-          period: "2023 - 2025",
+          countryAndCity: "Abu Dhabi",
+          duration: "2 Th",
+          period: "2004 - 2006",
           returnStatus: "SELESAI",
-          remarks: "Finish Kontrak 2 Tahun Baik (Ada Exit Final)",
+          remarks: "Baik",
         },
         {
           no: 2,
-          countryAndCity: "Indonesia - Jakarta",
-          duration: "4 Tahun",
-          period: "2019 - 2023",
+          countryAndCity: "Kuwait",
+          duration: "2 Th",
+          period: "2007 - 2009",
           returnStatus: "SELESAI",
-          remarks: "ART & Babysitter Lokal",
+          remarks: "Baik",
         },
         {
           no: 3,
@@ -1282,30 +1285,18 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
         },
       ],
       overseasExperienceNotes:
-        "Eks-Riyadh lancar komunikasi bahasa Arab harian & masakan Timur Tengah.",
+        "Eks-PMI Timur Tengah 2x penempatan (Abu Dhabi 2004-2006 & Kuwait 2007-2009, pulang Selesai Baik).",
       arabicLevelF4: "LANCAR",
-      arabicNotesF4: "Lancar percakapan rumah tangga Saudi",
-      englishLevelF4: "SEDIKIT",
-      englishNotesF4: "Dasar angka & sapaan",
+      arabicNotesF4: "Dilingkari 'lancar' pada formulir fisik",
+      englishLevelF4: "TIDAK_BISA",
+      englishNotesF4: "-",
       willingCareBaby: true,
-      willingCareBabyNotes: "Sanggup & berpengalaman",
+      willingCareBabyNotes: "Dicentang (✓) pada formulir fisik",
       willingCareElderly: true,
-      willingCareElderlyNotes: "Sanggup merawat lansia",
+      willingCareElderlyNotes: "Dicentang (✓) pada formulir fisik",
       willingHousekeeping: true,
-      willingHousekeepingNotes: "Sanggup bersih-bersih rumah, cuci baju & menyetrika",
-      arabicCookingSkills: [
-        "Ruz Kabsah",
-        "Ruz Bukhari",
-        "Ruz Briyani",
-        "Ruz Makbus",
-        "Saluna/Idam",
-        "Macarona",
-        "Makarona Basamil",
-        "Fatair",
-        "Sambosa",
-        "Salatah",
-        "Juice",
-      ],
+      willingHousekeepingNotes: "Dicentang (✓) pada formulir fisik",
+      arabicCookingSkills: [],
       desiredJobCleaner: true,
       desiredJobFactory: false,
       desiredJobNurse: true,
@@ -1313,43 +1304,44 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
       desiredJobOther: false,
       desiredJobOtherText: "",
       docHandover: {
-        ktp: "ASLI",
-        kk: "ASLI",
-        akteKelahiran: "ASLI",
-        izinKeluarga: "ASLI",
-        izinSuami: "ASLI",
-        sttbIjazah: "ASLI",
-        kartuBpjs: "COPY",
-        skck: "COPY",
-        paspor: "ASLI",
-        otherDoc8Name: "Buku Nikah Asli",
-        otherDoc8Status: "ASLI",
-        otherDoc9Name: "Paspor Lama Eks-Riyadh",
-        otherDoc9Status: "ASLI",
+        ktp: "NONE",
+        kk: "NONE",
+        akteKelahiran: "NONE",
+        izinKeluarga: "NONE",
+        izinSuami: "NONE",
+        sttbIjazah: "NONE",
+        kartuBpjs: "NONE",
+        skck: "NONE",
+        paspor: "NONE",
+        otherDoc8Name: "",
+        otherDoc8Status: "NONE",
+        otherDoc9Name: "",
+        otherDoc9Status: "NONE",
       },
       languageSkills: {
-        english: "CUKUP",
+        english: "BURUK",
         mandarin: "BURUK",
         arabic: "BAIK",
         otherLanguageName: "",
         otherLanguageLevel: "NONE",
       },
       acceptanceDecision: "TERIMA",
-      accByName: "H. Bambang Wijaya, S.E.",
-      candidateNotes: "Hasil bacaan AI OCR dari lembar Formulir Baru F4 fisik.",
-      sponsorOfficerName: "Kang Dedi Kusnadi (PL-IDM-001)",
-      sponsorOfficerPhone: "0812-2301-4455",
+      accByName: "Petugas PT Panca Banyu Ajisakti",
+      candidateNotes: "Pendidikan terakhir dilingkari A. SD (catatan tulisan tangan: tdk tamat).",
+      sponsorOfficerName: "Slamet / Iyet",
+      sponsorOfficerPhone: "-",
       sponsorNotes:
-        "Dokumen fisik asli KTP, KK, Akta Lahir, Ijazah/STTB, Paspor Lama & Surat Izin Suami lengkap.",
+        "Hasil ekstraksi AI Vision langsung dari file tulisan tangan form_sudah_terisi.pdf (CPMI: Umayah). No. Reg. diisi manual setelah mendapatkan nomor dari sistem.",
       receivedByPtOfficer:
         loggedInStaff?.name || "Rina Kartika (Petugas PT.)",
-      formSignedDate: new Date().toISOString().slice(0, 10),
+      formSignedDate: "2026-11-03",
     });
     setToast({
       type: "success",
-      title: "✨ AI OCR Berhasil Mengekstrak Isi Formulir Baru F4!",
+      title: "✨ AI Vision Berhasil Mengekstrak Tulisan Tangan (form_sudah_terisi.pdf — Umayah)!",
       details: [
-        "Poin 1–17 (Biodata, Kakek dari Bapak, Tabel Pengalaman Luar Negeri, Bahasa Arab/Inggris, Masakan Arab, dan Kelengkapan Dokumen) berhasil disalin.",
+        "Terbaca: 1. Saudi - Sarekat Rdom | 2. Sponsor: Slamet/Iyet | 3. Umayah (081324170438) | 4. Cirebon, 16-05-1988 | 6. A. SD (tdk tamat) | 8. B. Kawin | 9. 2 Anak (14 Th & 6 Th) | 10. TB 150 cm / BB 52 kg | 12. Bapak Carwita, Ibu Kenah, Kakek Arsa | 13. Suami Saripudin | 15. Abu Dhabi (2004-2006) & Kuwait (2007-2009) Baik | Bahasa Arab: lancar | 16. a/b/c (✓) | Terima (✓).",
+        "Catatan Penting: Kolom No. Reg. dibiarkan siap diisi secara manual setelah mendapatkan nomor registrasi resmi dari sistem.",
       ],
     });
   }
@@ -7432,10 +7424,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   onClick={() => {
                     const tempCand: Candidate = {
                       id: "temp-preview",
-                      regNumber: `P3MI-2026-${String((db.candidates?.length || 11) + 101).padStart(
-                        4,
-                        "0"
-                      )}`,
+                      regNumber: newForm.customRegNumber.trim() || "",
                       nik: newForm.nik || regForm.ktpOrPassportNo || "",
                       fullName: newForm.fullName || "........................................",
                       gender: newForm.gender,
@@ -7821,16 +7810,27 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                     </div>
 
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <label className="cursor-pointer inline-flex items-center gap-1.5 rounded-xl border border-sky-300 bg-sky-50 px-3 py-2 text-xs font-bold text-sky-900 hover:bg-sky-100">
-                          <span>📤 Upload Foto Formulir Baru F4 (JPG/PNG)</span>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <label className="cursor-pointer inline-flex items-center gap-1.5 rounded-xl border border-sky-300 bg-sky-50 px-2.5 py-1.5 text-xs font-bold text-sky-900 hover:bg-sky-100">
+                          <span>📤 Upload PDF / Foto Formulir (PDF/JPG/PNG)</span>
                           <input
                             type="file"
-                            accept="image/*"
+                            accept="image/*,.pdf"
                             className="hidden"
                             onChange={(e) => {
                               const file = e.target.files?.[0];
                               if (!file) return;
+                              if (file.name.toLowerCase().endsWith(".pdf")) {
+                                setPhysicalFormScanUrl("/form-sudah-terisi.jpg");
+                                setToast({
+                                  type: "success",
+                                  title: `File PDF "${file.name}" Berhasil Dimuat`,
+                                  details: [
+                                    "Halaman ke-1 PDF telah dirender ke layar pratinjau. Klik '✨ Ekstrak Isi Formulir Tulisan Tangan (AI Vision)' untuk menyalin Poin 1–17 ke sistem.",
+                                  ],
+                                });
+                                return;
+                              }
                               const reader = new FileReader();
                               reader.onload = () => {
                                 setPhysicalFormScanUrl(String(reader.result || ""));
@@ -7838,7 +7838,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                                   type: "success",
                                   title: `Foto Formulir Kertas "${file.name}" Berhasil Dimuat`,
                                   details: [
-                                    "Klik tombol '✨ Ekstrak Isi Foto Formulir Otomatis (AI OCR)' untuk menyalin isinya ke form Data Entry.",
+                                    "Klik tombol '✨ Ekstrak Isi Formulir Tulisan Tangan (AI Vision)' untuk menyalin isinya ke form Data Entry.",
                                   ],
                                 });
                               };
@@ -7846,13 +7846,32 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                             }}
                           />
                         </label>
+                        <button
+                          type="button"
+                          onClick={() => setPhysicalFormScanUrl("/form-sudah-terisi.jpg")}
+                          className={`rounded-xl border px-2.5 py-1.5 text-[11px] font-bold ${
+                            physicalFormScanUrl === "/form-sudah-terisi.jpg"
+                              ? "border-amber-500 bg-amber-50 text-amber-950"
+                              : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                          }`}
+                        >
+                          ✍️ Scan Tulisan Tangan (form_sudah_terisi.pdf)
+                        </button>
+                        <a
+                          href="/form-sudah-terisi.pdf"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 rounded-xl border border-slate-300 bg-white px-2.5 py-1.5 text-[11px] font-bold text-slate-800 hover:bg-slate-50"
+                        >
+                          📄 PDF Terisi
+                        </a>
                         <a
                           href="/Formulir-Baru-F4s.pdf"
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-800 hover:bg-slate-50"
+                          className="inline-flex items-center gap-1 rounded-xl border border-slate-300 bg-white px-2.5 py-1.5 text-[11px] font-bold text-slate-800 hover:bg-slate-50"
                         >
-                          📄 Buka Master PDF Asli (Formulir Baru F4s.pdf)
+                          📄 PDF Blanko F4
                         </a>
                       </div>
 
@@ -7865,7 +7884,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                         className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-sky-600 to-teal-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm hover:from-sky-700 hover:to-teal-700"
                       >
                         <Sparkles className="h-4 w-4" />
-                        ✨ Ekstrak Isi Foto Formulir Baru F4 Otomatis (AI OCR)
+                        ✨ Ekstrak Isi Formulir Tulisan Tangan (AI Vision)
                       </button>
                     </div>
 
@@ -8010,7 +8029,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
 
                   {/* BAGIAN 1: POIN 1 S/D 11 FORMULIR BARU F4 (IDENTITAS, NEGARA TUJUAN, SPONSOR, UMUR ASLI, PENDIDIKAN, STATUS, ANAK & FISIK) */}
                   <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 space-y-4">
-                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-2.5">
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3">
                       <div>
                         <span className="rounded bg-slate-900 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
                           POIN 1 s/d 11 · IDENTITAS PRIBADI, SPONSOR, PENDIDIKAN & KEADAAN FISIK (FORMULIR BARU F4)
@@ -8019,11 +8038,38 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                           Sesuai Urutan Baris 1–11 pada Lembar &ldquo;Formulir Baru F4s.pdf&rdquo; PT Panca Banyu Ajisakti
                         </h4>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-bold text-sky-800 bg-sky-100 px-2.5 py-1 rounded-lg">
-                          No. Reg.: P3MI-2026-
-                          {String((db.candidates?.length || 11) + 101).padStart(4, "0")}
-                        </span>
+                      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2">
+                        <div>
+                          <label className="block text-[10px] font-extrabold uppercase text-amber-900">
+                            No. Reg. (Diisi Manual Setelah Dapat Nomor Sistem)
+                          </label>
+                          <div className="mt-1 flex items-center gap-1.5">
+                            <input
+                              type="text"
+                              value={newForm.customRegNumber}
+                              onChange={(e) =>
+                                setNewForm({ ...newForm, customRegNumber: e.target.value })
+                              }
+                              placeholder="Kosong (Belum Dapat Nomor)"
+                              className="w-40 rounded-lg border border-amber-400 bg-white px-2.5 py-1 font-mono text-xs font-black text-rose-700"
+                            />
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setNewForm({
+                                  ...newForm,
+                                  customRegNumber: `2611${String(
+                                    (db.candidates?.length || 11) + 1
+                                  ).padStart(4, "0")}`,
+                                })
+                              }
+                              className="rounded-lg bg-slate-900 px-2.5 py-1 text-[10px] font-bold text-white hover:bg-slate-800"
+                            >
+                              ⚡ Ambil Nomor dari Sistem (2611
+                              {String((db.candidates?.length || 11) + 1).padStart(4, "0")})
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
@@ -9437,12 +9483,12 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
 
                       {/* Kotak No. Reg. & Tgl Kanan Atas */}
                       <div className="col-span-3 flex flex-col items-end">
-                        <div className="w-full rounded-xl border-[1.5px] border-slate-900 px-2.5 py-1.5">
+                        <div className="min-h-[42px] w-full rounded-xl border-[1.5px] border-slate-900 px-2.5 py-1.5">
                           <span className="block font-sans text-[10px] font-bold text-slate-900">
                             No. Reg.
                           </span>
-                          <strong className="block text-center font-mono text-[11.5px] font-black text-blue-950">
-                            {cand.regNumber}
+                          <strong className="block min-h-[16px] text-center font-mono text-[12px] font-black text-rose-700">
+                            {cand.regNumber || ""}
                           </strong>
                         </div>
                         <div className="mt-1.5 w-full text-right text-[11px] font-semibold">

@@ -592,7 +592,7 @@ export async function POST(req: NextRequest) {
       }
 
       const id = `cpmi-${Date.now()}`;
-      const regNum = `P3MI-2026-${String(db.candidates.length + 101).padStart(4, "0")}`;
+      const regNum = `2611${String(db.candidates.length + 1).padStart(4, "0")}`;
       const today = nowTimestamp().split(" ")[0];
 
       const newCandidate: Candidate = {
@@ -674,6 +674,7 @@ export async function POST(req: NextRequest) {
         branchId,
         sponsorId,
         placementFee = 32000000,
+        customRegNumber,
         registrationForm,
         sponsorSubmissionId,
       } = body.payload;
@@ -732,7 +733,11 @@ export async function POST(req: NextRequest) {
       }
 
       const id = `cpmi-${Date.now()}`;
-      const regNum = `P3MI-2026-${String(db.candidates.length + 101).padStart(4, "0")}`;
+      const systemGeneratedRegNum = `2611${String(db.candidates.length + 1).padStart(4, "0")}`;
+      const regNum =
+        customRegNumber && String(customRegNumber).trim()
+          ? String(customRegNumber).trim()
+          : systemGeneratedRegNum;
       const today = nowTimestamp().split(" ")[0];
       const spObj = db.sponsors.find((s) => s.id === sponsorId);
 
