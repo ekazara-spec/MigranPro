@@ -16,6 +16,8 @@ export type SpecialStatus =
   | "BADIL_REPLACEMENT"
   | "REPLACED_OUT";
 
+export type ProcessTrack = "REKOM" | "NON_REKOM";
+
 export type UserRole =
   | "DIREKTUR"
   | "ADMIN_PUSAT"
@@ -183,24 +185,26 @@ export interface CaseTicket {
 }
 
 export type DestinationCountry =
+  | "Arab Saudi"
+  | "Uni Emirat Arab (UAE)"
+  | "Kuwait"
+  | "Oman"
+  | "Yordania"
+  | "Qatar"
+  | "Bahrain"
   | "Taiwan"
   | "Hong Kong"
   | "Jepang"
   | "Malaysia"
   | "Singapura"
-  | "Korea Selatan"
-  | "Arab Saudi"
-  | "Kuwait"
-  | "Oman"
-  | "Yordania"
-  | "Uni Emirat Arab (UAE)";
+  | "Korea Selatan";
 
 export type MiddleEastPlacementScheme =
   | "SPSK_MUSANED_SAUDI"
   | "TADBEER_MOHRE_UAE"
   | "FORMAL_WAKALAH_GCC"
   | "QIZ_GARMENT_JORDAN"
-  | "REGULER_ASIA_TIMUR";
+  | "NON_REKOM_DIRECT_MAJIKAN";
 
 export interface JobVacancy {
   id: string;
@@ -470,6 +474,7 @@ export interface OfficialRegistrationForm {
   acceptanceDecision?: "TERIMA" | "TIDAK_DITERIMA" | "PENDING"; // Terima ( ) / Tidak diterima ( )
   accByName?: string; // ACC: (...................................)
   interviewMethod?: "TELEPON" | "VIDEO_CALL" | "DATANG_LANGSUNG"; // Metode Interview oleh Petugas PT Panca
+  processTrack?: ProcessTrack; // Alur Penempatan: REKOM (Normal SISKOP2MI + BPJS-TK/PAP/KTKLN) atau NON_REKOM (Langsung Tiket & Berangkat)
   candidateNotes: string; // Catatan berkas
   sponsorOfficerName: string; // 2. Nama Sponsor & Petugas Lapangan/Rekrut
   sponsorOfficerPhone: string; // Nomor Telp / Hp Sponsor
@@ -489,6 +494,7 @@ export interface SponsorFormSubmission {
   status: "MENUNGGU_DATA_ENTRY" | "SUDAH_DIINPUT";
   sourceMethod: "SCAN_FORM_FISIK" | "FORM_DIGITAL_SPONSOR" | "PARSE_WA_SPONSOR";
   interviewMethod?: "TELEPON" | "VIDEO_CALL" | "DATANG_LANGSUNG";
+  processTrack?: ProcessTrack;
   physicalFormImageUrl?: string;
   processedCandidateId?: string;
   processedRegNumber?: string;
@@ -529,6 +535,7 @@ export interface Candidate {
   vacancyId?: string;
   stage: JourneyStage;
   specialStatus: SpecialStatus;
+  processTrack?: ProcessTrack; // REKOM (Normal: BPJS-TK, PAP, E-KTKLN) vs NON_REKOM (Tanpa BPJS-TK, PAP, KTKLN -> Langsung Tiket & Terbang)
   siskop2miId?: string;
   flightInfo?: string;
   departureDate?: string;
@@ -570,19 +577,19 @@ export const JOURNEY_STAGES: {
   {
     key: "CPMI",
     label: "CPMI",
-    shortDesc: "Dokumen wajib dasar lengkap; Paspor, Medical & Visa berjalan",
+    shortDesc: "Berkas dasar lengkap; Paspor, Medical Wafid & Visa Timur Tengah berjalan",
     isEngineControlled: true,
   },
   {
     key: "READY",
     label: "Ready",
-    shortDesc: "Paspor, Medical FIT, Visa & Kontrak lengkap — siap terbang",
+    shortDesc: "Rekom: Lengkap + BPJS-TK/PAP/PK · Non-Rekom: Paspor, Medical & Visa siap langsung ke Tiket",
     isEngineControlled: true,
   },
   {
     key: "DEPLOYED",
     label: "Deployed",
-    shortDesc: "Tiket & E-KTKLN SISKOP2MI terbit, sudah diberangkatkan",
+    shortDesc: "Rekom: Tiket + BPJS-TK/PAP/E-KTKLN · Non-Rekom: Langsung Tiket & Keberangkatan",
     isEngineControlled: true,
   },
   {
@@ -647,11 +654,11 @@ export const DOC_TEMPLATE_CONFIG: {
   },
   {
     docType: "MEDICAL",
-    title: "Hasil Medical Check-Up (Pra-Penempatan)",
+    title: "Hasil Medical Check-Up Wafid / GCC (Pra-Penempatan)",
     isSensitive: true,
     requiredAtStage: "CPMI",
     hasExpiry: true,
-    description: "Wajib berstatus FIT & masa berlaku belum habis (biasanya 90 hari)",
+    description: "Wajib berstatus FIT & masa berlaku belum habis (90 hari)",
   },
   {
     docType: "PASPOR",
@@ -663,34 +670,34 @@ export const DOC_TEMPLATE_CONFIG: {
   },
   {
     docType: "SERTIFIKAT_KOMPETENSI",
-    title: "Sertifikat Kompetensi / Pelatihan BLK",
+    title: "Sertifikat Kompetensi BLK & PAP (Khusus Jalur Rekom)",
     isSensitive: false,
     requiredAtStage: "READY",
     hasExpiry: false,
-    description: "Sertifikat keterampilan & bahasa sesuai negara tujuan",
+    description: "Wajib pada Jalur Rekom (PAP & Kompetensi); dilewati pada Jalur Non-Rekom",
   },
   {
     docType: "PERJANJIAN_PENEMPATAN",
-    title: "Perjanjian Penempatan & Kontrak Kerja (PK)",
+    title: "Perjanjian Penempatan, PK & BPJS-TK (Khusus Jalur Rekom)",
     isSensitive: true,
     requiredAtStage: "READY",
     hasExpiry: true,
-    description: "Kontrak kerja antara CPMI, P3MI, dan Pemberi Kerja/Majikan",
+    description: "Wajib pada Jalur Rekom (PK & BPJS-TK); dilewati pada Jalur Non-Rekom",
   },
   {
     docType: "VISA",
-    title: "Visa Kerja Negara Tujuan",
+    title: "Visa Kerja Timur Tengah (Musaned / Wakalah / Tasheer / e-Visa)",
     isSensitive: true,
     requiredAtStage: "READY",
     hasExpiry: true,
-    description: "Visa kerja resmi dari kedutaan/perwakilan negara tujuan",
+    description: "Visa kerja resmi dari kedutaan/perwakilan negara tujuan Timur Tengah",
   },
   {
     docType: "TIKET_EKTKLN",
-    title: "Tiket Keberangkatan & Bukti OPP / E-KTKLN SISKOP2MI",
+    title: "Tiket Penerbangan & Keberangkatan (Rekom: + E-KTKLN/PAP/BPJS-TK · Non-Rekom: Langsung Tiket)",
     isSensitive: false,
     requiredAtStage: "DEPLOYED",
     hasExpiry: false,
-    description: "Syarat mutlak sebelum status CPMI menjadi Deployed",
+    description: "Syarat mutlak sebelum status CPMI menjadi Deployed (Berangkat)",
   },
 ];

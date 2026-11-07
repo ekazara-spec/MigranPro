@@ -16,6 +16,7 @@ import {
   JourneyStage,
   MedicalClinicPartner,
   OfficialRegistrationForm,
+  ProcessTrack,
   RenewalTask,
   Sponsor,
   SponsorFormSubmission,
@@ -68,12 +69,13 @@ function relativeDate(daysOffset: number): string {
 export function buildDefaultSponsorInstallments(
   candidateId: string,
   totalCommission: number,
-  paidTermins: ("DP1" | "DP2" | "DP3" | "PELUNASAN")[] = []
+  paidTermins: ("DP1" | "DP2" | "DP3" | "PELUNASAN")[] = [],
+  processTrack: ProcessTrack = "REKOM"
 ): SponsorInstallment[] {
   if (totalCommission <= 0) return [];
   const dp1Amt = Math.round(totalCommission * 0.2); // 20% saat Medical FIT
-  const dp2Amt = Math.round(totalCommission * 0.25); // 25% saat Paspor & ID SISKOP2MI
-  const dp3Amt = Math.round(totalCommission * 0.25); // 25% saat Visa & PK Turun
+  const dp2Amt = Math.round(totalCommission * 0.25); // 25% saat Paspor Terbit
+  const dp3Amt = Math.round(totalCommission * 0.25); // 25% saat Visa Turun
   const pelunasanAmt = totalCommission - (dp1Amt + dp2Amt + dp3Amt); // 30% saat Terbang (Deployed)
 
   const configs: {
@@ -85,28 +87,34 @@ export function buildDefaultSponsorInstallments(
   }[] = [
     {
       key: "DP1",
-      label: "DP 1 (20% · Lolos Medical FIT & Berkas Dasar)",
+      label: "DP 1 (20% · Lolos Medical Wafid FIT & Berkas Dasar)",
       pct: 20,
       amt: dp1Amt,
       reqStage: "CPMI",
     },
     {
       key: "DP2",
-      label: "DP 2 (25% · Paspor Terbit & Rekom ID SISKOP2MI)",
+      label:
+        processTrack === "NON_REKOM"
+          ? "DP 2 (25% · Paspor Terbit & Pengajuan Visa Non-Rekom)"
+          : "DP 2 (25% · Paspor Terbit & Rekom ID SISKOP2MI)",
       pct: 25,
       amt: dp2Amt,
       reqStage: "CPMI",
     },
     {
       key: "DP3",
-      label: "DP 3 (25% · Kontrak PK & Visa Kerja Turun)",
+      label:
+        processTrack === "NON_REKOM"
+          ? "DP 3 (25% · Visa Kerja Turun · Siap Langsung Tiket)"
+          : "DP 3 (25% · Kontrak Syarikah/PK & Visa Kerja Turun)",
       pct: 25,
       amt: dp3Amt,
       reqStage: "READY",
     },
     {
       key: "PELUNASAN",
-      label: "Pelunasan (30% · CPMI Terbang / Deployed)",
+      label: "Pelunasan (30% · Tiket Terbit & CPMI Terbang / Deployed)",
       pct: 30,
       amt: pelunasanAmt,
       reqStage: "DEPLOYED",
@@ -134,6 +142,7 @@ export function buildDefaultSponsorInstallments(
 }
 
 export function buildDefaultFinanceForCandidate(c: Candidate): CandidateFinance {
+  const track: ProcessTrack = c.processTrack || "REKOM";
   const isAdvancedStage = ["READY", "DEPLOYED", "ACTIVE_WORKER", "RETURNED", "ALUMNI"].includes(
     c.stage
   );
@@ -153,36 +162,30 @@ export function buildDefaultFinanceForCandidate(c: Candidate): CandidateFinance 
   const installments = buildDefaultSponsorInstallments(
     c.id,
     c.sponsorCommission || 0,
-    paidTermins
+    paidTermins,
+    track
   );
-
-  const isMiddleEast = [
-    "Arab Saudi",
-    "Kuwait",
-    "Oman",
-    "Yordania",
-    "Uni Emirat Arab (UAE)",
-  ].includes(c.destinationCountry);
 
   const costItems = [
     {
       id: `cost-${c.id}-1`,
       category: "MEDICAL_CHECKUP" as const,
-      title: isMiddleEast
-        ? "Medical Check-Up Wafid (eks-GAMCA) Klinik Terakreditasi GCC"
-        : "Biaya Pemeriksaan Medical Check-Up Standar Negara Tujuan",
-      amount: isMiddleEast ? 1650000 : 1250000,
+      title: "Medical Check-Up Wafid (eks-GAMCA) Klinik Terakreditasi GCC",
+      amount: 1650000,
+      borneBy: "AGENSI_MAJIKAN" as const,
       status: (c.stage === "LEAD" ? "PENDING" : "PAID") as "PAID" | "PENDING",
       paidDate: c.stage === "LEAD" ? undefined : relativeDate(-45),
-      vendorName: isMiddleEast
-        ? "Klinik Wafid / GAMCA Resmi (Jakarta/Cirebon)"
-        : "Klinik Pramita / Prodia",
+      vendorName: "Klinik Wafid / GAMCA Resmi (Jakarta/Cirebon/Surabaya)",
     },
     {
       id: `cost-${c.id}-2`,
       category: "PASPOR_IMIGRASI" as const,
-      title: "Penerbitan Paspor 48 Hal & Rekom ID SISKOP2MI",
+      title:
+        track === "NON_REKOM"
+          ? "Penerbitan Paspor RI 48 Halaman (Jalur Non-Rekom)"
+          : "Penerbitan Paspor RI 48 Hal & Rekom ID SISKOP2MI",
       amount: 650000,
+      borneBy: "AGENSI_MAJIKAN" as const,
       status: (["LEAD", "PROSPECT"].includes(c.stage) ? "PENDING" : "PAID") as
         | "PAID"
         | "PENDING",
@@ -192,10 +195,12 @@ export function buildDefaultFinanceForCandidate(c: Candidate): CandidateFinance 
     {
       id: `cost-${c.id}-3`,
       category: "PELATIHAN_BLK_SERTIFIKASI" as const,
-      title: isMiddleEast
-        ? "Pelatihan Bahasa Arab/Inggris, Asrama BLK-LN & Sertifikasi BNSP"
-        : "Pelatihan Bahasa, Asrama BLK-LN & Uji Kompetensi BNSP",
-      amount: isMiddleEast ? 5800000 : 7500000,
+      title:
+        track === "NON_REKOM"
+          ? "Pembekalan Singkat Bahasa Arab/Inggris & Persiapan Asrama"
+          : "Pelatihan Bahasa Arab/Inggris, Asrama BLK-LN & Sertifikasi BNSP",
+      amount: track === "NON_REKOM" ? 2800000 : 5800000,
+      borneBy: "AGENSI_MAJIKAN" as const,
       status: (["LEAD", "PROSPECT"].includes(c.stage) ? "PENDING" : "PAID") as
         | "PAID"
         | "PENDING",
@@ -205,74 +210,54 @@ export function buildDefaultFinanceForCandidate(c: Candidate): CandidateFinance 
     {
       id: `cost-${c.id}-4`,
       category: "VISA_TETO_KEDUTAAN" as const,
-      title: isMiddleEast
-        ? "Biometrik Tasheer / VFS, Enjaz & Stamping Visa Wakalah / Musaned / e-Visa"
-        : "Biaya Pengajuan Visa Kerja & Legalisir Kontrak Kerja",
-      amount: isMiddleEast ? 4200000 : 3400000,
+      title: "Biometrik Tasheer / VFS, Enjaz & Stamping Visa Wakalah / Musaned / e-Visa",
+      amount: 4200000,
+      borneBy: "AGENSI_MAJIKAN" as const,
       status: (isAdvancedStage ? "PAID" : "PENDING") as "PAID" | "PENDING",
       paidDate: isAdvancedStage ? relativeDate(-14) : undefined,
-      vendorName: isMiddleEast
-        ? "Tasheer / Kedutaan Arab Saudi / UAE / Kuwait / Oman / Yordania"
-        : "Kedutaan / TETO / Konsulat",
+      vendorName: `Tasheer / Kedutaan Besar ${c.destinationCountry}`,
     },
-    {
-      id: `cost-${c.id}-5`,
-      category: "BPJS_ASURANSI_PMI" as const,
-      title: "Premi BPJS Ketenagakerjaan PMI (Pra, Masa, Purna)",
-      amount: 540000,
-      status: (isAdvancedStage ? "PAID" : "PENDING") as "PAID" | "PENDING",
-      paidDate: isAdvancedStage ? relativeDate(-10) : undefined,
-      vendorName: "BPJS Ketenagakerjaan",
-    },
+    ...(track === "REKOM"
+      ? [
+          {
+            id: `cost-${c.id}-5`,
+            category: "BPJS_ASURANSI_PMI" as const,
+            title: "Premi BPJS Ketenagakerjaan PMI (Pra, Masa, Purna), PAP & E-KTKLN SISKOP2MI",
+            amount: 540000,
+            borneBy: "AGENSI_MAJIKAN" as const,
+            status: (isAdvancedStage ? "PAID" : "PENDING") as "PAID" | "PENDING",
+            paidDate: isAdvancedStage ? relativeDate(-10) : undefined,
+            vendorName: "BPJS Ketenagakerjaan & SISKOP2MI",
+          },
+        ]
+      : []),
     {
       id: `cost-${c.id}-6`,
       category: "TIKET_PESAWAT_HANDLING" as const,
-      title: isMiddleEast
-        ? "Tiket Pesawat Internasional (Saudia / Emirates / Etihad / Kuwait Airways / Oman Air)"
-        : "Tiket Pesawat Internasional One-Way & Airport Handling",
-      amount: isMiddleEast ? 8200000 : 6800000,
+      title:
+        track === "NON_REKOM"
+          ? "Tiket Pesawat Internasional Langsung & Airport Handling (Jalur Non-Rekom)"
+          : "Tiket Pesawat Internasional (Saudia / Emirates / Etihad / Kuwait Airways / Oman Air)",
+      amount: 8200000,
+      borneBy: "AGENSI_MAJIKAN" as const,
       status: (isDeployedOrLater ? "PAID" : "PENDING") as "PAID" | "PENDING",
       paidDate: isDeployedOrLater ? relativeDate(-5) : undefined,
-      vendorName: isMiddleEast
-        ? "Saudia Airlines / Emirates / Etihad / Qatar Airways"
-        : "Garuda Indonesia / China Airlines / Cathay",
+      vendorName: "Saudia Airlines / Emirates / Etihad / Kuwait Airways / Oman Air",
     },
   ];
 
-  const scheme =
-    isMiddleEast || c.destinationCountry === "Hong Kong"
-      ? "ZERO_COST_MAJIKAN"
-      : c.destinationCountry === "Taiwan"
-      ? "KUR_PMI_BANK"
-      : c.destinationCountry === "Jepang"
-      ? "MANDIRI_BERTAHAP"
-      : "POTONG_GAJI_RESMI";
-
   return {
-    fundingScheme: scheme,
-    fundingBankOrAgency: isMiddleEast
-      ? `100% Zero Cost — Ditanggung Syarikah / Majikan ${c.destinationCountry} (Wakalah Fee)`
-      : scheme === "KUR_PMI_BANK"
-      ? "KUR PMI Bank BNI (Bunga Subsidi Pemerintah)"
-      : scheme === "ZERO_COST_MAJIKAN"
-      ? "Full Employer Paid (Agensi Mitra Luar Negeri)"
-      : scheme === "POTONG_GAJI_RESMI"
-      ? "Pembiayaan Mitra Agensi Singapura"
-      : "Pembayaran Bertahap via Rekening P3MI",
-    agencyFeeRevenue: c.placementFee || (isMiddleEast ? 36000000 : 32000000),
+    fundingScheme: "ZERO_COST_MAJIKAN",
+    fundingBankOrAgency: `100% Zero Cost — Dibiayai Langsung Syarikah / Majikan ${c.destinationCountry} (${
+      track === "NON_REKOM" ? "Jalur Non-Rekom" : "Jalur Rekom Resmi"
+    })`,
+    agencyFeeRevenue: c.placementFee || 36000000,
     revenueReceived: isDeployedOrLater
-      ? c.placementFee
+      ? c.placementFee || 36000000
       : c.stage === "READY"
-      ? Math.round(c.placementFee * 0.5)
+      ? Math.round((c.placementFee || 36000000) * 0.5)
       : 0,
-    kurStatus:
-      scheme !== "KUR_PMI_BANK"
-        ? "NOT_APPLICABLE"
-        : isDeployedOrLater
-        ? "CAIR_LUNAS"
-        : c.stage === "READY"
-        ? "DISETUJUI"
-        : "PENGAJUAN",
+    kurStatus: "NOT_APPLICABLE",
     costItems,
     sponsorInstallments: installments,
   };
@@ -280,24 +265,21 @@ export function buildDefaultFinanceForCandidate(c: Candidate): CandidateFinance 
 
 export function buildDefaultTrainingForCandidate(c: Candidate): TrainingRecord {
   const langMap: Record<string, string> = {
-    Taiwan: "Bahasa Mandarin (Traditional) & Caregiving",
-    "Hong Kong": "Bahasa Kantonis & Housekeeping",
-    Jepang: "Bahasa Jepang (JFT-Basic A2 / N4) & Manufaktur SSW",
-    Singapura: "Bahasa Inggris Praktis & Elderly Care",
-    "Korea Selatan": "Bahasa Korea (EPS-TOPIK) & Keselamatan Kerja",
-    Malaysia: "Bahasa Melayu & SOP Industri",
-    "Arab Saudi": "Bahasa Arab Praktis (Percakapan) & Layanan Syarikah SPSK",
-    "Uni Emirat Arab (UAE)": "Bahasa Inggris Perhotelan & Bahasa Arab Dasar (Tadbeer/MOHRE)",
-    Kuwait: "Bahasa Arab & Bahasa Inggris Hospitality / Medis Kuwait",
-    Oman: "Bahasa Arab & Standar Perhotelan/Caregiver Kesultanan Oman",
-    Yordania: "Bahasa Arab & SOP Industri Garment (Kawasan QIZ) / Caregiving",
+    "Arab Saudi": "Bahasa Arab Praktis (Percakapan) & Tata Graha Timur Tengah",
+    "Uni Emirat Arab (UAE)": "Bahasa Arab & Bahasa Inggris Perhotelan / Tadbeer UAE",
+    Kuwait: "Bahasa Arab & Bahasa Inggris Hospitality / Caregiver Kuwait",
+    Oman: "Bahasa Arab & Standar Perhotelan / Caregiver Kesultanan Oman",
+    Yordania: "Bahasa Arab & Tata Graha / Industri Kawasan Timur Tengah",
+    Qatar: "Bahasa Arab & Bahasa Inggris Hospitality Doha Qatar",
+    Bahrain: "Bahasa Arab & Tata Graha Bahrain",
   };
   const isTrained = ["READY", "DEPLOYED", "ACTIVE_WORKER", "RETURNED", "ALUMNI"].includes(
     c.stage
   );
   return {
     blkLocation: "BLK-LN Panca Banyu Ajisakti (Pusat)",
-    targetLanguage: langMap[c.destinationCountry] || "Bahasa Negara Tujuan",
+    targetLanguage:
+      langMap[c.destinationCountry] || "Bahasa Arab Praktis & Tata Graha Timur Tengah",
     attendancePct: isTrained ? 98 : c.stage === "CPMI" ? 76 : 0,
     languageScore: isTrained ? 88 : c.stage === "CPMI" ? 72 : 0,
     skillScore: isTrained ? 91 : c.stage === "CPMI" ? 78 : 0,
@@ -307,9 +289,12 @@ export function buildDefaultTrainingForCandidate(c: Candidate): TrainingRecord {
       ? "BELUM_UJIAN"
       : "BELUM_UJIAN",
     dormitoryCheckIn: c.stage === "LEAD" ? undefined : c.createdAt,
-    instructorNotes: isTrained
-      ? "Kompeten & lulus ujian sertifikasi BNSP serta wawancara Syarikah/Majikan."
-      : "Sedang mengikuti kelas intensif harian di asrama BLK-LN.",
+    instructorNotes:
+      c.processTrack === "NON_REKOM"
+        ? "Jalur Non-Rekom: Tanpa wajib PAP/E-KTKLN, fokus kesiapan bahasa Arab/Inggris praktis & langsung proses tiket keberangkatan."
+        : isTrained
+        ? "Kompeten & lulus ujian sertifikasi BNSP, PAP serta wawancara Syarikah/Majikan Timur Tengah."
+        : "Sedang mengikuti kelas intensif Bahasa Arab & keterampilan di asrama BLK-LN.",
   };
 }
 
@@ -422,16 +407,16 @@ function createInitialCases(): CaseTicket[] {
       candidateName: "Siti Khodijah",
       candidateNik: "3507185006940004",
       branchId: "br-mlg",
-      destinationCountry: "Hong Kong",
-      employerName: "Mrs. Anita Cheung",
+      destinationCountry: "Uni Emirat Arab (UAE)",
+      employerName: "Al-Maktoum Residence & Tadbeer Dubai",
       category: "GAJI_TERLAMBAT",
       priority: "CRITICAL",
       status: "ESCALATED",
-      title: "Keterlambatan Pembayaran Gaji Bulan ke-10 & Jam Istirahat Kurang",
+      title: "Keterlambatan Transfer Gaji Bulan ke-10 & Penyesuaian Jam Istirahat",
       description:
-        "PMI melaporkan melalui Portal Mandiri bahwa pembayaran gaji bulan September mundur 9 hari dari jadwal kontrak ID407, serta jam istirahat malam kurang dari 8 jam.",
+        "PMI melaporkan melalui Portal Mandiri bahwa transfer gaji bulanan dari majikan/Syarikah di Dubai mundur 7 hari dari jadwal kontrak, serta jam istirahat malam kurang dari 8 jam.",
       picName: "Rina Kartika (Admin Pusat)",
-      escalatedTo: "Golden Harbour Agency (HK) & Atase Ketenagakerjaan KJRI Hong Kong",
+      escalatedTo: "Emirates Tadbeer Services (Dubai) & Atase Ketenagakerjaan KBRI Abu Dhabi / KJRI Dubai",
       targetResolutionDate: relativeDate(-2),
       reportedBy: "Portal Mandiri PMI (Siti Khodijah)",
       createdAt: relativeDate(-6),
@@ -441,21 +426,21 @@ function createInitialCases(): CaseTicket[] {
           id: "cn-1",
           authorName: "Siti Khodijah (PMI)",
           authorRole: "PMI Aktif",
-          note: "Melaporkan pengaduan lewat Portal Mandiri: Gaji bulan ini belum ditransfer majikan dan jam kerja terlalu malam.",
+          note: "Melaporkan pengaduan lewat Portal Mandiri: Gaji bulan ini belum masuk rekening payroll UAE dan jam kerja terlalu malam.",
           createdAt: relativeDate(-6) + " 20:15 WIB",
         },
         {
           id: "cn-2",
           authorName: "Rina Kartika, S.Psi.",
           authorRole: "ADMIN_PUSAT",
-          note: "Menghubungi agensi mitra Golden Harbour Employment Agency di Hong Kong untuk klarifikasi tertulis ke majikan Mrs. Anita Cheung.",
+          note: "Menghubungi Syarikah mitra Emirates Tadbeer di Dubai untuk klarifikasi tertulis ke majikan.",
           createdAt: relativeDate(-4) + " 10:30 WIB",
         },
         {
           id: "cn-3",
           authorName: "H. Bambang Wijaya, S.E.",
           authorRole: "DIREKTUR",
-          note: "Eskalasi resmi ditembuskan ke KJRI Hong Kong bila dalam 2x24 jam bukti transfer gaji belum diterima.",
+          note: "Eskalasi resmi ditembuskan ke KJRI Dubai bila dalam 2x24 jam bukti transfer gaji WPS belum diterima.",
           createdAt: relativeDate(-1) + " 15:40 WIB",
         },
       ],
@@ -467,16 +452,16 @@ function createInitialCases(): CaseTicket[] {
       candidateName: "Ratna Kumalasari",
       candidateNik: "3175042209950008",
       branchId: "br-jkt",
-      destinationCountry: "Taiwan",
-      employerName: "Taipei Senior Care Foundation",
+      destinationCountry: "Arab Saudi",
+      employerName: "Al-Rajhi Family Residence (Riyadh)",
       category: "MAJIKAN_PEKERJAAN",
       priority: "MEDIUM",
       status: "IN_PROGRESS",
-      title: "Pendampingan Adaptasi Bahasa Mandarin & Jadwal Shift Minggu Pertama",
+      title: "Pendampingan Adaptasi Bahasa Arab & Konfirmasi Ketibaan Bandara Riyadh",
       description:
-        "PMI baru tiba 5 hari lalu di Taipei dan meminta bantuan penerjemah dari agensi mitra terkait pembagian shift malam di panti lansia.",
+        "PMI baru tiba 5 hari lalu di Riyadh (Jalur Non-Rekom Zero Cost) dan meminta bantuan penerjemah dari Syarikah/Wakalah mitra terkait penyesuaian tugas harian rumah tangga.",
       picName: "Dimas Saputra (Staf Dokumen & Penempatan)",
-      escalatedTo: "Formosa Manpower Co., Ltd (Taipei)",
+      escalatedTo: "Al-Mawarid / Maktab Istiqdam Riyadh",
       targetResolutionDate: relativeDate(3),
       reportedBy: "Tim Monitoring Purna Penempatan",
       createdAt: relativeDate(-3),
@@ -486,7 +471,7 @@ function createInitialCases(): CaseTicket[] {
           id: "cn-4",
           authorName: "Dimas Saputra",
           authorRole: "STAF_DOKUMEN",
-          note: "Koordinasi dengan penerjemah Indonesia di Formosa Manpower Taipei untuk mendampingi briefing shift besok pagi.",
+          note: "Koordinasi dengan perwakilan Maktab Istiqdam di Riyadh untuk mendampingi komunikasi telepon dengan majikan.",
           createdAt: relativeDate(-2) + " 09:20 WIB",
         },
       ],
@@ -498,14 +483,14 @@ function createInitialCases(): CaseTicket[] {
       candidateName: "Wati Susilawati",
       candidateNik: "3212156201930007",
       branchId: "br-idm",
-      destinationCountry: "Taiwan",
-      employerName: "Lin Shu-Hua Family",
+      destinationCountry: "Arab Saudi",
+      employerName: "Sheikh Abdullah Al-Qahtani Family (Jeddah)",
       category: "DOKUMEN_IMIGRASI",
       priority: "LOW",
       status: "RESOLVED",
-      title: "Pengurusan Surat Pengantar Pencairan Jaminan Pensiun (Labor Insurance) Taiwan",
+      title: "Pengurusan Bukti Exit Final (Khuruj Nihai) untuk Proses Rehire Zero Cost",
       description:
-        "PMI purna (Alumni) membutuhkan legalisir dokumen kontrak lama untuk klaim tunjangan purna kerja.",
+        "PMI purna (Alumni Eks-Jeddah) membutuhkan verifikasi dokumen Exit Final paspor lama untuk pendaftaran ulang (Rehire) ke Arab Saudi.",
       picName: "Hj. Siti Aminah (Cabang Indramayu)",
       targetResolutionDate: relativeDate(-12),
       reportedBy: "Kunjungan Cabang Indramayu",
@@ -517,7 +502,7 @@ function createInitialCases(): CaseTicket[] {
           id: "cn-5",
           authorName: "Hj. Siti Aminah",
           authorRole: "KEPALA_CABANG",
-          note: "Berkas klaim selesai diverifikasi TETO dan dana telah cair ke rekening BNI PMI.",
+          note: "Status Khuruj Nihai (Exit Final) selesai diverifikasi di sistem Muqeem/Absher dan siap lanjut pengajuan visa baru.",
           createdAt: relativeDate(-11) + " 14:00 WIB",
         },
       ],
@@ -529,25 +514,26 @@ function createInitialVacancies(): JobVacancy[] {
   return [
     {
       id: "vac-1",
-      code: "JOB-2026-TW01",
-      title: "Caregiver (Perawat Lansia Rumahan & Panti)",
-      destinationCountry: "Taiwan",
-      jobSector: "Caregiver (Perawat Lansia)",
-      agencyPartner: "Formosa Manpower Co., Ltd (Taipei)",
-      employerName: "Multiple Verified Families & Care Centers",
-      salaryForeign: "NT$ 24.000 - 27.470 / bulan",
-      salaryIdrEstimate: 13200000,
-      placementFee: 32000000,
-      quotaTotal: 25,
-      quotaFilled: 14,
+      code: "JOB-2026-SA01",
+      title: "Penata Laksana Rumah Tangga & Babysitter (Jalur Non-Rekom · Langsung Tiket)",
+      destinationCountry: "Arab Saudi",
+      placementRegion: "TIMUR_TENGAH",
+      middleEastScheme: "NON_REKOM_DIRECT_MAJIKAN",
+      jobSector: "Housekeeping & Babysitter (Majikan Langsung)",
+      agencyPartner: "Maktab Istiqdam Al-Wataniyah (Riyadh & Jeddah)",
+      employerName: "Verified Saudi Families (Riyadh / Jeddah / Dammam)",
+      salaryForeign: "SAR 1.500 - 1.800 / bulan (Zero Cost)",
+      salaryIdrEstimate: 7200000,
+      placementFee: 36000000,
+      quotaTotal: 45,
+      quotaFilled: 24,
       genderPref: "P",
-      minEducation: "SMP / SMA / SMK",
+      minEducation: "SD / SMP / SMA",
       ageRange: "21 - 42 Tahun",
       requirements: [
-        "Wajib KTP Elektronik 16 digit & KK asli",
-        "Tinggi badan minimal 150 cm, sehat jasmani & rohani (Medical FIT)",
-        "Bersedia mengikuti pelatihan bahasa Mandarin & Caregiver di BLK-LN",
-        "Surat Izin Suami / Orang Tua diketahui Kepala Desa",
+        "100% ZERO COST — Seluruh biaya dibiayai langsung oleh Syarikah / Majikan (Tanpa Potong Gaji)",
+        "Jalur Non-Rekom: Tanpa proses BPJS-TK, PAP & KTKLN — setelah Medical Wafid, Paspor & Visa langsung Tiket & Terbang",
+        "Wajib KTP Elektronik, KK, Akta/Ijazah & Surat Izin Suami/Orang Tua",
       ],
       isPublished: true,
       closingDate: relativeDate(30),
@@ -555,24 +541,26 @@ function createInitialVacancies(): JobVacancy[] {
     },
     {
       id: "vac-2",
-      code: "JOB-2026-JP02",
-      title: "Operator Manufaktur Komponen Otomotif (Specified Skilled Worker / SSW)",
-      destinationCountry: "Jepang",
-      jobSector: "Operator Manufaktur (SSW)",
-      agencyPartner: "Kansai Kumiai Federation (Osaka)",
-      employerName: "Takahashi Precision Co., Ltd",
-      salaryForeign: "¥ 185.000 / bulan (Sebelum Lembur)",
-      salaryIdrEstimate: 19500000,
-      placementFee: 45000000,
-      quotaTotal: 15,
-      quotaFilled: 6,
-      genderPref: "P/L",
-      minEducation: "SMA / SMK / D3",
-      ageRange: "19 - 32 Tahun",
+      code: "JOB-2026-SA02",
+      title: "Driver Keluarga & Teknisi Gedung (Riyadh / Makkah / Madinah)",
+      destinationCountry: "Arab Saudi",
+      placementRegion: "TIMUR_TENGAH",
+      middleEastScheme: "FORMAL_WAKALAH_GCC",
+      jobSector: "Family Driver & Building Maintenance",
+      agencyPartner: "Al-Jazeera Recruitment Office (Riyadh)",
+      employerName: "Syarikah & Keluarga Majikan Riyadh / Makkah",
+      salaryForeign: "SAR 1.800 - 2.200 / bulan (Zero Cost)",
+      salaryIdrEstimate: 8500000,
+      placementFee: 35000000,
+      quotaTotal: 20,
+      quotaFilled: 9,
+      genderPref: "L",
+      minEducation: "SMP / SMA / SMK",
+      ageRange: "22 - 40 Tahun",
       requirements: [
-        "Sertifikat Bahasa Jepang JFT-Basic A2 atau JLPT N4",
-        "Sertifikat SSW Bidang Manufaktur / Pengolahan Mesin",
-        "Tidak buta warna & lulus Medical Check-Up standar Jepang",
+        "100% Zero Cost — Dibiayai penuh oleh Syarikah / Majikan Arab Saudi",
+        "Memiliki SIM A aktif & lulus Medical Check-Up Wafid (GAMCA) FIT",
+        "Tersedia pilihan Jalur Rekom (SISKOP2MI) maupun Jalur Non-Rekom (Langsung Tiket)",
       ],
       isPublished: true,
       closingDate: relativeDate(45),
@@ -580,24 +568,26 @@ function createInitialVacancies(): JobVacancy[] {
     },
     {
       id: "vac-3",
-      code: "JOB-2026-HK03",
-      title: "Domestic Worker (Penata Laksana Rumah Tangga)",
-      destinationCountry: "Hong Kong",
-      jobSector: "Domestic Worker (PRT)",
-      agencyPartner: "Golden Harbour Employment Agency (HK)",
-      employerName: "Verified Hong Kong Employers",
-      salaryForeign: "HK$ 4.870 / bulan (Standar Resmi KJRI)",
-      salaryIdrEstimate: 9800000,
-      placementFee: 28000000,
+      code: "JOB-2026-AE03",
+      title: "Housemaid & Caregiver Lansia (Jalur Non-Rekom Dubai & Abu Dhabi)",
+      destinationCountry: "Uni Emirat Arab (UAE)",
+      placementRegion: "TIMUR_TENGAH",
+      middleEastScheme: "NON_REKOM_DIRECT_MAJIKAN",
+      jobSector: "Domestic Worker & Caregiver (PRT / Lansia)",
+      agencyPartner: "Al-Noor Tadbeer & Domestic Services (Dubai)",
+      employerName: "Verified Emirati Families (Dubai / Abu Dhabi / Sharjah)",
+      salaryForeign: "AED 1.600 - 2.000 / bulan (Zero Cost)",
+      salaryIdrEstimate: 8200000,
+      placementFee: 35000000,
       quotaTotal: 30,
-      quotaFilled: 22,
+      quotaFilled: 18,
       genderPref: "P",
-      minEducation: "SMP / SMA",
+      minEducation: "SD / SMP / SMA",
       ageRange: "21 - 40 Tahun",
       requirements: [
-        "KTP, KK, Akta Kelahiran, Ijazah asli",
-        "Bisa memasak masakan dasar & mengurus anak/lansia",
-        "Pelatihan bahasa Kantonis dasar di BLK-LN (Skema Zero Cost / KUR PMI)",
+        "100% Zero Cost — Seluruh biaya tiket, visa, paspor & medical ditanggung Majikan / Syarikah UAE",
+        "Jalur Non-Rekom Cepat: Tanpa BPJS-TK, PAP & KTKLN — langsung proses Tiket & Keberangkatan setelah Visa terbit",
+        "Bisa memasak masakan Arab dasar & merawat anak/lansia",
       ],
       isPublished: true,
       closingDate: relativeDate(20),
@@ -605,26 +595,26 @@ function createInitialVacancies(): JobVacancy[] {
     },
     {
       id: "vac-4",
-      code: "JOB-2026-SG04",
-      title: "Home Care & Domestic Helper Singapura",
-      destinationCountry: "Singapura",
-      placementRegion: "ASIA_PASIFIK",
-      middleEastScheme: "REGULER_ASIA_TIMUR",
-      jobSector: "Domestic Worker (PRT)",
-      agencyPartner: "Merlion Home Care Pte Ltd",
-      employerName: "Singapore Residential Families",
-      salaryForeign: "SGD 700 - 850 / bulan",
-      salaryIdrEstimate: 9200000,
-      placementFee: 25000000,
+      code: "JOB-2026-QA04",
+      title: "Housekeeping Hospitality & Home Care Doha Qatar",
+      destinationCountry: "Qatar",
+      placementRegion: "TIMUR_TENGAH",
+      middleEastScheme: "FORMAL_WAKALAH_GCC",
+      jobSector: "Hospitality & Home Care Doha",
+      agencyPartner: "Doha Gulf Manpower & Hospitality W.L.L",
+      employerName: "Doha Pearl Residential & Hospitality Group",
+      salaryForeign: "QAR 1.600 - 2.100 / bulan (Zero Cost)",
+      salaryIdrEstimate: 8400000,
+      placementFee: 36000000,
       quotaTotal: 20,
       quotaFilled: 9,
-      genderPref: "P",
+      genderPref: "P/L",
       minEducation: "SMP / SMA",
-      ageRange: "23 - 38 Tahun",
+      ageRange: "21 - 40 Tahun",
       requirements: [
-        "Usia minimal 23 tahun sesuai regulasi MOM Singapura",
-        "Sehat jasmani (Medical FIT) & tidak memiliki riwayat alergi berat",
-        "Komunikasi dasar Bahasa Inggris / Melayu",
+        "100% Zero Cost — Dibiayai penuh oleh Syarikah / Majikan di Doha Qatar",
+        "Sehat jasmani (Medical Wafid FIT) & siap bekerja kontrak 2 tahun",
+        "Komunikasi dasar Bahasa Arab atau Bahasa Inggris praktis",
       ],
       isPublished: true,
       closingDate: relativeDate(25),
@@ -857,19 +847,19 @@ function createInitialSeed(): DatabaseSchema {
       address: "Desa Bulak Blok Rabu RT 04/02, Jatibarang, Indramayu",
       maritalStatus: "Kawin",
       education: "SMA/SMK",
-      destinationCountry: "Taiwan",
-      jobSector: "Caregiver (Perawat Lansia)",
-      employerName: "Chen Mei-Ling Family",
-      agencyPartner: "Formosa Manpower Co., Ltd (Taipei)",
+      destinationCountry: "Arab Saudi",
+      jobSector: "Housekeeping & Babysitter (Majikan Langsung)",
+      employerName: "Al-Otaibi Family Residence (Riyadh)",
+      agencyPartner: "Maktab Istiqdam Al-Wataniyah (Riyadh)",
       vacancyId: "vac-1",
       stage: "READY",
       specialStatus: "NORMAL",
-      siskop2miId: "SISKOP-2026-TW-88291",
-      flightInfo: "China Airlines · CI762",
+      processTrack: "NON_REKOM",
+      flightInfo: "Saudia Airlines · SV819",
       departureDate: relativeDate(6),
-      placementFee: 32000000,
-      costIncurred: 20140000,
-      sponsorCommission: 4500000,
+      placementFee: 36000000,
+      costIncurred: 17500000,
+      sponsorCommission: 6500000,
       commissionPaid: false,
       branchId: "br-idm",
       sponsorId: "sp-1",
@@ -912,13 +902,13 @@ function createInitialSeed(): DatabaseSchema {
         },
         MEDICAL: {
           status: "VERIFIED",
-          docNumber: "MCU-PRM-2026-9912",
-          issuedBy: "Klinik Utama Pramita Cirebon",
+          docNumber: "WAFID-CRB-2026-9912",
+          issuedBy: "Klinik Wafid GCC Resmi Cirebon",
           issueDate: relativeDate(-78),
           expiryDate: relativeDate(12),
           medicalResult: "FIT",
           aiCheckStatus: "MATCH",
-          aiCheckNotes: "Status FIT terdeteksi. Perhatian: Masa berlaku MCU tersisa 12 hari.",
+          aiCheckNotes: "Status Wafid FIT terdeteksi. Perhatian: Masa berlaku MCU tersisa 12 hari.",
           verifiedBy: "Staf Dokumen (Dimas)",
           verifiedAt: relativeDate(-76),
         },
@@ -933,26 +923,10 @@ function createInitialSeed(): DatabaseSchema {
           verifiedBy: "Staf Dokumen (Dimas)",
           verifiedAt: relativeDate(-45),
         },
-        SERTIFIKAT_KOMPETENSI: {
-          status: "VERIFIED",
-          docNumber: "BNSP-CG-2026-4410",
-          issuedBy: "BLK-LN Panca Banyu Ajisakti",
-          verifiedBy: "Admin Pusat (Rina)",
-          verifiedAt: relativeDate(-20),
-        },
-        PERJANJIAN_PENEMPATAN: {
-          status: "VERIFIED",
-          docNumber: "PP-TW/P3MI/IX/2026/101",
-          issuedBy: "PT Panca Banyu Ajisakti & TETO",
-          issueDate: relativeDate(-18),
-          expiryDate: relativeDate(160),
-          verifiedBy: "Admin Pusat (Rina)",
-          verifiedAt: relativeDate(-18),
-        },
         VISA: {
           status: "VERIFIED",
-          docNumber: "TW-VISA-9920184",
-          issuedBy: "TETO Jakarta",
+          docNumber: "SA-VISA-9920184",
+          issuedBy: "Kedutaan Besar Arab Saudi (Tasheer Jakarta)",
           issueDate: relativeDate(-10),
           expiryDate: relativeDate(80),
           aiCheckStatus: "MATCH",
@@ -961,9 +935,9 @@ function createInitialSeed(): DatabaseSchema {
         },
         TIKET_EKTKLN: {
           status: "UPLOADED",
-          docNumber: "CI762-CGK-TPE",
-          issuedBy: "China Airlines / SISKOP2MI",
-          notes: "Menunggu verifikasi final E-KTKLN sebelum status naik ke Deployed.",
+          docNumber: "SV819-CGK-RUH",
+          issuedBy: "Saudia Airlines (Jalur Non-Rekom — Langsung Tiket)",
+          notes: "Jalur Non-Rekom: Tanpa BPJS-TK, PAP & KTKLN. Menunggu konfirmasi boarding tiket SV819 untuk berangkat.",
         },
       }),
     },
@@ -979,17 +953,18 @@ function createInitialSeed(): DatabaseSchema {
       address: "Jl. Raya Kroya No. 45, Kec. Kroya, Cilacap",
       maritalStatus: "Belum Kawin",
       education: "SMA/SMK",
-      destinationCountry: "Jepang",
-      jobSector: "Operator Manufaktur (SSW)",
-      employerName: "Takahashi Precision Co., Ltd",
-      agencyPartner: "Kansai Kumiai Federation (Osaka)",
+      destinationCountry: "Arab Saudi",
+      jobSector: "Family Driver & Building Maintenance",
+      employerName: "Syarikah Al-Jazeera & Al-Harbi Residence (Riyadh)",
+      agencyPartner: "Al-Jazeera Recruitment Office (Riyadh)",
       vacancyId: "vac-2",
       stage: "CPMI",
       specialStatus: "NORMAL",
-      siskop2miId: "SISKOP-2026-JP-41029",
-      placementFee: 45000000,
-      costIncurred: 9400000,
-      sponsorCommission: 4000000,
+      processTrack: "REKOM",
+      siskop2miId: "SISKOP-2026-SA-41029",
+      placementFee: 35000000,
+      costIncurred: 8100000,
+      sponsorCommission: 5500000,
       commissionPaid: false,
       branchId: "br-clp",
       sponsorId: "sp-2",
@@ -1029,13 +1004,13 @@ function createInitialSeed(): DatabaseSchema {
         },
         MEDICAL: {
           status: "VERIFIED",
-          docNumber: "MCU-CLP-2026-1182",
-          issuedBy: "RSUD Cilacap Medical Center",
+          docNumber: "WAFID-CLP-2026-1182",
+          issuedBy: "Ar-Razi Medical Center (Wafid GCC)",
           issueDate: relativeDate(-85),
           expiryDate: relativeDate(5),
           medicalResult: "FIT",
           aiCheckStatus: "MATCH",
-          aiCheckNotes: "KRITIS: Masa berlaku Medical Check-Up habis dalam 5 hari!",
+          aiCheckNotes: "KRITIS: Masa berlaku Medical Wafid habis dalam 5 hari!",
           verifiedBy: "Staf Dokumen (Dimas)",
           verifiedAt: relativeDate(-84),
         },
@@ -1046,22 +1021,22 @@ function createInitialSeed(): DatabaseSchema {
           issueDate: "2021-11-10",
           expiryDate: relativeDate(24),
           aiCheckStatus: "MISMATCH",
-          aiCheckNotes: "Masa berlaku paspor kurang dari 6 bulan (sisa 24 hari). Wajib perpanjangan sebelum pengajuan Visa Jepang.",
+          aiCheckNotes: "Masa berlaku paspor kurang dari 6 bulan (sisa 24 hari). Wajib perpanjangan sebelum Stamping Visa Arab Saudi.",
           verifiedBy: "Staf Dokumen (Dimas)",
           verifiedAt: relativeDate(-40),
         },
         SERTIFIKAT_KOMPETENSI: {
           status: "VERIFIED",
-          docNumber: "JFT-BASIC-A2-88120",
-          issuedBy: "Japan Foundation & Prometric",
+          docNumber: "BNSP-DRV-SA-88120",
+          issuedBy: "BLK-LN Panca Banyu Ajisakti",
           verifiedBy: "Admin Pusat (Rina)",
           verifiedAt: relativeDate(-30),
         },
         PERJANJIAN_PENEMPATAN: {
           status: "UPLOADED",
-          docNumber: "PK-JP-2026-088",
-          issuedBy: "Takahashi Precision Co., Ltd",
-          notes: "Menunggu verifikasi tanda tangan kontrak SSW.",
+          docNumber: "PK-SA-2026-088",
+          issuedBy: "Al-Jazeera Recruitment Office Riyadh",
+          notes: "Menunggu verifikasi tanda tangan Perjanjian Penempatan & BPJS-TK.",
         },
       }),
     },
@@ -1077,17 +1052,17 @@ function createInitialSeed(): DatabaseSchema {
       address: "Dusun Krajan RT 02/01, Kec. Dampit, Kab. Malang",
       maritalStatus: "Belum Kawin",
       education: "SMA/SMK",
-      destinationCountry: "Hong Kong",
-      jobSector: "Domestic Worker (PRT)",
-      employerName: "Mr. Raymond Wong",
-      agencyPartner: "Golden Harbour Employment Agency (HK)",
+      destinationCountry: "Uni Emirat Arab (UAE)",
+      jobSector: "Domestic Worker & Caregiver (PRT / Lansia)",
+      employerName: "Al-Suwaidi Family Villa (Abu Dhabi)",
+      agencyPartner: "Al-Noor Tadbeer & Domestic Services (Dubai)",
       vacancyId: "vac-3",
       stage: "CPMI",
       specialStatus: "NORMAL",
-      siskop2miId: "SISKOP-2026-HK-66102",
-      placementFee: 28000000,
-      costIncurred: 9400000,
-      sponsorCommission: 5000000,
+      processTrack: "NON_REKOM",
+      placementFee: 35000000,
+      costIncurred: 9300000,
+      sponsorCommission: 6000000,
       commissionPaid: false,
       branchId: "br-mlg",
       sponsorId: "sp-3",
@@ -1126,13 +1101,13 @@ function createInitialSeed(): DatabaseSchema {
         },
         MEDICAL: {
           status: "EXPIRED",
-          docNumber: "MCU-MLG-2026-0412",
-          issuedBy: "Laboratorium Klinik Prodia Malang",
+          docNumber: "WAFID-MLG-2026-0412",
+          issuedBy: "Al-Haramain Diagnostic Center Surabaya (Wafid GCC)",
           issueDate: relativeDate(-94),
           expiryDate: relativeDate(-4),
           medicalResult: "FIT",
           aiCheckStatus: "MISMATCH",
-          aiCheckNotes: "EXPIRED: Masa berlaku hasil medical sudah lewat 4 hari lalu. Blokir kenaikan ke tahap READY.",
+          aiCheckNotes: "EXPIRED: Masa berlaku hasil Medical Wafid sudah lewat 4 hari lalu. Blokir kenaikan ke tahap READY.",
           verifiedBy: "Staf Dokumen (Dimas)",
           verifiedAt: relativeDate(-92),
         },
@@ -1146,26 +1121,10 @@ function createInitialSeed(): DatabaseSchema {
           verifiedBy: "Staf Dokumen (Dimas)",
           verifiedAt: relativeDate(-70),
         },
-        SERTIFIKAT_KOMPETENSI: {
-          status: "VERIFIED",
-          docNumber: "BNSP-HK-2026-1920",
-          issuedBy: "BLK-LN Malang Raya",
-          verifiedBy: "Admin Pusat (Rina)",
-          verifiedAt: relativeDate(-45),
-        },
-        PERJANJIAN_PENEMPATAN: {
-          status: "VERIFIED",
-          docNumber: "ID407-HK-2026-8812",
-          issuedBy: "KJRI Hong Kong & P3MI",
-          issueDate: relativeDate(-30),
-          expiryDate: relativeDate(150),
-          verifiedBy: "Admin Pusat (Rina)",
-          verifiedAt: relativeDate(-28),
-        },
         VISA: {
           status: "VERIFIED",
-          docNumber: "HK-VISA-551920",
-          issuedBy: "Hong Kong Immigration Dept",
+          docNumber: "UAE-EVISA-551920",
+          issuedBy: "MOHRE / GDRFA Abu Dhabi UAE",
           issueDate: relativeDate(-15),
           expiryDate: relativeDate(45),
           verifiedBy: "Staf Dokumen (Dimas)",
@@ -1185,16 +1144,17 @@ function createInitialSeed(): DatabaseSchema {
       address: "Kec. Karangampel RT 01/05, Kab. Indramayu",
       maritalStatus: "Belum Kawin",
       education: "SMP",
-      destinationCountry: "Singapura",
-      jobSector: "Domestic Worker (PRT)",
-      employerName: "Mrs. Evelyn Tan",
-      agencyPartner: "Merlion Home Care Pte Ltd",
-      vacancyId: "vac-4",
+      destinationCountry: "Kuwait",
+      jobSector: "Housekeeping & Caregiver (Wakalah Kuwait)",
+      employerName: "Al-Sabah Family Residence (Kuwait City)",
+      agencyPartner: "Al-Dhow International Recruitment (Kuwait City)",
+      vacancyId: "vac-7",
       stage: "PROSPECT",
       specialStatus: "NORMAL",
-      placementFee: 25000000,
-      costIncurred: 1250000,
-      sponsorCommission: 4500000,
+      processTrack: "NON_REKOM",
+      placementFee: 35000000,
+      costIncurred: 1650000,
+      sponsorCommission: 6000000,
       commissionPaid: false,
       branchId: "br-idm",
       sponsorId: "sp-1",
@@ -1229,11 +1189,11 @@ function createInitialSeed(): DatabaseSchema {
         },
         MEDICAL: {
           status: "UPLOADED",
-          docNumber: "MCU-CRB-2026-7712",
-          issuedBy: "Klinik Budi Sehat",
+          docNumber: "WAFID-CRB-2026-7712",
+          issuedBy: "Klinik Wafid GCC Resmi",
           issueDate: relativeDate(-3),
           medicalResult: "FIT",
-          notes: "Foto diunggah perekrut dari lapangan, tanggal kedaluwarsa belum diisi admin.",
+          notes: "Foto hasil Wafid diunggah petugas, tanggal kedaluwarsa belum diisi admin.",
         },
       }),
     },
@@ -1245,13 +1205,17 @@ function createInitialSeed(): DatabaseSchema {
       birthPlace: "Cilacap",
       phone: "0813-7712-9011",
       address: "Kec. Majenang, Kab. Cilacap",
-      destinationCountry: "Korea Selatan",
-      jobSector: "Manufaktur Otomotif",
+      destinationCountry: "Qatar",
+      jobSector: "Hospitality & Home Care Doha",
+      employerName: "Doha Pearl Hospitality Group",
+      agencyPartner: "Doha Gulf Manpower & Hospitality W.L.L",
+      vacancyId: "vac-4",
       stage: "LEAD",
       specialStatus: "NORMAL",
-      placementFee: 38000000,
+      processTrack: "REKOM",
+      placementFee: 36000000,
       costIncurred: 0,
-      sponsorCommission: 4000000,
+      sponsorCommission: 5500000,
       commissionPaid: false,
       branchId: "br-clp",
       sponsorId: "sp-2",
@@ -1272,21 +1236,22 @@ function createInitialSeed(): DatabaseSchema {
       address: "Jl. Condet Raya No. 19, Kramat Jati, Jakarta Timur",
       maritalStatus: "Kawin",
       education: "SMA/SMK",
-      destinationCountry: "Taiwan",
-      jobSector: "Caregiver (Panti Jompo)",
-      employerName: "Taipei Senior Care Foundation",
-      agencyPartner: "Formosa Manpower Co., Ltd (Taipei)",
+      destinationCountry: "Arab Saudi",
+      jobSector: "Housekeeping & Babysitter (Majikan Langsung)",
+      employerName: "Al-Rajhi Family Residence (Riyadh)",
+      agencyPartner: "Maktab Istiqdam Al-Wataniyah (Riyadh)",
       vacancyId: "vac-1",
       stage: "DEPLOYED",
       specialStatus: "NORMAL",
-      siskop2miId: "SISKOP-2026-TW-51092",
-      flightInfo: "Garuda Indonesia · GA872",
+      processTrack: "NON_REKOM",
+      flightInfo: "Saudia Airlines · SV817",
       departureDate: relativeDate(-5),
-      placementFee: 32000000,
-      costIncurred: 20140000,
-      sponsorCommission: 0,
+      placementFee: 36000000,
+      costIncurred: 17500000,
+      sponsorCommission: 6500000,
       commissionPaid: true,
       branchId: "br-jkt",
+      sponsorId: "sp-1",
       portalPin: "950008",
       createdAt: relativeDate(-110),
       updatedAt: relativeDate(-5),
@@ -1297,8 +1262,8 @@ function createInitialSeed(): DatabaseSchema {
         IZIN_KELUARGA: { status: "VERIFIED", docNumber: "470/09/KJ/2026", verifiedBy: "Admin Pusat (Rina)" },
         MEDICAL: {
           status: "VERIFIED",
-          docNumber: "MCU-JKT-2026-3011",
-          issuedBy: "RS Polri Kramat Jati",
+          docNumber: "WAFID-JKT-2026-3011",
+          issuedBy: "Ar-Razi Medical Center (Wafid GCC Jakarta)",
           issueDate: relativeDate(-45),
           expiryDate: relativeDate(45),
           medicalResult: "FIT",
@@ -1312,22 +1277,18 @@ function createInitialSeed(): DatabaseSchema {
           expiryDate: "2030-02-10",
           verifiedBy: "Staf Dokumen (Dimas)",
         },
-        SERTIFIKAT_KOMPETENSI: { status: "VERIFIED", docNumber: "BNSP-TW-2026-0912", verifiedBy: "Admin Pusat (Rina)" },
-        PERJANJIAN_PENEMPATAN: {
-          status: "VERIFIED",
-          docNumber: "PP-TW/P3MI/VIII/2026/089",
-          expiryDate: relativeDate(720),
-          verifiedBy: "Admin Pusat (Rina)",
-        },
         VISA: {
           status: "VERIFIED",
-          docNumber: "TW-VISA-771201",
+          docNumber: "SA-VISA-771201",
+          issuedBy: "Kedutaan Besar Arab Saudi (Tasheer)",
           expiryDate: relativeDate(170),
           verifiedBy: "Staf Dokumen (Dimas)",
         },
         TIKET_EKTKLN: {
           status: "VERIFIED",
-          docNumber: "GA872-EKTKLN-9910",
+          docNumber: "SV817-NONREKOM-9910",
+          issuedBy: "Saudia Airlines (Jalur Non-Rekom — Langsung Tiket & Terbang)",
+          notes: "Berangkat melalui Jalur Non-Rekom (Tanpa BPJS-TK, PAP & KTKLN — langsung proses Tiket & Keberangkatan).",
           verifiedBy: "Admin Pusat (Rina)",
         },
       }),
@@ -1344,19 +1305,20 @@ function createInitialSeed(): DatabaseSchema {
       address: "Kec. Kepanjen, Kab. Malang",
       maritalStatus: "Kawin",
       education: "SMA/SMK",
-      destinationCountry: "Hong Kong",
-      jobSector: "Domestic Worker (PRT)",
-      employerName: "Mrs. Anita Cheung",
-      agencyPartner: "Golden Harbour Employment Agency (HK)",
-      vacancyId: "vac-3",
+      destinationCountry: "Uni Emirat Arab (UAE)",
+      jobSector: "Hospitality & Housekeeping (Tadbeer / Hotel)",
+      employerName: "Al-Maktoum Residence & Tadbeer Dubai",
+      agencyPartner: "Emirates Tadbeer & Hospitality Services LLC (Dubai)",
+      vacancyId: "vac-6",
       stage: "ACTIVE_WORKER",
       specialStatus: "NORMAL",
-      siskop2miId: "SISKOP-2025-HK-11902",
-      flightInfo: "Cathay Pacific · CX798",
+      processTrack: "REKOM",
+      siskop2miId: "SISKOP-2025-AE-11902",
+      flightInfo: "Emirates · EK359",
       departureDate: "2025-11-15",
-      placementFee: 28000000,
-      costIncurred: 20140000,
-      sponsorCommission: 5000000,
+      placementFee: 36000000,
+      costIncurred: 21040000,
+      sponsorCommission: 6000000,
       commissionPaid: true,
       branchId: "br-mlg",
       sponsorId: "sp-3",
@@ -1368,7 +1330,7 @@ function createInitialSeed(): DatabaseSchema {
         KK: { status: "VERIFIED", docNumber: "3507180101140002", verifiedBy: "Admin Pusat (Rina)" },
         AKTA_IJAZAH: { status: "VERIFIED", docNumber: "DN-05 Mk 0119201", verifiedBy: "Admin Pusat (Rina)" },
         IZIN_KELUARGA: { status: "VERIFIED", docNumber: "470/88/KPJ/2025", verifiedBy: "Admin Pusat (Rina)" },
-        MEDICAL: { status: "VERIFIED", docNumber: "MCU-MLG-2025-881", medicalResult: "FIT", verifiedBy: "Staf Dokumen (Dimas)" },
+        MEDICAL: { status: "VERIFIED", docNumber: "WAFID-SUB-2025-881", medicalResult: "FIT", verifiedBy: "Staf Dokumen (Dimas)" },
         PASPOR: {
           status: "VERIFIED",
           docNumber: "C8819201",
@@ -1377,10 +1339,10 @@ function createInitialSeed(): DatabaseSchema {
           expiryDate: relativeDate(45),
           verifiedBy: "Staf Dokumen (Dimas)",
         },
-        SERTIFIKAT_KOMPETENSI: { status: "VERIFIED", docNumber: "BNSP-HK-2025-0012", verifiedBy: "Admin Pusat (Rina)" },
-        PERJANJIAN_PENEMPATAN: { status: "VERIFIED", docNumber: "ID407-HK-2025-331", expiryDate: "2027-11-15", verifiedBy: "Admin Pusat (Rina)" },
-        VISA: { status: "VERIFIED", docNumber: "HK-VISA-2025-881", expiryDate: "2027-11-15", verifiedBy: "Staf Dokumen (Dimas)" },
-        TIKET_EKTKLN: { status: "VERIFIED", docNumber: "CX798-EKTKLN-112", verifiedBy: "Admin Pusat (Rina)" },
+        SERTIFIKAT_KOMPETENSI: { status: "VERIFIED", docNumber: "BNSP-AE-2025-0012", verifiedBy: "Admin Pusat (Rina)" },
+        PERJANJIAN_PENEMPATAN: { status: "VERIFIED", docNumber: "MOHRE-AE-2025-331", expiryDate: "2027-11-15", verifiedBy: "Admin Pusat (Rina)" },
+        VISA: { status: "VERIFIED", docNumber: "AE-VISA-2025-881", expiryDate: "2027-11-15", verifiedBy: "Staf Dokumen (Dimas)" },
+        TIKET_EKTKLN: { status: "VERIFIED", docNumber: "EK359-EKTKLN-112", verifiedBy: "Admin Pusat (Rina)" },
       }),
     },
     {
@@ -1395,18 +1357,18 @@ function createInitialSeed(): DatabaseSchema {
       address: "Kec. Sliyeg, Kab. Indramayu",
       maritalStatus: "Kawin",
       education: "SMA/SMK",
-      destinationCountry: "Taiwan",
-      jobSector: "Caregiver (Perawat Lansia)",
-      employerName: "Lin Shu-Hua Family",
-      agencyPartner: "Formosa Manpower Co., Ltd (Taipei)",
+      destinationCountry: "Arab Saudi",
+      jobSector: "Housekeeping & Caregiver Lansia (Jeddah)",
+      employerName: "Sheikh Abdullah Al-Qahtani Family (Jeddah)",
+      agencyPartner: "Maktab Istiqdam Al-Wataniyah (Jeddah)",
       stage: "ALUMNI",
       specialStatus: "REHIRE",
-      siskop2miId: "SISKOP-2024-TW-00912",
+      processTrack: "NON_REKOM",
       departureDate: "2023-09-01",
       returnDate: "2026-09-05",
-      placementFee: 30000000,
-      costIncurred: 20140000,
-      sponsorCommission: 4500000,
+      placementFee: 36000000,
+      costIncurred: 17500000,
+      sponsorCommission: 6500000,
       commissionPaid: true,
       branchId: "br-idm",
       sponsorId: "sp-1",
@@ -1444,6 +1406,7 @@ function createInitialSeed(): DatabaseSchema {
       vacancyId: "vac-5",
       stage: "READY",
       specialStatus: "NORMAL",
+      processTrack: "REKOM",
       siskop2miId: "SISKOP-SPSK-SA-2026-9910",
       flightInfo: "Saudia Airlines · SV819",
       departureDate: relativeDate(9),
@@ -1548,6 +1511,7 @@ function createInitialSeed(): DatabaseSchema {
       vacancyId: "vac-6",
       stage: "CPMI",
       specialStatus: "NORMAL",
+      processTrack: "REKOM",
       siskop2miId: "SISKOP-AE-2026-3319",
       placementFee: 36000000,
       costIncurred: 8100000,
@@ -1602,6 +1566,7 @@ function createInitialSeed(): DatabaseSchema {
       vacancyId: "vac-7",
       stage: "DEPLOYED",
       specialStatus: "NORMAL",
+      processTrack: "REKOM",
       siskop2miId: "SISKOP-KW-2026-6610",
       flightInfo: "Kuwait Airways · KU418",
       departureDate: relativeDate(-3),
@@ -1653,8 +1618,8 @@ function createInitialSeed(): DatabaseSchema {
       actorRole: "STAF_DOKUMEN",
       branchName: "Kantor Pusat Jakarta",
       actionType: "DOC_VERIFIED",
-      summary: "Memverifikasi Visa Kerja Taiwan (TW-VISA-9920184) untuk Sri Wahyuni",
-      details: "Masa berlaku visa s/d " + relativeDate(80) + ". Status CPMI naik ke tahap READY.",
+      summary: "Memverifikasi Visa Kerja Arab Saudi (SA-VISA-9920184) untuk Sri Wahyuni (Jalur Non-Rekom)",
+      details: "Jalur Non-Rekom (Tanpa BPJS-TK, PAP & KTKLN): Langsung lanjut ke proses Tiket Penerbangan SV819 & Keberangkatan.",
       timestamp: relativeDate(-2) + " 14:22 WIB",
     },
     {
@@ -1665,8 +1630,8 @@ function createInitialSeed(): DatabaseSchema {
       actorRole: "ADMIN_PUSAT",
       branchName: "Kantor Pusat Jakarta",
       actionType: "FINANCE_PAYMENT",
-      summary: "Mencairkan Komisi Sponsor Termin DP 3 Skema SPSK Arab Saudi (Rp 1.750.000) a.n Halimah Tusadiyah",
-      details: "Medical Wafid FIT & Visa Biometrik Tasheer Saudi telah terbit. Sisa Pelunasan 30% saat terbang SV819.",
+      summary: "Mencairkan Komisi Sponsor Termin DP 3 Skema Zero Cost Arab Saudi (Rp 1.750.000) a.n Halimah Tusadiyah",
+      details: "100% Dibiayai Syarikah/Majikan. Medical Wafid FIT & Visa Biometrik Tasheer Saudi telah terbit.",
       timestamp: relativeDate(-1) + " 11:10 WIB",
     },
     {
@@ -1677,7 +1642,7 @@ function createInitialSeed(): DatabaseSchema {
       actorRole: "DIREKTUR",
       branchName: "Kantor Pusat Jakarta",
       actionType: "SENSITIVE_DOC_VIEW",
-      summary: "Membuka dokumen sensitif: Paspor RI & Hasil Medical Check-Up Ahmad Fauzi",
+      summary: "Membuka dokumen sensitif: Paspor RI & Hasil Medical Wafid Ahmad Fauzi",
       details: "Tercatat sesuai kepatuhan UU Perlindungan Data Pribadi (UU PDP).",
       timestamp: relativeDate(0) + " 09:15 WIB",
     },
@@ -1810,47 +1775,32 @@ export function createInitialForeignAgencies(): ForeignAgency[] {
     },
     {
       id: "agn-6",
-      code: "AGN-TW-001",
-      name: "Formosa Manpower Co., Ltd (Taipei)",
-      country: "Taiwan",
-      region: "ASIA_PASIFIK",
-      licenseOrWakalahNo: "MOL-TW-TETO-1092-A",
-      scheme: "Reguler TETO (Caregiver & Manufaktur Formal)",
-      picName: "Mr.Kevin Chen",
-      phoneEmail: "+886-2-2391-8800 · kevin@formosamanpower.com.tw",
-      defaultAgencyFeeIdr: 32000000,
+      code: "AGN-SA-002",
+      name: "Maktab Istiqdam Al-Wataniyah (Riyadh & Jeddah)",
+      country: "Arab Saudi",
+      region: "TIMUR_TENGAH",
+      licenseOrWakalahNo: "WAKALAH-SA-DIRECT-1092",
+      scheme: "Wakalah Syarikah & Majikan Langsung (Jalur Rekom & Non-Rekom)",
+      picName: "Sheikh Fahad Al-Harbi",
+      phoneEmail: "+966-11-291-8800 · fahad@wataniyah-sa.com",
+      defaultAgencyFeeIdr: 36000000,
       warrantyDays: 90,
       mouExpiryDate: "2028-09-30",
       status: "ACTIVE",
     },
     {
       id: "agn-7",
-      code: "AGN-HK-001",
-      name: "Golden Lotus Employment Agency Ltd",
-      country: "Hong Kong",
-      region: "ASIA_PASIFIK",
-      licenseOrWakalahNo: "HK-LD-EA-77210",
-      scheme: "KJRI Hong Kong Accredited Employment Agency",
-      picName: "Ms. Wendy Lau",
-      phoneEmail: "+852-2577-9011 · wendy@goldenlotus.hk",
-      defaultAgencyFeeIdr: 34000000,
+      code: "AGN-QA-001",
+      name: "Doha Gulf Manpower & Hospitality W.L.L",
+      country: "Qatar",
+      region: "TIMUR_TENGAH",
+      licenseOrWakalahNo: "MOL-QA-DOHA-77210",
+      scheme: "Wakalah Hospitality & Home Care Doha Qatar (Zero Cost)",
+      picName: "Mr. Hassan Al-Thani",
+      phoneEmail: "+974-4412-9011 · recruitment@dohagulf.qa",
+      defaultAgencyFeeIdr: 36000000,
       warrantyDays: 90,
       mouExpiryDate: "2028-05-15",
-      status: "ACTIVE",
-    },
-    {
-      id: "agn-8",
-      code: "AGN-JP-001",
-      name: "Sakura Kaigo Support TSK (Tokyo)",
-      country: "Jepang",
-      region: "ASIA_PASIFIK",
-      licenseOrWakalahNo: "ISA-TSK-JP-21-00981",
-      scheme: "Specified Skilled Worker (SSW / Tokutei Ginou)",
-      picName: "Tanaka Kenji-san",
-      phoneEmail: "+81-3-5512-9901 · tanaka@sakura-tsk.jp",
-      defaultAgencyFeeIdr: 42000000,
-      warrantyDays: 180,
-      mouExpiryDate: "2029-03-31",
       status: "ACTIVE",
     },
   ];
@@ -1867,7 +1817,7 @@ export function createInitialMedicalClinics(): MedicalClinicPartner[] {
       picName: "dr. H. Farhan Al-Kaff, Sp.PD",
       phone: "021-7982-4410",
       standardMcuFeeIdr: 1650000,
-      targetCountries: "Arab Saudi, Kuwait, Oman, UAE (GCC)",
+      targetCountries: "Arab Saudi, UAE, Kuwait, Oman, Qatar, Bahrain (GCC)",
       status: "ACTIVE",
     },
     {
@@ -1879,43 +1829,31 @@ export function createInitialMedicalClinics(): MedicalClinicPartner[] {
       picName: "dr. Siti Rahmawati, M.Kes",
       phone: "031-8291-0032",
       standardMcuFeeIdr: 1650000,
-      targetCountries: "Arab Saudi, Kuwait, Oman, UAE (GCC)",
+      targetCountries: "Arab Saudi, UAE, Kuwait, Oman, Qatar (GCC)",
       status: "ACTIVE",
     },
     {
       id: "mcu-3",
-      code: "KLINIK-MKS-01",
-      name: "Klinik Utama Pramita Cirebon (Akreditasi Kemenkes & TETO)",
+      code: "KLINIK-WAFID-03",
+      name: "Klinik Utama Al-Syifa Cirebon (Wafid GCC & Kemenkes)",
       accreditation: "WAFID_DAN_KEMENKES",
       city: "Cirebon / Indramayu",
       picName: "dr. Bambang Setiawan",
       phone: "0231-208911",
-      standardMcuFeeIdr: 1250000,
-      targetCountries: "Taiwan, Hong Kong, Singapura, Malaysia, Yordania",
+      standardMcuFeeIdr: 1650000,
+      targetCountries: "Arab Saudi, UAE, Kuwait, Oman, Yordania",
       status: "ACTIVE",
     },
     {
       id: "mcu-4",
       code: "KLINIK-MKS-02",
-      name: "RS Polri Kramat Jati — Unit MCU CPMI",
-      accreditation: "KEMENKES_RI_ASIA",
+      name: "RS Polri Kramat Jati — Unit Pra-Medical & Wafid Timur Tengah",
+      accreditation: "WAFID_DAN_KEMENKES",
       city: "Jakarta Timur",
       picName: "dr. Hendra Kusuma, Sp.Ok",
       phone: "021-8093288",
-      standardMcuFeeIdr: 1350000,
-      targetCountries: "Taiwan, Jepang, Korea Selatan, Hong Kong",
-      status: "ACTIVE",
-    },
-    {
-      id: "mcu-5",
-      code: "KLINIK-MKS-03",
-      name: "Klinik Budi Sehat Cilacap (Mitra Kemenkes RI)",
-      accreditation: "KEMENKES_RI_ASIA",
-      city: "Cilacap",
-      picName: "dr. Wahyu Nugroho",
-      phone: "0282-531290",
-      standardMcuFeeIdr: 1200000,
-      targetCountries: "Asia Pasifik & Pra-Skrining Awal Timur Tengah",
+      standardMcuFeeIdr: 1500000,
+      targetCountries: "Pra-Medical & Wafid Kawasan Timur Tengah",
       status: "ACTIVE",
     },
   ];
@@ -1926,10 +1864,10 @@ export function createInitialBpjsFinancing(): BpjsFinancingPartner[] {
     {
       id: "bpjs-1",
       code: "BPJS-TK-PMI",
-      name: "BPJS Ketenagakerjaan — Perlindungan Jaminan Sosial PMI",
+      name: "BPJS Ketenagakerjaan — Perlindungan Jaminan Sosial PMI (Khusus Jalur Rekom)",
       partnerType: "BPJS_KETENAGAKERJAAN",
-      programPackage: "Paket Lengkap JKK + JKM (Pra-Penempatan, Masa Penempatan 24 Bln & Purna)",
-      premiumOrRateInfo: "Rp 370.000 / CPMI (Pra Rp 37.000 + Masa & Purna Rp 333.000)",
+      programPackage: "Paket JKK + JKM (Pra, Masa 24 Bln & Purna — Wajib Jalur Rekom, Dilewati pada Non-Rekom)",
+      premiumOrRateInfo: "Rp 370.000 / CPMI (Ditanggung Penuh Syarikah / Majikan — Zero Cost)",
       picName: "Rizky Pratama (Account Representative PMI)",
       phone: "175 / 021-5207797",
       status: "ACTIVE",
@@ -1937,43 +1875,21 @@ export function createInitialBpjsFinancing(): BpjsFinancingPartner[] {
     {
       id: "bpjs-2",
       code: "ASR-JASINDO-PMI",
-      name: "Konsorsium Asuransi Jasindo — Proteksi Tambahan & Repatriasi",
+      name: "Konsorsium Asuransi Jasindo — Proteksi & Repatriasi Timur Tengah",
       partnerType: "ASURANSI_PMI",
-      programPackage: "Asuransi Kesehatan, Gagal Berangkat & Pemulangan Dini (Timteng & Asia)",
-      premiumOrRateInfo: "Rp 450.000 / Kontrak 2 Tahun",
+      programPackage: "Asuransi Kesehatan & Pemulangan Kawasan Timur Tengah (Dibiayai Syarikah)",
+      premiumOrRateInfo: "Rp 450.000 / Kontrak 2 Tahun (Zero Cost CPMI)",
       picName: "Dewi Sartika, AAIK",
       phone: "021-3924888",
       status: "ACTIVE",
     },
     {
-      id: "bpjs-3",
-      code: "KUR-BNI-PMI",
-      name: "PT Bank Negara Indonesia (Persero) Tbk — KUR Pekerja Migran",
-      partnerType: "BANK_KUR_PMI",
-      programPackage: "KUR PMI Penempatan Taiwan, Jepang, Hong Kong, Singapura & Korea",
-      premiumOrRateInfo: "Plafon s/d Rp 45.000.000 · Bunga Subsidi 6% Efektif/Tahun (Tanpa Agunan)",
-      picName: "Andi Wijaya (Divisi Kredit Program BNI)",
-      phone: "1500046 / 021-2511946",
-      status: "ACTIVE",
-    },
-    {
-      id: "bpjs-4",
-      code: "KUR-BRI-PMI",
-      name: "PT Bank Rakyat Indonesia (Persero) Tbk — KUR TKI / PMI",
-      partnerType: "BANK_KUR_PMI",
-      programPackage: "KUR TKI Cabang Indramayu, Cilacap & Malang",
-      premiumOrRateInfo: "Plafon s/d Rp 25.000.000 – Rp 40.000.000 · Bunga 6% p.a. Tenor 12–24 Bln",
-      picName: "Budi Santoso (Mantri KUR PMI BRI)",
-      phone: "14017 / 0234-272110",
-      status: "ACTIVE",
-    },
-    {
       id: "bpjs-5",
       code: "BANK-BSI-SYARIAH",
-      name: "PT Bank Syariah Indonesia Tbk (BSI) — Mitra Payroll & Wakalah Timteng",
+      name: "PT Bank Syariah Indonesia Tbk (BSI) — Mitra Payroll & Wakalah Syarikah Timteng",
       partnerType: "BANK_KUR_PMI",
-      programPackage: "Rekening Tabungan Migran Syariah & Remitansi Arab Saudi / UAE / Kuwait",
-      premiumOrRateInfo: "Bebas Biaya Admin Bulanan · Kurs Remitansi Khusus SAR/AED/KWD",
+      programPackage: "Penerimaan Dana Wakalah Zero Cost Syarikah & Remitansi Gaji PMI (SAR/AED/KWD/OMR/QAR)",
+      premiumOrRateInfo: "100% Zero Cost (Tanpa Pinjaman/Tanpa Potong Gaji CPMI)",
       picName: "Ust. Fauzan Hakim (BSI International Desk)",
       phone: "14040 / 021-30405555",
       status: "ACTIVE",
@@ -2605,22 +2521,43 @@ function createInitialSponsorSubmissions(): SponsorFormSubmission[] {
 }
 
 export function syncExpirationsAndTasks(db: DatabaseSchema): void {
+  const legacyAsiaCountries = [
+    "Taiwan",
+    "Hong Kong",
+    "Jepang",
+    "Singapura",
+    "Korea Selatan",
+    "Malaysia",
+  ];
+
   if (!db.staffAccounts || db.staffAccounts.length === 0) {
     db.staffAccounts = createInitialStaff();
   }
-  if (!db.cases || db.cases.length === 0) {
+  if (
+    !db.cases ||
+    db.cases.length === 0 ||
+    db.cases.some((cs) => legacyAsiaCountries.includes(cs.destinationCountry))
+  ) {
     db.cases = createInitialCases();
   }
   if (!db.badilRecords) {
     db.badilRecords = createInitialBadilRecords();
   }
-  if (!db.foreignAgencies || db.foreignAgencies.length === 0) {
+  if (
+    !db.foreignAgencies ||
+    db.foreignAgencies.length === 0 ||
+    db.foreignAgencies.some((fa) => fa.region === "ASIA_PASIFIK")
+  ) {
     db.foreignAgencies = createInitialForeignAgencies();
   }
   if (!db.medicalClinics || db.medicalClinics.length === 0) {
     db.medicalClinics = createInitialMedicalClinics();
   }
-  if (!db.bpjsFinancingPartners || db.bpjsFinancingPartners.length === 0) {
+  if (
+    !db.bpjsFinancingPartners ||
+    db.bpjsFinancingPartners.length === 0 ||
+    db.bpjsFinancingPartners.some((bp) => bp.code.includes("KUR-"))
+  ) {
     db.bpjsFinancingPartners = createInitialBpjsFinancing();
   }
   if (
@@ -2631,7 +2568,11 @@ export function syncExpirationsAndTasks(db: DatabaseSchema): void {
     db.sponsorSubmissions = createInitialSponsorSubmissions();
   }
   const initialVacancies = createInitialVacancies();
-  if (!db.vacancies || db.vacancies.length === 0) {
+  if (
+    !db.vacancies ||
+    db.vacancies.length === 0 ||
+    db.vacancies.some((v) => legacyAsiaCountries.includes(v.destinationCountry))
+  ) {
     db.vacancies = initialVacancies;
   } else {
     for (const iv of initialVacancies) {
@@ -2651,17 +2592,108 @@ export function syncExpirationsAndTasks(db: DatabaseSchema): void {
   const sponsorPayableMap = new Map<string, number>();
 
   for (const cpmi of db.candidates) {
+    // Migrasi otomatis kandidat lama Asia Pasifik menjadi Kawasan Timur Tengah (Zero Cost Syarikah/Majikan)
+    if (legacyAsiaCountries.includes(cpmi.destinationCountry)) {
+      if (cpmi.id === "cpmi-1") {
+        cpmi.destinationCountry = "Arab Saudi";
+        cpmi.jobSector = "Housekeeping & Babysitter (Majikan Langsung)";
+        cpmi.employerName = "Al-Otaibi Family Residence (Riyadh)";
+        cpmi.agencyPartner = "Maktab Istiqdam Al-Wataniyah (Riyadh)";
+        cpmi.processTrack = "NON_REKOM";
+        cpmi.flightInfo = "Saudia Airlines · SV819";
+        cpmi.placementFee = 36000000;
+      } else if (cpmi.id === "cpmi-2") {
+        cpmi.destinationCountry = "Arab Saudi";
+        cpmi.jobSector = "Family Driver & Building Maintenance";
+        cpmi.employerName = "Syarikah Al-Jazeera & Al-Harbi Residence (Riyadh)";
+        cpmi.agencyPartner = "Al-Jazeera Recruitment Office (Riyadh)";
+        cpmi.processTrack = "REKOM";
+        cpmi.placementFee = 35000000;
+      } else if (cpmi.id === "cpmi-3") {
+        cpmi.destinationCountry = "Uni Emirat Arab (UAE)";
+        cpmi.jobSector = "Domestic Worker & Caregiver (PRT / Lansia)";
+        cpmi.employerName = "Al-Suwaidi Family Villa (Abu Dhabi)";
+        cpmi.agencyPartner = "Al-Noor Tadbeer & Domestic Services (Dubai)";
+        cpmi.processTrack = "NON_REKOM";
+        cpmi.placementFee = 35000000;
+      } else if (cpmi.id === "cpmi-4") {
+        cpmi.destinationCountry = "Kuwait";
+        cpmi.jobSector = "Housekeeping & Caregiver (Wakalah Kuwait)";
+        cpmi.employerName = "Al-Sabah Family Residence (Kuwait City)";
+        cpmi.agencyPartner = "Al-Dhow International Recruitment (Kuwait City)";
+        cpmi.processTrack = "NON_REKOM";
+        cpmi.placementFee = 35000000;
+      } else if (cpmi.id === "cpmi-5") {
+        cpmi.destinationCountry = "Qatar";
+        cpmi.jobSector = "Hospitality & Home Care Doha";
+        cpmi.employerName = "Doha Pearl Hospitality Group";
+        cpmi.agencyPartner = "Doha Gulf Manpower & Hospitality W.L.L";
+        cpmi.processTrack = "REKOM";
+        cpmi.placementFee = 36000000;
+      } else if (cpmi.id === "cpmi-6") {
+        cpmi.destinationCountry = "Arab Saudi";
+        cpmi.jobSector = "Housekeeping & Babysitter (Majikan Langsung)";
+        cpmi.employerName = "Al-Rajhi Family Residence (Riyadh)";
+        cpmi.agencyPartner = "Maktab Istiqdam Al-Wataniyah (Riyadh)";
+        cpmi.processTrack = "NON_REKOM";
+        cpmi.flightInfo = "Saudia Airlines · SV817";
+        cpmi.placementFee = 36000000;
+      } else if (cpmi.id === "cpmi-7") {
+        cpmi.destinationCountry = "Uni Emirat Arab (UAE)";
+        cpmi.jobSector = "Hospitality & Housekeeping (Tadbeer / Hotel)";
+        cpmi.employerName = "Al-Maktoum Residence & Tadbeer Dubai";
+        cpmi.agencyPartner = "Emirates Tadbeer & Hospitality Services LLC (Dubai)";
+        cpmi.processTrack = "REKOM";
+        cpmi.flightInfo = "Emirates · EK359";
+        cpmi.placementFee = 36000000;
+      } else {
+        cpmi.destinationCountry = "Arab Saudi";
+        cpmi.jobSector = "Housekeeping & Caregiver Lansia (Jeddah)";
+        cpmi.employerName = "Sheikh Abdullah Al-Qahtani Family (Jeddah)";
+        cpmi.agencyPartner = "Maktab Istiqdam Al-Wataniyah (Jeddah)";
+        cpmi.processTrack = "NON_REKOM";
+        cpmi.placementFee = 36000000;
+      }
+      cpmi.finance = buildDefaultFinanceForCandidate(cpmi);
+      cpmi.training = buildDefaultTrainingForCandidate(cpmi);
+    }
+
+    if (!cpmi.processTrack) {
+      cpmi.processTrack = ["cpmi-1", "cpmi-3", "cpmi-4", "cpmi-6", "cpmi-8"].includes(cpmi.id)
+        ? "NON_REKOM"
+        : "REKOM";
+    }
+
     if (!cpmi.portalPin) {
       cpmi.portalPin = cpmi.nik ? cpmi.nik.slice(-6) : "123456";
     }
-    if (!cpmi.finance) {
+    if (!cpmi.finance || cpmi.finance.fundingScheme !== "ZERO_COST_MAJIKAN") {
       cpmi.finance = buildDefaultFinanceForCandidate(cpmi);
     }
+    if (cpmi.processTrack === "NON_REKOM" && cpmi.finance) {
+      cpmi.finance.costItems = cpmi.finance.costItems.filter(
+        (ci) => ci.category !== "BPJS_ASURANSI_PMI"
+      );
+      cpmi.finance.fundingBankOrAgency = `100% Zero Cost — Dibiayai Langsung Syarikah / Majikan ${cpmi.destinationCountry} (Jalur Non-Rekom)`;
+    }
+    // Sinkronkan judul dokumen ke-10 (Tiket) & dokumen Rekom/Non-Rekom sesuai jalur proses
+    for (const d of cpmi.documents) {
+      if (d.docType === "TIKET_EKTKLN") {
+        d.title =
+          cpmi.processTrack === "NON_REKOM"
+            ? "Tiket Penerbangan & Boarding Keberangkatan (Jalur Non-Rekom — Langsung Tiket Tanpa BPJS-TK/KTKLN)"
+            : "Tiket Keberangkatan, BPJS-TK, PAP & E-KTKLN SISKOP2MI (Jalur Rekom)";
+      }
+    }
+
     if (!cpmi.training) {
       cpmi.training = buildDefaultTrainingForCandidate(cpmi);
     }
     if (!cpmi.registrationForm || !cpmi.registrationForm.overseasExperiences) {
       cpmi.registrationForm = buildDefaultRegistrationFormForCandidate(cpmi, db.sponsors);
+    }
+    if (cpmi.registrationForm && !cpmi.registrationForm.processTrack) {
+      cpmi.registrationForm.processTrack = cpmi.processTrack;
     }
     if (cpmi.id === "cpmi-9" && !cpmi.badilInfo) {
       cpmi.specialStatus = "BADIL_REPLACEMENT";
@@ -2827,10 +2859,20 @@ export function validateStageTransition(
     }
   }
 
+  const isNonRekom = candidate.processTrack === "NON_REKOM";
+
   if (targetIdx >= 3) {
-    const requiredForReady = candidate.documents.filter(
-      (d) => d.requiredAtStage === "CPMI" || d.requiredAtStage === "READY"
-    );
+    const requiredForReady = candidate.documents.filter((d) => {
+      if (d.requiredAtStage !== "CPMI" && d.requiredAtStage !== "READY") return false;
+      // Untuk Jalur Non-Rekom: lewati syarat Sertifikat Kompetensi/PAP dan Perjanjian Penempatan/BPJS-TK, langsung fokus ke Medical, Paspor & Visa
+      if (
+        isNonRekom &&
+        (d.docType === "SERTIFIKAT_KOMPETENSI" || d.docType === "PERJANJIAN_PENEMPATAN")
+      ) {
+        return false;
+      }
+      return true;
+    });
     for (const d of requiredForReady) {
       const daysLeft = getDaysRemaining(d.expiryDate);
       if (d.status === "EXPIRED" || (daysLeft !== null && daysLeft < 0)) {
@@ -2838,11 +2880,13 @@ export function validateStageTransition(
           `Dokumen "${d.title}" sudah KEDALUWARSA (${d.expiryDate}) — berhenti dihitung lengkap!`
         );
       } else if (d.status !== "VERIFIED") {
-        blockers.push(`Syarat tahap Ready "${d.title}" belum VERIFIED (Status: ${d.status}).`);
+        blockers.push(
+          `Syarat tahap Ready (${isNonRekom ? "Jalur Non-Rekom" : "Jalur Rekom"}) "${d.title}" belum VERIFIED (Status: ${d.status}).`
+        );
       }
       if (d.docType === "MEDICAL" && d.medicalResult !== "FIT") {
         blockers.push(
-          `Hasil Medical Check-Up wajib berstatus FIT (Saat ini: ${d.medicalResult || "Belum diisi"}).`
+          `Hasil Medical Check-Up Wafid wajib berstatus FIT (Saat ini: ${d.medicalResult || "Belum diisi"}).`
         );
       }
     }
@@ -2852,11 +2896,17 @@ export function validateStageTransition(
     const deployDocs = candidate.documents.filter((d) => d.requiredAtStage === "DEPLOYED");
     for (const d of deployDocs) {
       if (d.status !== "VERIFIED") {
-        blockers.push(`Berkas keberangkatan "${d.title}" belum VERIFIED.`);
+        blockers.push(
+          isNonRekom
+            ? `Tiket Penerbangan Langsung (Jalur Non-Rekom — Tanpa BPJS-TK/KTKLN) belum VERIFIED.`
+            : `Berkas keberangkatan "${d.title}" (Tiket, BPJS-TK, PAP & E-KTKLN) belum VERIFIED.`
+        );
       }
     }
     if (!candidate.flightInfo || !candidate.departureDate) {
-      blockers.push("Maskapai Penerbangan & Tanggal Keberangkatan wajib diisi sebelum status Deployed.");
+      blockers.push(
+        "Maskapai Penerbangan & Tanggal Keberangkatan wajib diisi sebelum status Deployed (Berangkat)."
+      );
     }
   }
 

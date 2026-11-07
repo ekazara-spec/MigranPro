@@ -70,6 +70,7 @@ import {
   OfficialRegistrationForm,
   OverseasWorkExperienceRow,
   PlacementCostItem,
+  ProcessTrack,
   RenewalTask,
   SpecialStatus,
   Sponsor,
@@ -263,6 +264,7 @@ export default function PASMigranProCommandCenter() {
   const [searchQuery, setSearchQuery] = useState("");
   const [stageFilter, setStageFilter] = useState<string>("ALL");
   const [countryFilter, setCountryFilter] = useState<string>("ALL");
+  const [processTrackFilter, setProcessTrackFilter] = useState<"ALL" | ProcessTrack>("ALL");
   const [docStatusFilter, setDocStatusFilter] = useState<string>("ALL");
   const [cpmiViewMode, setCpmiViewMode] = useState<"DETAIL_ORANG" | "MATRIKS_BERKAS">("DETAIL_ORANG");
 
@@ -323,24 +325,24 @@ export default function PASMigranProCommandCenter() {
   const [newCaseStatusUpdate, setNewCaseStatusUpdate] = useState<CaseStatus | "">("");
   const [newCaseEscalationUpdate, setNewCaseEscalationUpdate] = useState("");
 
-  // State Lowongan (Job Order / Vacancy)
+  // State Lowongan (Job Order / Vacancy — Khusus Kawasan Timur Tengah Zero Cost)
   const [showNewVacancyModal, setShowNewVacancyModal] = useState(false);
   const [newVacancyForm, setNewVacancyForm] = useState({
     title: "",
-    destinationCountry: "Taiwan" as JobVacancy["destinationCountry"],
-    jobSector: "Caregiver (Perawat Lansia)",
-    agencyPartner: "",
-    employerName: "",
-    salaryForeign: "NT$ 27.470 / bulan",
-    salaryIdrEstimate: 13200000,
-    placementFee: 32000000,
-    quotaTotal: 20,
+    destinationCountry: "Arab Saudi" as JobVacancy["destinationCountry"],
+    jobSector: "Housekeeping & Caregiver (SPSK Syarikah)",
+    agencyPartner: "Saudi Manpower Solutions Co. (SMASCO)",
+    employerName: "Syarikah SMASCO Riyadh",
+    salaryForeign: "SAR 1.500 - 1.800 / bulan (Zero Cost)",
+    salaryIdrEstimate: 6400000,
+    placementFee: 38000000,
+    quotaTotal: 25,
     genderPref: "P" as "P" | "L" | "P/L",
-    minEducation: "SMP / SMA",
+    minEducation: "SD / SMP / SMA",
     ageRange: "21 - 40 Tahun",
     closingDate: "2026-11-30",
     requirementsText:
-      "Wajib KTP Elektronik 16 digit & KK asli\nSehat jasmani & rohani (Medical FIT)\nSurat izin keluarga diketahui Kepala Desa",
+      "Wajib KTP Elektronik 16 digit & KK asli\nSehat jasmani & rohani (Medical Wafid / GAMCA FIT)\nSurat izin suami/orang tua diketahui Kepala Desa\n100% Zero Cost (Seluruh biaya ditanggung langsung oleh Syarikah/Majikan)",
   });
   const [applyingVacancy, setApplyingVacancy] = useState<JobVacancy | null>(null);
   const [applyForm, setApplyForm] = useState({
@@ -436,6 +438,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
     education: "SMA/SMK",
     maritalStatus: "Kawin",
     destinationCountry: "Arab Saudi",
+    processTrack: "REKOM" as ProcessTrack,
     jobSector: "Housekeeping & Caregiver (SPSK Syarikah)",
     employerName: "",
     agencyPartner: "",
@@ -444,6 +447,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
   });
   const [regForm, setRegForm] = useState<OfficialRegistrationForm>({
     nickname: "",
+    processTrack: "REKOM",
     realAge: 28,
     heightCm: 158,
     weightKg: 52,
@@ -809,7 +813,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
     });
   }
 
-  // Filter kandidat berdasarkan cabang, pencarian, tahapan, dan negara tujuan
+  // Filter kandidat berdasarkan cabang, pencarian, tahapan, alur proses (Rekom vs Non-Rekom), dan negara tujuan Timur Tengah
   const filteredCandidates = useMemo(() => {
     if (!db) return [];
     const middleEastCountries = [
@@ -818,14 +822,18 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
       "Kuwait",
       "Oman",
       "Yordania",
+      "Qatar",
+      "Bahrain",
     ];
     return db.candidates.filter((c) => {
       if (selectedBranchId !== "ALL" && c.branchId !== selectedBranchId) return false;
       if (stageFilter !== "ALL" && c.stage !== stageFilter) return false;
+      if (processTrackFilter !== "ALL") {
+        const track = c.processTrack || "REKOM";
+        if (track !== processTrackFilter) return false;
+      }
       if (countryFilter === "TIMUR_TENGAH") {
         if (!middleEastCountries.includes(c.destinationCountry)) return false;
-      } else if (countryFilter === "ASIA_PASIFIK") {
-        if (middleEastCountries.includes(c.destinationCountry)) return false;
       } else if (countryFilter !== "ALL" && c.destinationCountry !== countryFilter) {
         return false;
       }
@@ -855,7 +863,15 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
       }
       return true;
     });
-  }, [db, selectedBranchId, stageFilter, countryFilter, docStatusFilter, searchQuery]);
+  }, [
+    db,
+    selectedBranchId,
+    stageFilter,
+    processTrackFilter,
+    countryFilter,
+    docStatusFilter,
+    searchQuery,
+  ]);
 
   const selectedCandidate = useMemo(() => {
     if (!db || !selectedCandidateId) return null;
@@ -1177,6 +1193,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
       education: sub.education,
       maritalStatus: sub.maritalStatus,
       destinationCountry: sub.destinationCountry,
+      processTrack: sub.processTrack || sub.registrationForm?.processTrack || "REKOM",
       jobSector: sub.jobSector,
       employerName: "",
       agencyPartner: "",
@@ -1185,6 +1202,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
     });
     setRegForm({
       ...sub.registrationForm,
+      processTrack: sub.processTrack || sub.registrationForm?.processTrack || "REKOM",
       receivedByPtOfficer:
         loggedInStaff?.name || "Rina Kartika (Petugas PT.)",
     });
@@ -1215,6 +1233,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
       education: "SD",
       maritalStatus: "Kawin",
       destinationCountry: "Arab Saudi",
+      processTrack: "REKOM",
       jobSector: "Saudi - Sarekat Rdom (Housekeeping & Caregiver)",
       employerName: "",
       agencyPartner: "Sarekat Rdom (Syarikah Saudi)",
@@ -1223,6 +1242,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
     });
     setRegForm({
       nickname: "Umayah",
+      processTrack: "REKOM",
       realAge: 38,
       heightCm: 150,
       weightKg: 52,
@@ -1435,12 +1455,14 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
         ? "Belum Kawin"
         : "Kawin",
       destinationCountry: dest,
+      processTrack: prev.processTrack || "REKOM",
       jobSector: "Housekeeping & Caregiver (SPSK / Formal)",
     }));
 
     setRegForm((prev) => ({
       ...prev,
       nickname,
+      processTrack: prev.processTrack || "REKOM",
       realAge: realAgeMatch ? Number(realAgeMatch[1]) : 27,
       heightCm: tbMatch ? Number(tbMatch[1]) : 160,
       weightKg: bbMatch ? Number(bbMatch[1]) : 53,
@@ -2969,7 +2991,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                     />
                   </div>
 
-                  <div className="mt-3 grid grid-cols-2 gap-2">
+                  <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
                     <select
                       value={stageFilter}
                       onChange={(e) => setStageFilter(e.target.value)}
@@ -2988,24 +3010,32 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                       onChange={(e) => setCountryFilter(e.target.value)}
                       className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-700"
                     >
-                      <option value="ALL">Semua Negara (Asia & Timteng)</option>
-                      <option value="TIMUR_TENGAH">★ Kawasan Timur Tengah (Semua)</option>
-                      <option value="ASIA_PASIFIK">★ Kawasan Asia Timur & Tenggara</option>
-                      <optgroup label="Skema Timur Tengah (SPSK / Formal / Tadbeer / QIZ)">
-                        <option value="Arab Saudi">Arab Saudi (SPSK / Musaned)</option>
-                        <option value="Uni Emirat Arab (UAE)">Uni Emirat Arab (UAE - Tadbeer/MOHRE)</option>
-                        <option value="Kuwait">Kuwait (Sektor Formal / Wakalah)</option>
-                        <option value="Oman">Oman (Hospitality / Caregiver)</option>
-                        <option value="Yordania">Yordania (Jordan - Garment QIZ)</option>
-                      </optgroup>
-                      <optgroup label="Skema Asia Timur & Asia Tenggara">
-                        <option value="Taiwan">Taiwan</option>
-                        <option value="Hong Kong">Hong Kong</option>
-                        <option value="Jepang">Jepang (SSW)</option>
-                        <option value="Singapura">Singapura</option>
-                        <option value="Korea Selatan">Korea Selatan</option>
-                        <option value="Malaysia">Malaysia</option>
-                      </optgroup>
+                      <option value="ALL">Semua Negara Timur Tengah (Zero Cost)</option>
+                      <option value="Arab Saudi">🇸🇦 Arab Saudi (SPSK / Musaned)</option>
+                      <option value="Uni Emirat Arab (UAE)">🇦🇪 Uni Emirat Arab (UAE - Tadbeer)</option>
+                      <option value="Kuwait">🇰🇼 Kuwait (Sektor Formal / Wakalah)</option>
+                      <option value="Oman">🇴🇲 Oman (Hospitality / Caregiver)</option>
+                      <option value="Yordania">🇯🇴 Yordania (Jordan - QIZ)</option>
+                      <option value="Qatar">🇶🇦 Qatar (Hospitality / Domestic)</option>
+                      <option value="Bahrain">🇧🇭 Bahrain (Caregiver / Domestic)</option>
+                    </select>
+
+                    <select
+                      value={processTrackFilter}
+                      onChange={(e) =>
+                        setProcessTrackFilter(e.target.value as "ALL" | ProcessTrack)
+                      }
+                      className="sm:col-span-2 rounded-lg border border-teal-300 bg-teal-50/70 px-2.5 py-1.5 text-xs font-bold text-teal-950"
+                    >
+                      <option value="ALL">
+                        ⚡ Semua Alur Penempatan Timur Tengah (Rekom SPSK & Non-Rekom)
+                      </option>
+                      <option value="REKOM">
+                        ✓ Alur REKOM (Resmi SPSK Satu Kanal: Wajib BPJS-TK, PAP & E-KTKLN)
+                      </option>
+                      <option value="NON_REKOM">
+                        🚀 Alur NON-REKOM (Tanpa BPJS-TK, KTKLN & PAP ➔ Langsung Tiket & Terbang)
+                      </option>
                     </select>
                   </div>
                 </div>
@@ -3046,6 +3076,17 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                               <div className="flex flex-wrap items-center gap-1.5">
                                 <span className="text-sm font-bold text-slate-900">
                                   {c.fullName}
+                                </span>
+                                <span
+                                  className={`rounded px-1.5 py-0.5 text-[9.5px] font-extrabold ${
+                                    (c.processTrack || "REKOM") === "NON_REKOM"
+                                      ? "bg-amber-100 text-amber-950 border border-amber-300"
+                                      : "bg-teal-100 text-teal-900 border border-teal-300"
+                                  }`}
+                                >
+                                  {(c.processTrack || "REKOM") === "NON_REKOM"
+                                    ? "⚡ NON-REKOM (Langsung Tiket)"
+                                    : "✓ REKOM (SPSK Resmi)"}
                                 </span>
                                 {c.specialStatus !== "NORMAL" && (
                                   <span
@@ -3166,6 +3207,20 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                               <span className="rounded-full bg-slate-900 px-3 py-0.5 text-xs font-bold text-white">
                                 Tahap: {selectedCandidate.stage}
                               </span>
+                              <span
+                                className={`rounded-full px-3 py-0.5 text-xs font-extrabold ${
+                                  (selectedCandidate.processTrack || "REKOM") === "NON_REKOM"
+                                    ? "bg-amber-500 text-slate-950"
+                                    : "bg-teal-600 text-white"
+                                }`}
+                              >
+                                {(selectedCandidate.processTrack || "REKOM") === "NON_REKOM"
+                                  ? "⚡ ALUR NON-REKOM (Tanpa BPJS-TK/KTKLN/PAP ➔ Langsung Tiket)"
+                                  : "✓ ALUR REKOM (Resmi SPSK Satu Kanal · Zero Cost)"}
+                              </span>
+                              <span className="rounded-full bg-emerald-50 border border-emerald-300 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800">
+                                100% Zero Cost Syarikah/Majikan
+                              </span>
                               {selectedCandidate.specialStatus !== "NORMAL" && (
                                 <span
                                   className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
@@ -3261,6 +3316,42 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                               <RefreshCw className="h-3.5 w-3.5 text-amber-700" />
                               Proses Badil (Ganti Kandidat)
                             </button>
+
+                            <select
+                              value={selectedCandidate.processTrack || "REKOM"}
+                              onChange={async (e) => {
+                                const newTrack = e.target.value as ProcessTrack;
+                                await callApi("UPDATE_CANDIDATE", {
+                                  candidateId: selectedCandidate.id,
+                                  updates: { processTrack: newTrack },
+                                });
+                                setToast({
+                                  type: "success",
+                                  title: `Alur Proses ${selectedCandidate.fullName} Diubah ke ${
+                                    newTrack === "NON_REKOM"
+                                      ? "ALUR NON-REKOM (Tanpa BPJS-TK, KTKLN & PAP — Langsung Tiket)"
+                                      : "ALUR REKOM (Resmi SPSK Satu Kanal: Wajib BPJS-TK, PAP & E-KTKLN)"
+                                  }`,
+                                  details: [
+                                    newTrack === "NON_REKOM"
+                                      ? "Tahap BPJS-TK, PAP, dan E-KTKLN otomatis dilewati. Setelah Medical, Paspor & Visa siap, langsung ke Tiket & Keberangkatan."
+                                      : "Mengikuti urutan resmi SPSK Satu Kanal lengkap dengan Rekomendasi SISKOP2MI, BPJS-TK, PAP & E-KTKLN.",
+                                  ],
+                                });
+                              }}
+                              className={`rounded-lg border px-2.5 py-1.5 text-xs font-extrabold ${
+                                (selectedCandidate.processTrack || "REKOM") === "NON_REKOM"
+                                  ? "border-amber-400 bg-amber-50 text-amber-950"
+                                  : "border-teal-400 bg-teal-50 text-teal-950"
+                              }`}
+                            >
+                              <option value="REKOM">
+                                ✓ Alur Rekom (Resmi SPSK: BPJS-TK, PAP & KTKLN)
+                              </option>
+                              <option value="NON_REKOM">
+                                ⚡ Alur Non-Rekom (Tanpa BPJS-TK/KTKLN/PAP ➔ Langsung Tiket)
+                              </option>
+                            </select>
 
                             <select
                               value={selectedCandidate.specialStatus}
@@ -3408,6 +3499,187 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                       )}
                     </div>
 
+                    {/* PANEL SKEMA PENEMPATAN TIMUR TENGAH: ALUR RESMI SPSK (REKOM) VS ALUR NON-REKOM (ZERO COST SYARIKAH) */}
+                    <div
+                      className={`rounded-2xl border p-5 shadow-sm ${
+                        (selectedCandidate.processTrack || "REKOM") === "NON_REKOM"
+                          ? "border-amber-300 bg-amber-50/60"
+                          : "border-teal-300 bg-teal-50/50"
+                      }`}
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 pb-3">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span
+                              className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase text-white ${
+                                (selectedCandidate.processTrack || "REKOM") === "NON_REKOM"
+                                  ? "bg-amber-600"
+                                  : "bg-teal-700"
+                              }`}
+                            >
+                              {(selectedCandidate.processTrack || "REKOM") === "NON_REKOM"
+                                ? "JALUR AKTIF: ALUR PROSES NON-REKOM (LANGSUNG TIKET & KEBERANGKATAN)"
+                                : "JALUR AKTIF: ALUR PENEMPATAN RESMI SPSK (SISTEM PENEMPATAN SATU KANAL — REKOM)"}
+                            </span>
+                            <span className="rounded-full bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 text-[10px] font-extrabold text-emerald-900">
+                              💰 Pembiayaan 100% Zero Cost (Langsung dari Syarikah / Majikan Timur Tengah)
+                            </span>
+                          </div>
+                          <h3 className="mt-1.5 text-sm font-bold text-slate-900">
+                            {(selectedCandidate.processTrack || "REKOM") === "NON_REKOM"
+                              ? "Alur Non-Rekom: Melewati BPJS-TK, PAP & E-KTKLN — Setelah Medical, Paspor & Visa Langsung Proses Tiket & Keberangkatan"
+                              : "Urutan Alur Resmi Penempatan PMI Timur Tengah (Skema SPSK Satu Kanal SISKOP2MI–Musaned / Tadbeer)"}
+                          </h3>
+                        </div>
+
+                        <div className="inline-flex rounded-xl border border-slate-300 bg-white p-1 text-xs shadow-2xs">
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              await callApi("UPDATE_CANDIDATE", {
+                                candidateId: selectedCandidate.id,
+                                updates: { processTrack: "REKOM" },
+                              });
+                              setToast({
+                                type: "success",
+                                title: `${selectedCandidate.fullName} Beralih ke Alur REKOM (Resmi SPSK Satu Kanal)`,
+                              });
+                            }}
+                            className={`rounded-lg px-3 py-1.5 font-extrabold transition ${
+                              (selectedCandidate.processTrack || "REKOM") === "REKOM"
+                                ? "bg-teal-700 text-white shadow-xs"
+                                : "text-slate-600 hover:text-slate-900"
+                            }`}
+                          >
+                            ✓ 1. Alur Rekom (Resmi SPSK)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              await callApi("UPDATE_CANDIDATE", {
+                                candidateId: selectedCandidate.id,
+                                updates: { processTrack: "NON_REKOM" },
+                              });
+                              setToast({
+                                type: "success",
+                                title: `${selectedCandidate.fullName} Beralih ke Alur NON-REKOM (Langsung Tiket & Terbang)`,
+                              });
+                            }}
+                            className={`rounded-lg px-3 py-1.5 font-extrabold transition ${
+                              (selectedCandidate.processTrack || "REKOM") === "NON_REKOM"
+                                ? "bg-amber-500 text-slate-950 shadow-xs"
+                                : "text-slate-600 hover:text-slate-900"
+                            }`}
+                          >
+                            ⚡ 2. Alur Non-Rekom (Langsung Tiket)
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Urutan Langkah Spesifik SPSK (Rekom) vs Non-Rekom */}
+                      <div className="mt-3.5 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-6 text-[11px]">
+                        <div className="rounded-xl border border-teal-200 bg-white p-2.5">
+                          <span className="font-mono text-[10px] font-bold text-teal-700">
+                            TAHAP 01 · WAJIB
+                          </span>
+                          <p className="mt-0.5 font-bold text-slate-900">
+                            1. Seleksi, Interview & Dokumen Dasar
+                          </p>
+                          <p className="mt-0.5 text-[10px] text-slate-500">
+                            Info Sponsor ➔ Interview Petugas PT (Blanko F4) ➔ KTP, KK, Akta, Izin Keluarga.
+                          </p>
+                        </div>
+
+                        <div className="rounded-xl border border-teal-200 bg-white p-2.5">
+                          <span className="font-mono text-[10px] font-bold text-teal-700">
+                            TAHAP 02 · WAJIB
+                          </span>
+                          <p className="mt-0.5 font-bold text-slate-900">
+                            2. Pra-Medical & Medical Wafid (GAMCA)
+                          </p>
+                          <p className="mt-0.5 text-[10px] text-slate-500">
+                            Pemeriksaan klinik resmi Wafid GCC hingga terbit status <strong>FIT TO WORK</strong>.
+                          </p>
+                        </div>
+
+                        <div className="rounded-xl border border-teal-200 bg-white p-2.5">
+                          <span className="font-mono text-[10px] font-bold text-teal-700">
+                            TAHAP 03 · WAJIB
+                          </span>
+                          <p className="mt-0.5 font-bold text-slate-900">
+                            {(selectedCandidate.processTrack || "REKOM") === "NON_REKOM"
+                              ? "3. Paspor RI (48 Hal)"
+                              : "3. Rekom ID SISKOP2MI & Paspor RI"}
+                          </p>
+                          <p className="mt-0.5 text-[10px] text-slate-500">
+                            {(selectedCandidate.processTrack || "REKOM") === "NON_REKOM"
+                              ? "Penerbitan Paspor aktif tanpa syarat Rekom ID SISKOP2MI."
+                              : "Sinkronisasi Satu Kanal SISKOP2MI–Musaned & Rekomendasi Paspor Disnaker."}
+                          </p>
+                        </div>
+
+                        <div className="rounded-xl border border-teal-200 bg-white p-2.5">
+                          <span className="font-mono text-[10px] font-bold text-teal-700">
+                            TAHAP 04 · WAJIB
+                          </span>
+                          <p className="mt-0.5 font-bold text-slate-900">
+                            4. Kontrak Syarikah, Biometrik Tasheer & Visa
+                          </p>
+                          <p className="mt-0.5 text-[10px] text-slate-500">
+                            Wakalah/Kontrak Kerja Syarikah, Rekam Sidik Jari Tasheer (VFS) & Visa Kerja terbit.
+                          </p>
+                        </div>
+
+                        <div
+                          className={`rounded-xl border p-2.5 ${
+                            (selectedCandidate.processTrack || "REKOM") === "NON_REKOM"
+                              ? "border-dashed border-amber-400 bg-amber-100/60 opacity-85"
+                              : "border-teal-200 bg-white"
+                          }`}
+                        >
+                          <span
+                            className={`font-mono text-[10px] font-extrabold ${
+                              (selectedCandidate.processTrack || "REKOM") === "NON_REKOM"
+                                ? "text-amber-800"
+                                : "text-teal-700"
+                            }`}
+                          >
+                            {(selectedCandidate.processTrack || "REKOM") === "NON_REKOM"
+                              ? "TAHAP 05 · DILEWATI (SKIP)"
+                              : "TAHAP 05 · WAJIB SPSK"}
+                          </span>
+                          <p
+                            className={`mt-0.5 font-bold ${
+                              (selectedCandidate.processTrack || "REKOM") === "NON_REKOM"
+                                ? "line-through text-slate-500"
+                                : "text-slate-900"
+                            }`}
+                          >
+                            5. BPJS-TK, PAP & E-KTKLN
+                          </p>
+                          <p className="mt-0.5 text-[10px] text-slate-600">
+                            {(selectedCandidate.processTrack || "REKOM") === "NON_REKOM"
+                              ? "Tidak perlu dikerjakan pada jalur Non-Rekom (langsung lompat ke Tiket)."
+                              : "Pelunasan BPJS Ketenagakerjaan PMI, Pembekalan Akhir (PAP) & Penerbitan E-KTKLN."}
+                          </p>
+                        </div>
+
+                        <div className="rounded-xl border-2 border-emerald-500 bg-emerald-50/70 p-2.5">
+                          <span className="font-mono text-[10px] font-extrabold text-emerald-800">
+                            TAHAP 06 · AKHIR
+                          </span>
+                          <p className="mt-0.5 font-bold text-emerald-950">
+                            6. Tiket Pesawat & Keberangkatan
+                          </p>
+                          <p className="mt-0.5 text-[10px] text-emerald-900">
+                            {(selectedCandidate.processTrack || "REKOM") === "NON_REKOM"
+                              ? "Begitu Visa terbit, langsung proses Tiket Pesawat & Keberangkatan ke Timur Tengah."
+                              : "Issued Tiket Penerbangan (Saudia/Emirates/Etihad/Qatar) & Penempatan di Syarikah."}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
                     {/* JOURNEY ENGINE INTERAKTIF */}
                     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                       <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
@@ -3488,11 +3760,23 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                             daysLeft !== null && daysLeft >= 0 && daysLeft <= 30;
                           const isRevealed = revealedSensitiveDocs[doc.id];
 
+                          const isNonRekom =
+                            (selectedCandidate.processTrack || "REKOM") === "NON_REKOM";
+                          const isSkippedInNonRekom =
+                            isNonRekom &&
+                            ["SERTIFIKAT_KOMPETENSI", "PERJANJIAN_PENEMPATAN"].includes(
+                              doc.docType
+                            );
+                          const isDirectTicketInNonRekom =
+                            isNonRekom && doc.docType === "TIKET_EKTKLN";
+
                           return (
                             <div
                               key={doc.id}
                               className={`rounded-xl border p-4 transition ${
-                                isExpired
+                                isSkippedInNonRekom
+                                  ? "border-dashed border-amber-300 bg-amber-50/40"
+                                  : isExpired
                                   ? "border-rose-300 bg-rose-50/60"
                                   : doc.status === "VERIFIED"
                                   ? "border-slate-200 bg-white"
@@ -3504,9 +3788,27 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                               <div className="flex flex-wrap items-start justify-between gap-3">
                                 <div className="space-y-1">
                                   <div className="flex flex-wrap items-center gap-2">
-                                    <span className="text-sm font-bold text-slate-900">
+                                    <span
+                                      className={`text-sm font-bold ${
+                                        isSkippedInNonRekom
+                                          ? "line-through text-slate-500"
+                                          : "text-slate-900"
+                                      }`}
+                                    >
                                       {doc.title}
                                     </span>
+
+                                    {isSkippedInNonRekom && (
+                                      <span className="rounded-full bg-amber-200 px-2.5 py-0.5 text-[10px] font-extrabold text-amber-950 border border-amber-400">
+                                        ⚡ DILEWATI PADA ALUR NON-REKOM (TIDAK PERLU DIKERJAKAN)
+                                      </span>
+                                    )}
+
+                                    {isDirectTicketInNonRekom && (
+                                      <span className="rounded-full bg-emerald-600 px-2.5 py-0.5 text-[10px] font-extrabold text-white">
+                                        ✈️ LANGSUNG PROSES TIKET & KEBERANGKATAN (TANPA BPJS-TK / KTKLN / PAP)
+                                      </span>
+                                    )}
 
                                     <span className="rounded bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600">
                                       Syarat Tahap: {doc.requiredAtStage}
@@ -4091,14 +4393,14 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
             <div className="space-y-6">
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                 <div>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-sky-600">
-                    Rantai Penempatan Terhubung · Asia Pasifik & Timur Tengah
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-teal-700">
+                    Fokus 100% Kawasan Timur Tengah · Pembiayaan Langsung Syarikah / Majikan (Zero Cost)
                   </span>
                   <h2 className="text-base font-bold text-slate-900">
-                    Publikasi Job Order / Lowongan Luar Negeri & Pendaftaran Lead Otomatis
+                    Publikasi Job Order / Wakalah Syarikah Timur Tengah & Pendaftaran Lead Otomatis
                   </h2>
                   <p className="text-xs text-slate-500">
-                    Mendukung penuh <strong>Skema Timur Tengah (Arab Saudi SPSK/Musaned, UAE Tadbeer/MOHRE, Kuwait, Oman, Yordania QIZ)</strong> dan <strong>Asia Pasifik (Taiwan, Jepang SSW, Hong Kong, Singapura)</strong>.
+                    Khusus penempatan <strong>Kawasan Timur Tengah (Arab Saudi SPSK/Musaned, UAE Tadbeer/MOHRE, Kuwait, Oman, Yordania, Qatar & Bahrain)</strong> dengan skema <strong>100% Zero Cost (Dibiayai Langsung Syarikah/Majikan)</strong>.
                   </p>
                 </div>
 
@@ -5544,11 +5846,11 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                     >
                       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
                         <div>
-                          <span className="text-[11px] font-bold uppercase tracking-wider text-sky-600">
-                            Buku Besar HPP Penempatan & Pembiayaan KUR PMI
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">
+                            Buku Besar HPP Penempatan Timur Tengah · 100% Zero Cost Syarikah / Majikan
                           </span>
                           <h3 className="text-base font-bold text-slate-900">
-                            Rincian Komponen Biaya Proses (HPP) & Margin per CPMI
+                            Rincian Komponen Biaya Proses (HPP), Alur Rekom vs Non-Rekom & Margin per CPMI
                           </h3>
                         </div>
 
@@ -5561,7 +5863,11 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                           >
                             {db.candidates.map((c) => (
                               <option key={c.id} value={c.id}>
-                                {c.regNumber} · {c.fullName} ({c.destinationCountry} - {c.stage})
+                                {c.regNumber} · {c.fullName} ({c.destinationCountry} ·{" "}
+                                {(c.processTrack || "REKOM") === "NON_REKOM"
+                                  ? "ALUR NON-REKOM"
+                                  : "ALUR REKOM SPSK"}{" "}
+                                - {c.stage})
                               </option>
                             ))}
                           </select>
@@ -5569,89 +5875,99 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                       </div>
 
                       <div className="mt-5 grid grid-cols-1 gap-6 lg:grid-cols-12">
-                        {/* Kolom Kiri: Skema Pembiayaan, KUR PMI & Kalkulasi Margin */}
+                        {/* Kolom Kiri: Skema Pembiayaan Zero Cost Syarikah & Kalkulasi Margin */}
                         <div className="space-y-4 lg:col-span-5">
-                          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs space-y-3">
-                            <h4 className="font-bold text-slate-900 text-sm">
-                              Skema Pembiayaan & Status KUR PMI
-                            </h4>
+                          <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 text-xs space-y-3">
+                            <div className="flex items-center justify-between gap-2">
+                              <h4 className="font-bold text-slate-900 text-sm">
+                                Skema Pembiayaan Timur Tengah (Zero Cost)
+                              </h4>
+                              <span
+                                className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold ${
+                                  (financeCandidate.processTrack || "REKOM") === "NON_REKOM"
+                                    ? "bg-amber-500 text-slate-950"
+                                    : "bg-teal-700 text-white"
+                                }`}
+                              >
+                                {(financeCandidate.processTrack || "REKOM") === "NON_REKOM"
+                                  ? "⚡ ALUR NON-REKOM (Tanpa BPJS-TK/KTKLN)"
+                                  : "✓ ALUR REKOM (SPSK Resmi)"}
+                              </span>
+                            </div>
+
+                            <div className="rounded-lg border border-emerald-300 bg-white p-3 text-[11px] text-emerald-950">
+                              <strong>✓ Kebijakan Aktif Sistem:</strong> Seluruh penempatan dikhususkan untuk{" "}
+                              <strong>Kawasan Timur Tengah</strong> dengan skema{" "}
+                              <strong>100% Zero Cost (Pembiayaan Langsung dari Syarikah / Majikan)</strong>. Pembiayaan kawasan Asia Pasifik (Taiwan, Hong Kong, KUR PMI) dinonaktifkan.
+                            </div>
 
                             <div>
                               <label className="block font-bold text-slate-700 mb-1">
-                                Skema Biaya Penempatan (Sesuai Aturan BP2MI)
+                                Skema Biaya Penempatan (Khusus Kawasan Timur Tengah)
                               </label>
                               <select
-                                value={financeCandidate.finance.fundingScheme}
-                                onChange={async (e) => {
+                                value="ZERO_COST_MAJIKAN"
+                                onChange={async () => {
                                   await callApi("UPDATE_FINANCE_SCHEME", {
                                     candidateId: financeCandidate.id,
-                                    fundingScheme: e.target.value as FundingScheme,
-                                  });
-                                  setToast({
-                                    type: "success",
-                                    title: `Skema Pembiayaan ${financeCandidate.fullName} Diperbarui`,
+                                    fundingScheme: "ZERO_COST_MAJIKAN",
                                   });
                                 }}
-                                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-semibold"
+                                className="w-full rounded-lg border border-emerald-400 bg-white px-3 py-2 font-bold text-emerald-950"
                               >
                                 <option value="ZERO_COST_MAJIKAN">
-                                  Zero Cost (100% Ditanggung Majikan / Agensi)
-                                </option>
-                                <option value="KUR_PMI_BANK">
-                                  KUR PMI Perbankan (BNI / BRI / Mandiri / Bank Daerah)
-                                </option>
-                                <option value="POTONG_GAJI_RESMI">
-                                  Cicilan Potong Gaji Resmi Terukur
-                                </option>
-                                <option value="MANDIRI_BERTAHAP">
-                                  Pembayaran Mandiri Bertahap oleh CPMI
+                                  Zero Cost Timur Tengah (100% Dibiayai Langsung oleh Syarikah / Majikan)
                                 </option>
                               </select>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                               <div>
                                 <label className="block font-bold text-slate-700 mb-1">
-                                  Bank KUR / Lembaga Pembiayaan
+                                  Syarikah / Agensi Penanggung Biaya
                                 </label>
                                 <input
                                   type="text"
-                                  value={financeCandidate.finance.fundingBankOrAgency || ""}
+                                  value={
+                                    financeCandidate.finance.fundingBankOrAgency ||
+                                    "100% Ditanggung Syarikah / Majikan (Zero Cost Timur Tengah)"
+                                  }
                                   onChange={async (e) => {
                                     await callApi("UPDATE_FINANCE_SCHEME", {
                                       candidateId: financeCandidate.id,
                                       fundingBankOrAgency: e.target.value,
                                     });
                                   }}
-                                  placeholder="Contoh: KUR PMI Bank BNI"
+                                  placeholder="Contoh: Syarikah SMASCO / ARCO / Tadbeer"
                                   className="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5"
                                 />
                               </div>
 
                               <div>
                                 <label className="block font-bold text-slate-700 mb-1">
-                                  Status Pengajuan KUR
+                                  Alur Proses Kandidat Ini
                                 </label>
                                 <select
-                                  value={
-                                    financeCandidate.finance.kurStatus || "NOT_APPLICABLE"
-                                  }
+                                  value={financeCandidate.processTrack || "REKOM"}
                                   onChange={async (e) => {
-                                    await callApi("UPDATE_FINANCE_SCHEME", {
+                                    const nextTrack = e.target.value as ProcessTrack;
+                                    await callApi("UPDATE_CANDIDATE", {
                                       candidateId: financeCandidate.id,
-                                      kurStatus: e.target.value,
+                                      updates: { processTrack: nextTrack },
                                     });
                                     setToast({
                                       type: "success",
-                                      title: `Status KUR PMI Diperbarui ke ${e.target.value}`,
+                                      title: `Alur Proses & HPP ${financeCandidate.fullName} Diubah ke ${nextTrack}`,
                                     });
                                   }}
                                   className="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 font-bold"
                                 >
-                                  <option value="NOT_APPLICABLE">Tanpa KUR (Zero Cost)</option>
-                                  <option value="PENGAJUAN">PENGAJUAN (Proses Analis Bank)</option>
-                                  <option value="DISETUJUI">DISETUJUI (Akad Kredit Disetujui)</option>
-                                  <option value="CAIR_LUNAS">CAIR_LUNAS (Dana KUR Cair)</option>
+                                  <option value="REKOM">
+                                    Alur Rekom (Termasuk BPJS-TK, PAP & KTKLN)
+                                  </option>
+                                  <option value="NON_REKOM">
+                                    Alur Non-Rekom (Tanpa BPJS-TK, PAP & KTKLN)
+                                  </option>
                                 </select>
                               </div>
                             </div>
@@ -7115,20 +7431,14 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                     }
                     className="w-full rounded-lg border border-slate-300 px-3 py-2"
                   >
-                    <optgroup label="Timur Tengah (SPSK / Tadbeer / Formal / QIZ)">
+                    <optgroup label="Kawasan Timur Tengah (100% Zero Cost Syarikah / Majikan)">
                       <option value="Arab Saudi">Arab Saudi (SPSK / Musaned)</option>
-                      <option value="Uni Emirat Arab (UAE)">Uni Emirat Arab (UAE)</option>
-                      <option value="Kuwait">Kuwait</option>
-                      <option value="Oman">Oman</option>
-                      <option value="Yordania">Yordania (Jordan)</option>
-                    </optgroup>
-                    <optgroup label="Asia Timur & Tenggara">
-                      <option value="Taiwan">Taiwan</option>
-                      <option value="Hong Kong">Hong Kong</option>
-                      <option value="Jepang">Jepang</option>
-                      <option value="Singapura">Singapura</option>
-                      <option value="Malaysia">Malaysia</option>
-                      <option value="Korea Selatan">Korea Selatan</option>
+                      <option value="Uni Emirat Arab (UAE)">Uni Emirat Arab (UAE - Tadbeer/MOHRE)</option>
+                      <option value="Kuwait">Kuwait (Sektor Formal / Wakalah)</option>
+                      <option value="Oman">Oman (Hospitality / Caregiver)</option>
+                      <option value="Yordania">Yordania (Jordan - QIZ)</option>
+                      <option value="Qatar">Qatar (Hospitality / Domestic)</option>
+                      <option value="Bahrain">Bahrain (Caregiver / Domestic)</option>
                     </optgroup>
                   </select>
                 </div>
@@ -8144,10 +8454,95 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                       </div>
                     </div>
 
+                    {/* PILIHAN ALUR PROSES PEREKRUTAN TIMUR TENGAH (REKOM SPSK VS NON-REKOM) & ZERO COST SYARIKAH */}
+                    <div className="rounded-xl border-2 border-teal-500 bg-teal-50/70 p-3.5 space-y-2.5">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <span className="rounded bg-teal-800 px-2 py-0.5 text-[10px] font-extrabold uppercase text-white">
+                            PILIH ALUR PROSES PENEMPATAN TIMUR TENGAH · 100% ZERO COST SYARIKAH / MAJIKAN
+                          </span>
+                          <h5 className="mt-1 text-xs font-bold text-slate-900">
+                            Tentukan Jalur Proses Kandidat: Alur Normal (Rekom SPSK) atau Alur Non-Rekom (Langsung Tiket & Keberangkatan)
+                          </h5>
+                        </div>
+                        <span className="rounded-full bg-emerald-100 border border-emerald-400 px-2.5 py-0.5 text-[10px] font-extrabold text-emerald-900">
+                          💰 Pembiayaan 100% Dibiayai Langsung oleh Syarikah / Majikan (Zero Cost)
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setNewForm({ ...newForm, processTrack: "REKOM" });
+                            setRegForm({ ...regForm, processTrack: "REKOM" });
+                          }}
+                          className={`rounded-xl border-2 p-3 text-left transition ${
+                            (newForm.processTrack || "REKOM") === "REKOM"
+                              ? "border-teal-700 bg-teal-700 text-white shadow-sm"
+                              : "border-slate-300 bg-white text-slate-800 hover:bg-slate-50"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-extrabold">
+                              ✓ 1. Alur Penempatan Normal / Resmi (REKOM — SPSK)
+                            </span>
+                            {(newForm.processTrack || "REKOM") === "REKOM" && (
+                              <span className="rounded bg-white/20 px-2 py-0.5 text-[10px] font-bold">
+                                AKTIF DIPILIH
+                              </span>
+                            )}
+                          </div>
+                          <p
+                            className={`mt-1 text-[11px] leading-snug ${
+                              (newForm.processTrack || "REKOM") === "REKOM"
+                                ? "text-teal-50"
+                                : "text-slate-600"
+                            }`}
+                          >
+                            Mengikuti skema resmi <strong>Sistem Penempatan Satu Kanal (SPSK)</strong> lengkap: Rekom ID SISKOP2MI, Medical Wafid, Paspor, Visa, <strong>BPJS-TK, PAP & E-KTKLN</strong>, lalu Tiket & Keberangkatan.
+                          </p>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setNewForm({ ...newForm, processTrack: "NON_REKOM" });
+                            setRegForm({ ...regForm, processTrack: "NON_REKOM" });
+                          }}
+                          className={`rounded-xl border-2 p-3 text-left transition ${
+                            newForm.processTrack === "NON_REKOM"
+                              ? "border-amber-500 bg-amber-500 text-slate-950 shadow-sm"
+                              : "border-slate-300 bg-white text-slate-800 hover:bg-slate-50"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-extrabold">
+                              ⚡ 2. Alur Proses NON-REKOM (Langsung Tiket & Terbang)
+                            </span>
+                            {newForm.processTrack === "NON_REKOM" && (
+                              <span className="rounded bg-slate-950/15 px-2 py-0.5 text-[10px] font-bold">
+                                AKTIF DIPILIH
+                              </span>
+                            )}
+                          </div>
+                          <p
+                            className={`mt-1 text-[11px] leading-snug ${
+                              newForm.processTrack === "NON_REKOM"
+                                ? "text-slate-900 font-medium"
+                                : "text-slate-600"
+                            }`}
+                          >
+                            Melewati proses <strong>BPJS-TK, E-KTKLN, dan PAP</strong> (tidak perlu dikerjakan). Setelah Dokumen Dasar, Medical, Paspor & Visa selesai, <strong>langsung ke proses Tiket & Keberangkatan</strong>.
+                          </p>
+                        </button>
+                      </div>
+                    </div>
+
                     <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
                       <div>
                         <label className="font-bold text-slate-700 block mb-1">
-                          1. Negara Tujuan Penempatan *
+                          1. Negara Tujuan Penempatan (Timur Tengah) *
                         </label>
                         <select
                           value={newForm.destinationCountry}
@@ -8156,19 +8551,14 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                           }
                           className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-bold text-slate-900"
                         >
-                          <optgroup label="Timur Tengah (SPSK / Tadbeer / Formal)">
+                          <optgroup label="Kawasan Timur Tengah (Zero Cost Syarikah / Majikan)">
                             <option value="Arab Saudi">Arab Saudi (SPSK / Musaned)</option>
-                            <option value="Uni Emirat Arab (UAE)">Uni Emirat Arab (UAE)</option>
-                            <option value="Kuwait">Kuwait</option>
-                            <option value="Oman">Oman</option>
-                            <option value="Yordania">Yordania (Jordan)</option>
-                          </optgroup>
-                          <optgroup label="Asia Timur & Tenggara">
-                            <option value="Taiwan">Taiwan</option>
-                            <option value="Hong Kong">Hong Kong</option>
-                            <option value="Jepang">Jepang</option>
-                            <option value="Singapura">Singapura</option>
-                            <option value="Malaysia">Malaysia</option>
+                            <option value="Uni Emirat Arab (UAE)">Uni Emirat Arab (UAE - Tadbeer)</option>
+                            <option value="Kuwait">Kuwait (Sektor Formal / Wakalah)</option>
+                            <option value="Oman">Oman (Hospitality / Caregiver)</option>
+                            <option value="Yordania">Yordania (Jordan - QIZ)</option>
+                            <option value="Qatar">Qatar (Hospitality / Domestic)</option>
+                            <option value="Bahrain">Bahrain (Caregiver / Domestic)</option>
                           </optgroup>
                         </select>
                       </div>
@@ -11276,16 +11666,12 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                     className="w-full rounded-lg border border-slate-300 px-3 py-2 font-semibold"
                   >
                     <option value="Arab Saudi">Arab Saudi (SPSK / Musaned)</option>
-                    <option value="Uni Emirat Arab (UAE)">Uni Emirat Arab (UAE)</option>
-                    <option value="Kuwait">Kuwait</option>
-                    <option value="Oman">Oman</option>
+                    <option value="Uni Emirat Arab (UAE)">Uni Emirat Arab (UAE - Tadbeer)</option>
+                    <option value="Kuwait">Kuwait (Wakalah Formal)</option>
+                    <option value="Oman">Oman (Muscat)</option>
                     <option value="Yordania">Yordania (QIZ)</option>
-                    <option value="Taiwan">Taiwan</option>
-                    <option value="Hong Kong">Hong Kong</option>
-                    <option value="Jepang">Jepang (SSW)</option>
-                    <option value="Singapura">Singapura</option>
-                    <option value="Malaysia">Malaysia</option>
-                    <option value="Korea Selatan">Korea Selatan</option>
+                    <option value="Qatar">Qatar</option>
+                    <option value="Bahrain">Bahrain</option>
                   </select>
                 </div>
                 <div>

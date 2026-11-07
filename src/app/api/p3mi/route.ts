@@ -29,6 +29,7 @@ import {
   JourneyStage,
   MedicalClinicPartner,
   OfficialRegistrationForm,
+  ProcessTrack,
   Sponsor,
   SponsorFormSubmission,
   StaffAccount,
@@ -671,9 +672,10 @@ export async function POST(req: NextRequest) {
         employerName,
         agencyPartner,
         stage = "LEAD",
+        processTrack,
         branchId,
         sponsorId,
-        placementFee = 32000000,
+        placementFee = 36000000,
         customRegNumber,
         registrationForm,
         sponsorSubmissionId,
@@ -741,6 +743,11 @@ export async function POST(req: NextRequest) {
       const today = nowTimestamp().split(" ")[0];
       const spObj = db.sponsors.find((s) => s.id === sponsorId);
 
+      const resolvedTrack: ProcessTrack =
+        processTrack ||
+        (registrationForm as OfficialRegistrationForm | undefined)?.processTrack ||
+        "REKOM";
+
       const newCandidate: Candidate = {
         id,
         regNumber: regNum,
@@ -754,13 +761,14 @@ export async function POST(req: NextRequest) {
         address: address || "",
         maritalStatus: maritalStatus || "Belum Kawin",
         education: education || "SMA/SMK",
-        destinationCountry: destinationCountry || "Taiwan",
-        jobSector: jobSector || "Caregiver",
+        destinationCountry: destinationCountry || "Arab Saudi",
+        jobSector: jobSector || "Housekeeping & Caregiver",
         employerName: employerName || "",
         agencyPartner: agencyPartner || "",
         stage: stage as JourneyStage,
         specialStatus: "NORMAL",
-        placementFee: Number(placementFee) || 32000000,
+        processTrack: resolvedTrack,
+        placementFee: Number(placementFee) || 36000000,
         costIncurred: 0,
         sponsorCommission: spObj ? spObj.commissionPerCpmi : 0,
         commissionPaid: false,
@@ -939,11 +947,40 @@ export async function POST(req: NextRequest) {
       }
 
       const prevSpecial = candidate.specialStatus;
+      const prevTrack = candidate.processTrack || "REKOM";
       Object.assign(candidate, {
         ...updates,
         nik: candidate.nik,
         updatedAt: nowTimestamp().split(" ")[0],
       });
+
+      if (updates.processTrack && updates.processTrack !== prevTrack) {
+        candidate.finance = buildDefaultFinanceForCandidate(candidate);
+        if (candidate.registrationForm) {
+          candidate.registrationForm.processTrack = updates.processTrack;
+        }
+        db.auditLogs.unshift({
+          id: `aud-${Date.now()}`,
+          candidateId: candidate.id,
+          candidateName: candidate.fullName,
+          actorName,
+          actorRole: actorRole as UserRole,
+          branchName,
+          actionType: "SPECIAL_STATUS",
+          summary: `Mengubah Alur Proses Penempatan ${candidate.fullName}: ${
+            prevTrack === "NON_REKOM" ? "Jalur Non-Rekom" : "Jalur Rekom"
+          } → ${
+            updates.processTrack === "NON_REKOM"
+              ? "Jalur Non-Rekom (Tanpa BPJS-TK/KTKLN · Langsung Tiket & Keberangkatan)"
+              : "Jalur Rekom Resmi (SISKOP2MI + BPJS-TK & E-KTKLN)"
+          }`,
+          details:
+            updates.processTrack === "NON_REKOM"
+              ? "Tahapan BPJS-TK, PAP & E-KTKLN dilewati. Setelah Medical, Paspor & Visa langsung menuju Tiket & Keberangkatan."
+              : "Menggunakan alur penempatan normal lengkap (BPJS-TK, PAP & E-KTKLN).",
+          timestamp: nowTimestamp(),
+        });
+      }
 
       if (updates.specialStatus && updates.specialStatus !== prevSpecial) {
         db.auditLogs.unshift({
