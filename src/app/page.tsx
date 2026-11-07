@@ -419,6 +419,50 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
   const [printingRegFormCandidate, setPrintingRegFormCandidate] = useState<Candidate | null>(
     null
   );
+  const [printingSyarikahBiodataCandidate, setPrintingSyarikahBiodataCandidate] =
+    useState<Candidate | null>(null);
+  const [syarikahBiodataForm, setSyarikahBiodataForm] = useState({
+    referenceNo: "",
+    employmentIn: "SAUDI ARABIA",
+    postApply: "DOMESTIC HELPER",
+    monthlySalary: "SAR 1500",
+    contractPeriod: "2 YEARS",
+    phone: "083174903728",
+    fullName: "EKA HERMAYANTI RUSLAN",
+    nationality: "INDONESIAN",
+    religion: "ISLAM",
+    dateOfBirth: "17-12-2003",
+    age: "23",
+    placeOfBirth: "JOWET",
+    livingTown: "N.T.B",
+    maritalStatus: "NOT MARRIED",
+    noOfChildren: "",
+    weight: "43CM",
+    height: "155KG",
+    complexion: "BROWN SKIN",
+    educational: "SENIOR HIGH SCHOOL",
+    passportNumber: "",
+    passportIssueDate: "",
+    passportIssuePlace: "",
+    passportExpiryDate: "",
+    arabicSpeak: "POOR",
+    arabicRead: "POOR",
+    englishSpeak: "POOR",
+    englishRead: "POOR",
+    prevEmploymentCountry: "NON EXPERIENCE",
+    prevEmploymentPeriod: "",
+    driving: "NO",
+    cooking: "YES",
+    cleaning: "YES",
+    washing: "YES",
+    babySitting: "YES",
+    ironing: "YES",
+    careOfOlder: "YES",
+    sheCanCook: "",
+    closeUpPhotoUrl: "/biodata-img-2.jpg",
+    fullBodyPhotoUrl: "/biodata-img-3.jpg",
+    replaceHeaderLogoWithNew: true,
+  });
   const [duplicateNikAlert, setDuplicateNikAlert] = useState<{
     candidate: Candidate;
     branchName: string;
@@ -431,6 +475,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
     fullName: "",
     gender: "P" as "P" | "L",
     avatarUrl: "",
+    fullBodyPhotoUrl: "",
     birthPlace: "",
     birthDate: "",
     phone: "",
@@ -448,6 +493,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
   const [regForm, setRegForm] = useState<OfficialRegistrationForm>({
     nickname: "",
     processTrack: "REKOM",
+    fullBodyPhotoUrl: "/biodata-img-3.jpg",
     realAge: 28,
     heightCm: 158,
     weightKg: 52,
@@ -1186,6 +1232,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
       fullName: sub.fullName,
       gender: sub.gender,
       avatarUrl: sub.avatarUrl || "",
+      fullBodyPhotoUrl: sub.registrationForm?.fullBodyPhotoUrl || "/biodata-img-3.jpg",
       birthPlace: sub.birthPlace,
       birthDate: sub.birthDate,
       phone: sub.phone,
@@ -1226,6 +1273,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
       fullName: "Umayah",
       gender: "P",
       avatarUrl: AVATAR_PRESETS[0].url,
+      fullBodyPhotoUrl: "/biodata-img-3.jpg",
       birthPlace: "Cirebon",
       birthDate: "1988-05-16",
       phone: "081324170438",
@@ -1549,6 +1597,235 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
       title: `📲 Chat WhatsApp Sponsor Berhasil Dikonversi ke Formulir Baru F4 (${fullName})`,
       details: [
         "Seluruh Poin 1–17 Formulir Baru F4 (Biodata, Kakek dari Bapak, Tabel Pengalaman Luar Negeri, Bahasa, Masakan Arab & Dokumen) otomatis terisi.",
+      ],
+    });
+  }
+
+  // Handler Buka & Konversi Otomatis Printout Biodata Syarikah (contoh_printout_biodata.pdf) dari Data Pendaftaran CPMI
+  function openSyarikahBiodataModal(cand: Candidate) {
+    const rf: OfficialRegistrationForm = cand.registrationForm || regForm;
+    const countryMap: Record<string, { en: string; salary: string }> = {
+      "Arab Saudi": { en: "SAUDI ARABIA", salary: "SAR 1500" },
+      "Uni Emirat Arab (UAE)": { en: "UNITED ARAB EMIRATES", salary: "AED 1500" },
+      Kuwait: { en: "KUWAIT", salary: "KWD 120" },
+      Oman: { en: "OMAN", salary: "OMR 130" },
+      Yordania: { en: "JORDAN", salary: "JOD 300" },
+      Qatar: { en: "QATAR", salary: "QAR 1500" },
+      Bahrain: { en: "BAHRAIN", salary: "BHD 130" },
+    };
+    const destInfo = countryMap[cand.destinationCountry] || {
+      en: cand.destinationCountry.toUpperCase(),
+      salary: "SAR 1500",
+    };
+
+    const bParts = (cand.birthDate || "1998-08-14").split("-");
+    const dobFormatted =
+      bParts.length === 3 ? `${bParts[2]}-${bParts[1]}-${bParts[0]}` : cand.birthDate || "17-12-2003";
+
+    const calcAge = () => {
+      if (rf.realAge && rf.realAge > 0) return String(rf.realAge);
+      if (bParts.length === 3 && !isNaN(Number(bParts[0]))) {
+        return String(Math.max(18, 2026 - Number(bParts[0])));
+      }
+      return "25";
+    };
+
+    const marUpper = (cand.maritalStatus || "").toUpperCase();
+    const maritalEn = marUpper.includes("BELUM")
+      ? "NOT MARRIED"
+      : marUpper.includes("CERAI") || marUpper.includes("JANDA")
+      ? "DIVORCED"
+      : "MARRIED";
+
+    const eduUpper = (cand.education || "").toUpperCase();
+    const eduEn = eduUpper.includes("SD")
+      ? "ELEMENTARY SCHOOL"
+      : eduUpper.includes("SMP") || eduUpper.includes("MTS")
+      ? "JUNIOR HIGH SCHOOL"
+      : eduUpper.includes("D3") || eduUpper.includes("S1") || eduUpper.includes("UNIV")
+      ? "UNIVERSITY / DIPLOMA"
+      : "SENIOR HIGH SCHOOL";
+
+    const relUpper = (rf.religion || "Islam").toUpperCase();
+    const religionEn = relUpper.includes("ISLAM")
+      ? "ISLAM"
+      : relUpper.includes("KRISTEN") || relUpper.includes("KATOLIK")
+      ? "CHRISTIAN"
+      : relUpper;
+
+    const pasporDoc = (cand.documents || []).find((d) => d.docType === "PASPOR");
+    const rawPassportNo =
+      pasporDoc?.docNumber && !pasporDoc.docNumber.startsWith("FISIK-")
+        ? pasporDoc.docNumber
+        : "";
+    const rawPassportPlace =
+      pasporDoc?.issuedBy && !pasporDoc.issuedBy.startsWith("Diserahkan")
+        ? pasporDoc.issuedBy.toUpperCase()
+        : "";
+
+    const arabSpeak =
+      rf.arabicLevelF4 === "LANCAR"
+        ? "FLUENT"
+        : rf.arabicLevelF4 === "SEDIKIT"
+        ? "FAIR"
+        : "POOR";
+    const arabRead =
+      rf.arabicLevelF4 === "LANCAR"
+        ? "FAIR"
+        : rf.arabicLevelF4 === "SEDIKIT"
+        ? "POOR"
+        : "POOR";
+    const engSpeak =
+      rf.englishLevelF4 === "LANCAR"
+        ? "FLUENT"
+        : rf.englishLevelF4 === "SEDIKIT"
+        ? "FAIR"
+        : "POOR";
+    const engRead =
+      rf.englishLevelF4 === "LANCAR"
+        ? "GOOD"
+        : rf.englishLevelF4 === "SEDIKIT"
+        ? "FAIR"
+        : "POOR";
+
+    const validExps = (rf.overseasExperiences || []).filter(
+      (e) =>
+        e.countryAndCity &&
+        e.countryAndCity.trim() !== "" &&
+        e.countryAndCity.trim() !== "-" &&
+        !/non/i.test(e.countryAndCity)
+    );
+    const prevCountryEn =
+      validExps.length > 0
+        ? validExps
+            .map((e) =>
+              `${e.countryAndCity} ${e.duration ? `(${e.duration})` : ""}`
+                .toUpperCase()
+                .replace(/ARAB SAUDI/g, "SAUDI ARABIA")
+                .replace(/TAHUN/g, "YEARS")
+                .replace(/THN|TH/g, "YRS")
+                .trim()
+            )
+            .join(" / ")
+        : "NON EXPERIENCE";
+    const prevPeriodEn =
+      validExps.length > 0
+        ? validExps
+            .map((e) => e.period)
+            .filter(Boolean)
+            .join(", ")
+        : "";
+
+    const townGuess =
+      cand.birthPlace?.toUpperCase() ||
+      (cand.address ? cand.address.split(",").pop()?.trim().toUpperCase() : "") ||
+      "INDRAMAYU";
+
+    const cookList = (rf.arabicCookingSkills || []).join(", ").toUpperCase();
+
+    setSyarikahBiodataForm({
+      referenceNo: cand.regNumber || "",
+      employmentIn: destInfo.en,
+      postApply: "DOMESTIC HELPER",
+      monthlySalary: destInfo.salary,
+      contractPeriod: "2 YEARS",
+      phone: cand.phone || "",
+      fullName: (cand.fullName || "").toUpperCase(),
+      nationality: "INDONESIAN",
+      religion: religionEn,
+      dateOfBirth: dobFormatted,
+      age: calcAge(),
+      placeOfBirth: (cand.birthPlace || "INDRAMAYU").toUpperCase(),
+      livingTown: townGuess,
+      maritalStatus: maritalEn,
+      noOfChildren:
+        rf.childrenTotalCount && rf.childrenTotalCount > 0
+          ? String(rf.childrenTotalCount)
+          : maritalEn === "NOT MARRIED"
+          ? ""
+          : "0",
+      weight: `${rf.weightKg || 52} KG`,
+      height: `${rf.heightCm || 158} CM`,
+      complexion: "BROWN SKIN",
+      educational: eduEn,
+      passportNumber: rawPassportNo.toUpperCase(),
+      passportIssueDate: pasporDoc?.issueDate || "",
+      passportIssuePlace: rawPassportPlace,
+      passportExpiryDate: pasporDoc?.expiryDate || "",
+      arabicSpeak: arabSpeak,
+      arabicRead: arabRead,
+      englishSpeak: engSpeak,
+      englishRead: engRead,
+      prevEmploymentCountry: prevCountryEn,
+      prevEmploymentPeriod: prevPeriodEn,
+      driving: "NO",
+      cooking: (rf.arabicCookingSkills?.length || 0) > 0 || rf.willingHousekeeping ? "YES" : "NO",
+      cleaning: rf.willingHousekeeping !== false ? "YES" : "NO",
+      washing: rf.willingHousekeeping !== false ? "YES" : "NO",
+      babySitting: rf.willingCareBaby !== false ? "YES" : "NO",
+      ironing: rf.willingHousekeeping !== false ? "YES" : "NO",
+      careOfOlder: rf.willingCareElderly !== false ? "YES" : "NO",
+      sheCanCook: cookList,
+      closeUpPhotoUrl:
+        cand.avatarUrl && !cand.avatarUrl.startsWith("data:image/svg")
+          ? cand.avatarUrl
+          : "/biodata-img-2.jpg",
+      fullBodyPhotoUrl:
+        cand.fullBodyPhotoUrl || rf.fullBodyPhotoUrl || "/biodata-img-3.jpg",
+      replaceHeaderLogoWithNew: true,
+    });
+    setPrintingSyarikahBiodataCandidate(cand);
+  }
+
+  // Handler Muat Contoh Asli 100% dari File contoh_printout_biodata.pdf (EKA HERMAYANTI RUSLAN)
+  function loadExactSampleBiodataPdf() {
+    setSyarikahBiodataForm({
+      referenceNo: "",
+      employmentIn: "",
+      postApply: "DOMESTIC HELPER",
+      monthlySalary: "SAR 1500",
+      contractPeriod: "2 YEARS",
+      phone: "083174903728",
+      fullName: "EKA HERMAYANTI RUSLAN",
+      nationality: "INDONESIAN",
+      religion: "ISLAM",
+      dateOfBirth: "17-12-2003",
+      age: "23",
+      placeOfBirth: "JOWET",
+      livingTown: "N.T.B",
+      maritalStatus: "NOT MARRIED",
+      noOfChildren: "",
+      weight: "43CM",
+      height: "155KG",
+      complexion: "BROWN SKIN",
+      educational: "SENIOR HIGH SCHOOL",
+      passportNumber: "",
+      passportIssueDate: "",
+      passportIssuePlace: "",
+      passportExpiryDate: "",
+      arabicSpeak: "POOR",
+      arabicRead: "POOR",
+      englishSpeak: "POOR",
+      englishRead: "POOR",
+      prevEmploymentCountry: "NON EXPERIENCE",
+      prevEmploymentPeriod: "",
+      driving: "NO",
+      cooking: "YES",
+      cleaning: "YES",
+      washing: "YES",
+      babySitting: "YES",
+      ironing: "YES",
+      careOfOlder: "YES",
+      sheCanCook: "",
+      closeUpPhotoUrl: "/biodata-img-2.jpg",
+      fullBodyPhotoUrl: "/biodata-img-3.jpg",
+      replaceHeaderLogoWithNew: true,
+    });
+    setToast({
+      type: "success",
+      title: "✨ Data Contoh Asli (contoh_printout_biodata.pdf — EKA HERMAYANTI RUSLAN) Dimuat!",
+      details: [
+        "Menampilkan data dan foto asli persis seperti file contoh_printout_biodata.pdf untuk verifikasi tata letak (layout).",
       ],
     });
   }
@@ -3272,6 +3549,14 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
 
                         <div className="flex flex-col items-end gap-2">
                           <div className="flex flex-wrap items-center gap-2">
+                            <button
+                              onClick={() => openSyarikahBiodataModal(selectedCandidate)}
+                              className="inline-flex items-center gap-1.5 rounded-lg border-2 border-indigo-500 bg-indigo-600 px-3 py-1.5 text-xs font-extrabold text-white shadow-sm hover:bg-indigo-700"
+                            >
+                              <Printer className="h-3.5 w-3.5 text-amber-300" />
+                              🌍 Printout Biodata Syarikah (CV Majikan)
+                            </button>
+
                             <button
                               onClick={() => setPrintingRegFormCandidate(selectedCandidate)}
                               className="inline-flex items-center gap-1.5 rounded-lg border border-sky-300 bg-sky-50 px-3 py-1.5 text-xs font-bold text-sky-900 shadow-xs hover:bg-sky-100"
@@ -7770,6 +8055,50 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   🖨️ Pratinjau & Cetak Lembar Fisik (Ide 3)
                 </button>
                 <button
+                  type="button"
+                  onClick={() => {
+                    const tempCand: Candidate = {
+                      id: "temp-preview",
+                      regNumber: newForm.customRegNumber.trim() || "",
+                      nik: newForm.nik || regForm.ktpOrPassportNo || "",
+                      fullName: newForm.fullName || "EKA HERMAYANTI RUSLAN",
+                      gender: newForm.gender,
+                      avatarUrl: newForm.avatarUrl || "/biodata-img-2.jpg",
+                      fullBodyPhotoUrl:
+                        newForm.fullBodyPhotoUrl ||
+                        regForm.fullBodyPhotoUrl ||
+                        "/biodata-img-3.jpg",
+                      birthPlace: newForm.birthPlace || "JOWET",
+                      birthDate: newForm.birthDate || "2003-12-17",
+                      phone: newForm.phone || "083174903728",
+                      address: newForm.address || "N.T.B",
+                      maritalStatus: newForm.maritalStatus,
+                      education: newForm.education,
+                      destinationCountry: newForm.destinationCountry as DestinationCountry,
+                      jobSector: newForm.jobSector,
+                      employerName: newForm.employerName,
+                      agencyPartner: newForm.agencyPartner,
+                      stage: newForm.stage,
+                      specialStatus: "NORMAL",
+                      placementFee: 36000000,
+                      costIncurred: 0,
+                      sponsorCommission: 6000000,
+                      commissionPaid: false,
+                      branchId: newForm.branchId,
+                      sponsorId: newForm.sponsorId,
+                      createdAt: new Date().toISOString().slice(0, 10),
+                      updatedAt: new Date().toISOString().slice(0, 10),
+                      documents: [],
+                      registrationForm: regForm,
+                    };
+                    openSyarikahBiodataModal(tempCand);
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-400/60 bg-indigo-600 px-3.5 py-2 text-xs font-extrabold text-white shadow-sm hover:bg-indigo-500"
+                >
+                  <Printer className="h-4 w-4 text-amber-300" />
+                  🌍 Printout Biodata Syarikah (CV Majikan)
+                </button>
+                <button
                   onClick={() => setShowAddModal(false)}
                   className="rounded-lg bg-white/10 p-1.5 text-slate-300 hover:bg-white/20 hover:text-white"
                 >
@@ -8450,6 +8779,46 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                               </button>
                             );
                           })}
+                        </div>
+                      </div>
+
+                      {/* Foto Seluruh Badan (Full Body 3R/4R) khusus Printout Biodata Syarikah */}
+                      <div className="flex items-center gap-3 border-t border-slate-200 pt-2.5 sm:border-t-0 sm:border-l sm:pl-4">
+                        <img
+                          src={
+                            newForm.fullBodyPhotoUrl ||
+                            regForm.fullBodyPhotoUrl ||
+                            "/biodata-img-3.jpg"
+                          }
+                          alt="Foto Seluruh Badan"
+                          className="h-20 w-14 shrink-0 rounded-lg border-2 border-indigo-600 object-cover shadow-xs"
+                        />
+                        <div className="space-y-1.5">
+                          <span className="block text-[11px] font-extrabold text-indigo-950">
+                            🧍‍♀️ Foto Seluruh Badan (Full Body 3R/4R)
+                          </span>
+                          <span className="block text-[10px] text-slate-500">
+                            Untuk Printout Biodata Syarikah (CV Majikan Timur Tengah)
+                          </span>
+                          <label className="cursor-pointer inline-flex items-center gap-1 rounded-lg border border-indigo-300 bg-indigo-50 px-2.5 py-1 text-[10.5px] font-bold text-indigo-900 hover:bg-indigo-100">
+                            📤 Upload Foto Full Body
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                const reader = new FileReader();
+                                reader.onload = () => {
+                                  const url = String(reader.result || "");
+                                  setNewForm((prev) => ({ ...prev, fullBodyPhotoUrl: url }));
+                                  setRegForm((prev) => ({ ...prev, fullBodyPhotoUrl: url }));
+                                };
+                                reader.readAsDataURL(file);
+                              }}
+                            />
+                          </label>
                         </div>
                       </div>
                     </div>
@@ -9748,6 +10117,17 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                 </h3>
               </div>
               <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const cand = printingRegFormCandidate;
+                    setPrintingRegFormCandidate(null);
+                    openSyarikahBiodataModal(cand);
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-400 bg-indigo-600 px-3 py-2 text-xs font-extrabold text-white shadow-sm hover:bg-indigo-500"
+                >
+                  🌍 Buka Printout Biodata Syarikah (CV Majikan)
+                </button>
                 <a
                   href="/Formulir-Baru-F4s.pdf"
                   target="_blank"
@@ -10554,6 +10934,1238 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   </div>
                 );
               })()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================
+          MODAL PRINTOUT BIODATA SYARIKAH / CV MAJIKAN TIMUR TENGAH
+          (100% IDENTIK DENGAN CONTOH_PRINTOUT_BIODATA.PDF — BAHASA INGGRIS & ARAB)
+         ========================================================= */}
+      {printingSyarikahBiodataCandidate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 p-2 sm:p-5 backdrop-blur-sm print:static print:bg-white print:p-0">
+          <div className="flex max-h-[96vh] w-full max-w-7xl flex-col overflow-hidden rounded-2xl bg-slate-100 shadow-2xl print:max-h-none print:rounded-none print:bg-white print:shadow-none">
+            {/* Toolbar Atas (Disembunyikan saat Print) */}
+            <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900 px-5 py-3.5 text-white print:hidden">
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded bg-indigo-500 px-2 py-0.5 text-[10px] font-extrabold uppercase text-white">
+                    PRINTOUT BIODATA SYARIKAH / CV MAJIKAN TIMUR TENGAH (CONTOH_PRINTOUT_BIODATA.PDF)
+                  </span>
+                  <span className="rounded bg-emerald-500/20 border border-emerald-400/40 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
+                    ✓ Otomatis Dikonversi ke Bahasa Inggris & Arab dari Data Pendaftaran
+                  </span>
+                </div>
+                <h3 className="mt-0.5 text-sm font-bold">
+                  Biodata Syarikah PT. Panca Banyu Aji Sakti —{" "}
+                  <span className="text-amber-300">{syarikahBiodataForm.fullName}</span> (
+                  {syarikahBiodataForm.referenceNo || "Tanpa No. Reg."})
+                </h3>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={loadExactSampleBiodataPdf}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-amber-400/60 bg-amber-500/20 px-3 py-2 text-xs font-extrabold text-amber-200 hover:bg-amber-500/30"
+                >
+                  ⚡ Muat Contoh Asli PDF (Eka Hermayanti Ruslan)
+                </button>
+                <a
+                  href="/contoh-printout-biodata.pdf"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-xs font-bold text-white hover:bg-white/20"
+                >
+                  📄 Buka File Asli (contoh_printout_biodata.pdf)
+                </a>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const cand = printingSyarikahBiodataCandidate;
+                    setPrintingSyarikahBiodataCandidate(null);
+                    setPrintingRegFormCandidate(cand);
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-sky-400/50 bg-sky-500/20 px-3 py-2 text-xs font-bold text-sky-200 hover:bg-sky-500/30"
+                >
+                  📋 Lihat Formulir F4 Indonesia
+                </button>
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-extrabold text-white shadow-md hover:bg-indigo-500"
+                >
+                  <Printer className="h-4 w-4 text-amber-300" />
+                  🖨️ Cetak / Simpan PDF untuk Syarikah
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPrintingSyarikahBiodataCandidate(null)}
+                  className="rounded-lg bg-white/10 p-1.5 text-slate-300 hover:bg-white/20 hover:text-white"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Body Split-Screen: Kiri Editor Cepat Bahasa Inggris & Foto, Kanan Kertas A4 Biodata Syarikah */}
+            <div className="grid flex-1 grid-cols-1 overflow-y-auto lg:grid-cols-12 print:block print:overflow-visible">
+              {/* PANEL KIRI: EDITOR CEPAT DATA BIODATA SYARIKAH & UPLOAD 2 FOTO (DISEMBUNYIKAN SAAT PRINT) */}
+              <div className="space-y-4 border-r border-slate-300 bg-white p-4 text-xs lg:col-span-4 lg:max-h-[86vh] lg:overflow-y-auto print:hidden">
+                <div className="rounded-xl border border-indigo-200 bg-indigo-50/70 p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[11px] font-extrabold uppercase text-indigo-950">
+                      🔄 Pilih Kandidat CPMI dari Sistem
+                    </span>
+                    <span className="rounded bg-indigo-600 px-1.5 py-0.5 text-[9.5px] font-bold text-white">
+                      Auto-Translate EN
+                    </span>
+                  </div>
+                  <select
+                    value={printingSyarikahBiodataCandidate.id}
+                    onChange={(e) => {
+                      const found = db.candidates.find((c) => c.id === e.target.value);
+                      if (found) openSyarikahBiodataModal(found);
+                    }}
+                    className="mt-2 w-full rounded-lg border border-indigo-300 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-900"
+                  >
+                    {printingSyarikahBiodataCandidate.id === "temp-preview" && (
+                      <option value="temp-preview">
+                        [Draft Pendaftaran Baru] {syarikahBiodataForm.fullName}
+                      </option>
+                    )}
+                    {db.candidates.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.fullName} ({c.regNumber}) — {c.destinationCountry}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Upload 2 Foto: Close-Up 4x6 & Foto Seluruh Badan (Full Body 3R/4R) */}
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-slate-900">
+                      📷 Foto Kandidat untuk Syarikah
+                    </span>
+                    <label className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-700 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={syarikahBiodataForm.replaceHeaderLogoWithNew}
+                        onChange={(e) =>
+                          setSyarikahBiodataForm({
+                            ...syarikahBiodataForm,
+                            replaceHeaderLogoWithNew: e.target.checked,
+                          })
+                        }
+                        className="rounded border-slate-300"
+                      />
+                      Gunakan Logo Baru PT
+                    </label>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2.5">
+                    {/* Foto Close-Up Kanan Atas */}
+                    <div className="rounded-lg border border-slate-200 bg-white p-2 text-center">
+                      <img
+                        src={syarikahBiodataForm.closeUpPhotoUrl}
+                        alt="Close Up"
+                        className="mx-auto h-20 w-16 rounded border border-slate-300 object-cover"
+                      />
+                      <span className="mt-1 block text-[10px] font-bold text-slate-700">
+                        1. Foto Setengah Badan
+                      </span>
+                      <label className="mt-1 inline-block cursor-pointer rounded bg-sky-600 px-2 py-1 text-[10px] font-bold text-white hover:bg-sky-700">
+                        📤 Ganti Foto
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            const reader = new FileReader();
+                            reader.onload = async () => {
+                              const dataUrl = String(reader.result || "");
+                              setSyarikahBiodataForm((prev) => ({
+                                ...prev,
+                                closeUpPhotoUrl: dataUrl,
+                              }));
+                              if (printingSyarikahBiodataCandidate.id !== "temp-preview") {
+                                await callApi("UPDATE_CANDIDATE", {
+                                  candidateId: printingSyarikahBiodataCandidate.id,
+                                  updates: { avatarUrl: dataUrl },
+                                });
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          }}
+                        />
+                      </label>
+                    </div>
+
+                    {/* Foto Full-Body Berdiri Kanan Bawah */}
+                    <div className="rounded-lg border border-slate-200 bg-white p-2 text-center">
+                      <img
+                        src={syarikahBiodataForm.fullBodyPhotoUrl}
+                        alt="Full Body"
+                        className="mx-auto h-20 w-14 rounded border border-indigo-300 object-cover"
+                      />
+                      <span className="mt-1 block text-[10px] font-bold text-indigo-900">
+                        2. Foto Full Body (3R/4R)
+                      </span>
+                      <label className="mt-1 inline-block cursor-pointer rounded bg-indigo-600 px-2 py-1 text-[10px] font-bold text-white hover:bg-indigo-700">
+                        📤 Ganti Full Body
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            const reader = new FileReader();
+                            reader.onload = async () => {
+                              const dataUrl = String(reader.result || "");
+                              setSyarikahBiodataForm((prev) => ({
+                                ...prev,
+                                fullBodyPhotoUrl: dataUrl,
+                              }));
+                              if (printingSyarikahBiodataCandidate.id !== "temp-preview") {
+                                await callApi("UPDATE_CANDIDATE", {
+                                  candidateId: printingSyarikahBiodataCandidate.id,
+                                  updates: { fullBodyPhotoUrl: dataUrl },
+                                });
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          }}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Form Edit Cepat Field Bahasa Inggris */}
+                <div className="space-y-2.5 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <span className="block font-extrabold text-slate-900 border-b border-slate-200 pb-1.5">
+                    ✏️ Edit Cepat Isian Biodata Syarikah (Bahasa Inggris)
+                  </span>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-600 block">
+                        REFERENCE NO.
+                      </label>
+                      <input
+                        type="text"
+                        value={syarikahBiodataForm.referenceNo}
+                        onChange={(e) =>
+                          setSyarikahBiodataForm({
+                            ...syarikahBiodataForm,
+                            referenceNo: e.target.value.toUpperCase(),
+                          })
+                        }
+                        placeholder="Kosong / No Reg"
+                        className="w-full rounded border border-slate-300 bg-white px-2 py-1 font-mono text-[11px]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-600 block">
+                        FOR EMPLOYMENT IN
+                      </label>
+                      <input
+                        type="text"
+                        value={syarikahBiodataForm.employmentIn}
+                        onChange={(e) =>
+                          setSyarikahBiodataForm({
+                            ...syarikahBiodataForm,
+                            employmentIn: e.target.value.toUpperCase(),
+                          })
+                        }
+                        placeholder="SAUDI ARABIA"
+                        className="w-full rounded border border-slate-300 bg-white px-2 py-1 text-[11px] font-bold"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-600 block">
+                        Post Apply (Jabatan)
+                      </label>
+                      <input
+                        type="text"
+                        value={syarikahBiodataForm.postApply}
+                        onChange={(e) =>
+                          setSyarikahBiodataForm({
+                            ...syarikahBiodataForm,
+                            postApply: e.target.value.toUpperCase(),
+                          })
+                        }
+                        className="w-full rounded border border-slate-300 bg-white px-2 py-1 text-[11px] font-bold"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-600 block">
+                        Monthly Salary (Gaji)
+                      </label>
+                      <input
+                        type="text"
+                        value={syarikahBiodataForm.monthlySalary}
+                        onChange={(e) =>
+                          setSyarikahBiodataForm({
+                            ...syarikahBiodataForm,
+                            monthlySalary: e.target.value.toUpperCase(),
+                          })
+                        }
+                        className="w-full rounded border border-slate-300 bg-white px-2 py-1 text-[11px] font-bold"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-600 block">
+                        Contract Period
+                      </label>
+                      <input
+                        type="text"
+                        value={syarikahBiodataForm.contractPeriod}
+                        onChange={(e) =>
+                          setSyarikahBiodataForm({
+                            ...syarikahBiodataForm,
+                            contractPeriod: e.target.value.toUpperCase(),
+                          })
+                        }
+                        className="w-full rounded border border-slate-300 bg-white px-2 py-1 text-[11px]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-600 block">Phone</label>
+                      <input
+                        type="text"
+                        value={syarikahBiodataForm.phone}
+                        onChange={(e) =>
+                          setSyarikahBiodataForm({
+                            ...syarikahBiodataForm,
+                            phone: e.target.value,
+                          })
+                        }
+                        className="w-full rounded border border-slate-300 bg-white px-2 py-1 font-mono text-[11px]"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-blue-800 block">
+                      Full Name (Nama Lengkap Huruf Kapital Biru)
+                    </label>
+                    <input
+                      type="text"
+                      value={syarikahBiodataForm.fullName}
+                      onChange={(e) =>
+                        setSyarikahBiodataForm({
+                          ...syarikahBiodataForm,
+                          fullName: e.target.value.toUpperCase(),
+                        })
+                      }
+                      className="w-full rounded border border-blue-400 bg-white px-2 py-1 text-xs font-black text-blue-700"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-600 block">
+                        Date of Birth
+                      </label>
+                      <input
+                        type="text"
+                        value={syarikahBiodataForm.dateOfBirth}
+                        onChange={(e) =>
+                          setSyarikahBiodataForm({
+                            ...syarikahBiodataForm,
+                            dateOfBirth: e.target.value,
+                          })
+                        }
+                        className="w-full rounded border border-slate-300 bg-white px-2 py-1 text-[11px]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-600 block">Age</label>
+                      <input
+                        type="text"
+                        value={syarikahBiodataForm.age}
+                        onChange={(e) =>
+                          setSyarikahBiodataForm({
+                            ...syarikahBiodataForm,
+                            age: e.target.value,
+                          })
+                        }
+                        className="w-full rounded border border-slate-300 bg-white px-2 py-1 text-[11px]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-600 block">
+                        Place of Birth
+                      </label>
+                      <input
+                        type="text"
+                        value={syarikahBiodataForm.placeOfBirth}
+                        onChange={(e) =>
+                          setSyarikahBiodataForm({
+                            ...syarikahBiodataForm,
+                            placeOfBirth: e.target.value.toUpperCase(),
+                          })
+                        }
+                        className="w-full rounded border border-slate-300 bg-white px-2 py-1 text-[11px]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-600 block">
+                        Living Town
+                      </label>
+                      <input
+                        type="text"
+                        value={syarikahBiodataForm.livingTown}
+                        onChange={(e) =>
+                          setSyarikahBiodataForm({
+                            ...syarikahBiodataForm,
+                            livingTown: e.target.value.toUpperCase(),
+                          })
+                        }
+                        className="w-full rounded border border-slate-300 bg-white px-2 py-1 text-[11px]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-600 block">
+                        Marital Status
+                      </label>
+                      <input
+                        type="text"
+                        value={syarikahBiodataForm.maritalStatus}
+                        onChange={(e) =>
+                          setSyarikahBiodataForm({
+                            ...syarikahBiodataForm,
+                            maritalStatus: e.target.value.toUpperCase(),
+                          })
+                        }
+                        className="w-full rounded border border-slate-300 bg-white px-2 py-1 text-[11px]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-600 block">
+                        No. of Children
+                      </label>
+                      <input
+                        type="text"
+                        value={syarikahBiodataForm.noOfChildren}
+                        onChange={(e) =>
+                          setSyarikahBiodataForm({
+                            ...syarikahBiodataForm,
+                            noOfChildren: e.target.value,
+                          })
+                        }
+                        className="w-full rounded border border-slate-300 bg-white px-2 py-1 text-[11px]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-600 block">Weight</label>
+                      <input
+                        type="text"
+                        value={syarikahBiodataForm.weight}
+                        onChange={(e) =>
+                          setSyarikahBiodataForm({
+                            ...syarikahBiodataForm,
+                            weight: e.target.value.toUpperCase(),
+                          })
+                        }
+                        className="w-full rounded border border-slate-300 bg-white px-2 py-1 text-[11px]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-600 block">Height</label>
+                      <input
+                        type="text"
+                        value={syarikahBiodataForm.height}
+                        onChange={(e) =>
+                          setSyarikahBiodataForm({
+                            ...syarikahBiodataForm,
+                            height: e.target.value.toUpperCase(),
+                          })
+                        }
+                        className="w-full rounded border border-slate-300 bg-white px-2 py-1 text-[11px]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-600 block">
+                        Complexion
+                      </label>
+                      <input
+                        type="text"
+                        value={syarikahBiodataForm.complexion}
+                        onChange={(e) =>
+                          setSyarikahBiodataForm({
+                            ...syarikahBiodataForm,
+                            complexion: e.target.value.toUpperCase(),
+                          })
+                        }
+                        className="w-full rounded border border-slate-300 bg-white px-2 py-1 text-[11px]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-600 block">
+                        Educational
+                      </label>
+                      <input
+                        type="text"
+                        value={syarikahBiodataForm.educational}
+                        onChange={(e) =>
+                          setSyarikahBiodataForm({
+                            ...syarikahBiodataForm,
+                            educational: e.target.value.toUpperCase(),
+                          })
+                        }
+                        className="w-full rounded border border-slate-300 bg-white px-2 py-1 text-[11px]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Data Paspor */}
+                  <div className="grid grid-cols-2 gap-2 border-t border-slate-200 pt-2">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-600 block">
+                        Passport Number
+                      </label>
+                      <input
+                        type="text"
+                        value={syarikahBiodataForm.passportNumber}
+                        onChange={(e) =>
+                          setSyarikahBiodataForm({
+                            ...syarikahBiodataForm,
+                            passportNumber: e.target.value.toUpperCase(),
+                          })
+                        }
+                        placeholder="Kosong jika belum terbit"
+                        className="w-full rounded border border-slate-300 bg-white px-2 py-1 font-mono text-[11px]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-600 block">
+                        Place of Issue
+                      </label>
+                      <input
+                        type="text"
+                        value={syarikahBiodataForm.passportIssuePlace}
+                        onChange={(e) =>
+                          setSyarikahBiodataForm({
+                            ...syarikahBiodataForm,
+                            passportIssuePlace: e.target.value.toUpperCase(),
+                          })
+                        }
+                        className="w-full rounded border border-slate-300 bg-white px-2 py-1 text-[11px]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-600 block">
+                        Date of Issue
+                      </label>
+                      <input
+                        type="text"
+                        value={syarikahBiodataForm.passportIssueDate}
+                        onChange={(e) =>
+                          setSyarikahBiodataForm({
+                            ...syarikahBiodataForm,
+                            passportIssueDate: e.target.value,
+                          })
+                        }
+                        className="w-full rounded border border-slate-300 bg-white px-2 py-1 text-[11px]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-600 block">
+                        Date of Expire
+                      </label>
+                      <input
+                        type="text"
+                        value={syarikahBiodataForm.passportExpiryDate}
+                        onChange={(e) =>
+                          setSyarikahBiodataForm({
+                            ...syarikahBiodataForm,
+                            passportExpiryDate: e.target.value,
+                          })
+                        }
+                        className="w-full rounded border border-slate-300 bg-white px-2 py-1 text-[11px]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Bahasa & Pengalaman */}
+                  <div className="grid grid-cols-2 gap-2 border-t border-slate-200 pt-2">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-600 block">
+                        Arabic (Speak / Read)
+                      </label>
+                      <div className="flex gap-1">
+                        <input
+                          type="text"
+                          value={syarikahBiodataForm.arabicSpeak}
+                          onChange={(e) =>
+                            setSyarikahBiodataForm({
+                              ...syarikahBiodataForm,
+                              arabicSpeak: e.target.value.toUpperCase(),
+                            })
+                          }
+                          className="w-1/2 rounded border border-slate-300 bg-white px-1.5 py-1 text-[11px]"
+                        />
+                        <input
+                          type="text"
+                          value={syarikahBiodataForm.arabicRead}
+                          onChange={(e) =>
+                            setSyarikahBiodataForm({
+                              ...syarikahBiodataForm,
+                              arabicRead: e.target.value.toUpperCase(),
+                            })
+                          }
+                          className="w-1/2 rounded border border-slate-300 bg-white px-1.5 py-1 text-[11px]"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-600 block">
+                        English (Speak / Read)
+                      </label>
+                      <div className="flex gap-1">
+                        <input
+                          type="text"
+                          value={syarikahBiodataForm.englishSpeak}
+                          onChange={(e) =>
+                            setSyarikahBiodataForm({
+                              ...syarikahBiodataForm,
+                              englishSpeak: e.target.value.toUpperCase(),
+                            })
+                          }
+                          className="w-1/2 rounded border border-slate-300 bg-white px-1.5 py-1 text-[11px]"
+                        />
+                        <input
+                          type="text"
+                          value={syarikahBiodataForm.englishRead}
+                          onChange={(e) =>
+                            setSyarikahBiodataForm({
+                              ...syarikahBiodataForm,
+                              englishRead: e.target.value.toUpperCase(),
+                            })
+                          }
+                          className="w-1/2 rounded border border-slate-300 bg-white px-1.5 py-1 text-[11px]"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-600 block">
+                        Previous Employment Country
+                      </label>
+                      <input
+                        type="text"
+                        value={syarikahBiodataForm.prevEmploymentCountry}
+                        onChange={(e) =>
+                          setSyarikahBiodataForm({
+                            ...syarikahBiodataForm,
+                            prevEmploymentCountry: e.target.value.toUpperCase(),
+                          })
+                        }
+                        className="w-full rounded border border-slate-300 bg-white px-2 py-1 text-[11px]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-600 block">
+                        Period (Periode)
+                      </label>
+                      <input
+                        type="text"
+                        value={syarikahBiodataForm.prevEmploymentPeriod}
+                        onChange={(e) =>
+                          setSyarikahBiodataForm({
+                            ...syarikahBiodataForm,
+                            prevEmploymentPeriod: e.target.value.toUpperCase(),
+                          })
+                        }
+                        className="w-full rounded border border-slate-300 bg-white px-2 py-1 text-[11px]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Work Experience YES/NO & She Can Cook */}
+                  <div className="border-t border-slate-200 pt-2">
+                    <label className="text-[10px] font-bold text-slate-600 block mb-1">
+                      Work Experience (YES / NO)
+                    </label>
+                    <div className="grid grid-cols-4 gap-1.5 text-[10px]">
+                      {(
+                        [
+                          ["driving", "Driving"],
+                          ["cooking", "Cooking"],
+                          ["cleaning", "Cleaning"],
+                          ["washing", "Washing"],
+                          ["babySitting", "Baby Sit"],
+                          ["ironing", "Ironing"],
+                          ["careOfOlder", "Older Care"],
+                        ] as const
+                      ).map(([k, lbl]) => (
+                        <button
+                          key={k}
+                          type="button"
+                          onClick={() =>
+                            setSyarikahBiodataForm((prev) => ({
+                              ...prev,
+                              [k]: prev[k] === "YES" ? "NO" : "YES",
+                            }))
+                          }
+                          className={`rounded border px-1.5 py-1 font-bold ${
+                            syarikahBiodataForm[k] === "YES"
+                              ? "border-emerald-500 bg-emerald-50 text-emerald-900"
+                              : "border-slate-300 bg-white text-slate-600"
+                          }`}
+                        >
+                          {lbl}: {syarikahBiodataForm[k]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-600 block">
+                      She Can Cook (Daftar Masakan Arab)
+                    </label>
+                    <input
+                      type="text"
+                      value={syarikahBiodataForm.sheCanCook}
+                      onChange={(e) =>
+                        setSyarikahBiodataForm({
+                          ...syarikahBiodataForm,
+                          sheCanCook: e.target.value,
+                        })
+                      }
+                      placeholder="Kosong atau daftar masakan Arab"
+                      className="w-full rounded border border-slate-300 bg-white px-2 py-1 text-[11px]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* PANEL KANAN: KERTAS A4 PRINTOUT BIODATA SYARIKAH (100% IDENTIK DENGAN CONTOH_PRINTOUT_BIODATA.PDF) */}
+              <div className="flex items-start justify-center overflow-y-auto bg-slate-300/80 p-4 sm:p-6 lg:col-span-8 lg:max-h-[86vh] print:bg-white print:p-0">
+                <div
+                  className="relative mx-auto w-full max-w-[760px] select-none overflow-hidden bg-white shadow-2xl print:max-w-none print:w-[210mm] print:shadow-none"
+                  style={{ aspectRatio: "594.96 / 828.32" }}
+                >
+                  {/* 1. Template Asli A4 Bahasa Inggris & Arab dari contoh_printout_biodata.pdf */}
+                  <img
+                    src="/biodata-img-1.jpg"
+                    alt="Template Biodata Syarikah PT Panca Banyu Aji Sakti"
+                    className="h-full w-full object-fill"
+                  />
+
+                  {/* 2. Overlay Logo Perusahaan Baru PT Panca Banyu Ajisakti di Kanan Atas Kop (Jika Diaktifkan) */}
+                  {syarikahBiodataForm.replaceHeaderLogoWithNew && (
+                    <div
+                      style={{
+                        left: "83.4%",
+                        top: "1.8%",
+                        width: "13.2%",
+                        height: "9.0%",
+                      }}
+                      className="absolute flex items-center justify-center bg-white p-1"
+                    >
+                      <img
+                        src="/logo-panca-banyu.png"
+                        alt="Logo PT Panca Banyu Ajisakti"
+                        className="h-full w-full object-contain"
+                      />
+                    </div>
+                  )}
+
+                  {/* 3. Foto Setengah Badan (Close-Up Portrait) — Koordinat Identik contoh_printout_biodata.pdf */}
+                  <div
+                    style={{
+                      left: "79.54%",
+                      top: "16.71%",
+                      width: "12.65%",
+                      height: "11.08%",
+                    }}
+                    className="absolute overflow-hidden bg-white"
+                  >
+                    <img
+                      src={syarikahBiodataForm.closeUpPhotoUrl}
+                      alt={syarikahBiodataForm.fullName}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+
+                  {/* 4. Foto Seluruh Badan (Full-Body Standing 3R/4R) — Koordinat Identik contoh_printout_biodata.pdf */}
+                  <div
+                    style={{
+                      left: "53.56%",
+                      top: "44.19%",
+                      width: "38.76%",
+                      height: "43.89%",
+                    }}
+                    className="absolute overflow-hidden bg-white"
+                  >
+                    <img
+                      src={syarikahBiodataForm.fullBodyPhotoUrl}
+                      alt={`${syarikahBiodataForm.fullName} Full Body`}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+
+                  {/* 5. Seluruh Field Teks Bahasa Inggris pada Koordinat Presisi contoh_printout_biodata.pdf */}
+                  {/* REFERENCE NO. */}
+                  <span
+                    style={{
+                      left: "25.84%",
+                      top: "15.85%",
+                      transform: "translateY(-82%)",
+                    }}
+                    className="absolute font-sans text-[11px] font-bold leading-none tracking-tight text-black uppercase"
+                  >
+                    {syarikahBiodataForm.referenceNo}
+                  </span>
+
+                  {/* FOR EMPLOYMENT IN */}
+                  <span
+                    style={{
+                      left: "25.84%",
+                      top: "17.95%",
+                      transform: "translateY(-82%)",
+                    }}
+                    className="absolute font-sans text-[11px] font-bold leading-none tracking-tight text-black uppercase"
+                  >
+                    {syarikahBiodataForm.employmentIn}
+                  </span>
+
+                  {/* Post Apply */}
+                  <span
+                    style={{
+                      left: "22.36%",
+                      top: "20.97%",
+                      transform: "translateY(-82%)",
+                    }}
+                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                  >
+                    {syarikahBiodataForm.postApply}
+                  </span>
+
+                  {/* Monthly Salary */}
+                  <span
+                    style={{
+                      left: "22.36%",
+                      top: "22.95%",
+                      transform: "translateY(-82%)",
+                    }}
+                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                  >
+                    {syarikahBiodataForm.monthlySalary}
+                  </span>
+
+                  {/* Contract Period */}
+                  <span
+                    style={{
+                      left: "22.36%",
+                      top: "24.80%",
+                      transform: "translateY(-82%)",
+                    }}
+                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                  >
+                    {syarikahBiodataForm.contractPeriod}
+                  </span>
+
+                  {/* Phone */}
+                  <span
+                    style={{
+                      left: "48.84%",
+                      top: "24.74%",
+                      transform: "translateY(-82%)",
+                    }}
+                    className="absolute font-sans text-[10.5px] font-normal leading-none text-black"
+                  >
+                    {syarikahBiodataForm.phone}
+                  </span>
+
+                  {/* Full Name (Bold Blue #0033FF, 11pt in PDF) */}
+                  <span
+                    style={{
+                      left: "34.03%",
+                      top: "27.94%",
+                      transform: "translateY(-82%)",
+                      color: "#0033FF",
+                    }}
+                    className="absolute font-sans text-[13.5px] font-bold leading-none tracking-wide uppercase"
+                  >
+                    {syarikahBiodataForm.fullName}
+                  </span>
+
+                  {/* Personal Information (Left Column) */}
+                  {/* Nationality */}
+                  <span
+                    style={{
+                      left: "18.96%",
+                      top: "33.29%",
+                      transform: "translateY(-82%)",
+                    }}
+                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                  >
+                    {syarikahBiodataForm.nationality}
+                  </span>
+
+                  {/* Religion */}
+                  <span
+                    style={{
+                      left: "18.96%",
+                      top: "35.27%",
+                      transform: "translateY(-82%)",
+                    }}
+                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                  >
+                    {syarikahBiodataForm.religion}
+                  </span>
+
+                  {/* Date of Birth */}
+                  <span
+                    style={{
+                      left: "18.96%",
+                      top: "37.25%",
+                      transform: "translateY(-82%)",
+                    }}
+                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                  >
+                    {syarikahBiodataForm.dateOfBirth}
+                  </span>
+
+                  {/* Age */}
+                  <span
+                    style={{
+                      left: "18.96%",
+                      top: "39.11%",
+                      transform: "translateY(-82%)",
+                    }}
+                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                  >
+                    {syarikahBiodataForm.age}
+                  </span>
+
+                  {/* Place of Birth */}
+                  <span
+                    style={{
+                      left: "18.96%",
+                      top: "41.20%",
+                      transform: "translateY(-82%)",
+                    }}
+                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                  >
+                    {syarikahBiodataForm.placeOfBirth}
+                  </span>
+
+                  {/* Living Town */}
+                  <span
+                    style={{
+                      left: "18.96%",
+                      top: "43.41%",
+                      transform: "translateY(-82%)",
+                    }}
+                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                  >
+                    {syarikahBiodataForm.livingTown}
+                  </span>
+
+                  {/* Marital Status */}
+                  <span
+                    style={{
+                      left: "18.96%",
+                      top: "45.56%",
+                      transform: "translateY(-82%)",
+                    }}
+                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                  >
+                    {syarikahBiodataForm.maritalStatus}
+                  </span>
+
+                  {/* No. of Children */}
+                  <span
+                    style={{
+                      left: "18.96%",
+                      top: "47.65%",
+                      transform: "translateY(-82%)",
+                    }}
+                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                  >
+                    {syarikahBiodataForm.noOfChildren}
+                  </span>
+
+                  {/* Weight */}
+                  <span
+                    style={{
+                      left: "18.96%",
+                      top: "49.58%",
+                      transform: "translateY(-82%)",
+                    }}
+                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                  >
+                    {syarikahBiodataForm.weight}
+                  </span>
+
+                  {/* Height */}
+                  <span
+                    style={{
+                      left: "18.96%",
+                      top: "51.36%",
+                      transform: "translateY(-82%)",
+                    }}
+                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                  >
+                    {syarikahBiodataForm.height}
+                  </span>
+
+                  {/* Complexion */}
+                  <span
+                    style={{
+                      left: "18.96%",
+                      top: "53.28%",
+                      transform: "translateY(-82%)",
+                    }}
+                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                  >
+                    {syarikahBiodataForm.complexion}
+                  </span>
+
+                  {/* Educational */}
+                  <span
+                    style={{
+                      left: "18.96%",
+                      top: "55.06%",
+                      transform: "translateY(-82%)",
+                    }}
+                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                  >
+                    {syarikahBiodataForm.educational}
+                  </span>
+
+                  {/* Passport Details (Right Top Column) */}
+                  {/* Passport Number */}
+                  <span
+                    style={{
+                      left: "64.71%",
+                      top: "33.29%",
+                      transform: "translateY(-82%)",
+                    }}
+                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                  >
+                    {syarikahBiodataForm.passportNumber}
+                  </span>
+
+                  {/* Date of Issue */}
+                  <span
+                    style={{
+                      left: "64.71%",
+                      top: "35.27%",
+                      transform: "translateY(-82%)",
+                    }}
+                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                  >
+                    {syarikahBiodataForm.passportIssueDate}
+                  </span>
+
+                  {/* Place of Issue */}
+                  <span
+                    style={{
+                      left: "64.71%",
+                      top: "37.25%",
+                      transform: "translateY(-82%)",
+                    }}
+                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                  >
+                    {syarikahBiodataForm.passportIssuePlace}
+                  </span>
+
+                  {/* Date of Expire */}
+                  <span
+                    style={{
+                      left: "64.71%",
+                      top: "39.11%",
+                      transform: "translateY(-82%)",
+                    }}
+                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                  >
+                    {syarikahBiodataForm.passportExpiryDate}
+                  </span>
+
+                  {/* Knowledge of Languages */}
+                  {/* Arabic Speak */}
+                  <span
+                    style={{
+                      left: "18.90%",
+                      top: "62.34%",
+                      transform: "translateY(-82%)",
+                    }}
+                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                  >
+                    {syarikahBiodataForm.arabicSpeak}
+                  </span>
+
+                  {/* Arabic Read */}
+                  <span
+                    style={{
+                      left: "32.44%",
+                      top: "62.34%",
+                      transform: "translateY(-82%)",
+                    }}
+                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                  >
+                    {syarikahBiodataForm.arabicRead}
+                  </span>
+
+                  {/* English Speak */}
+                  <span
+                    style={{
+                      left: "18.90%",
+                      top: "64.14%",
+                      transform: "translateY(-82%)",
+                    }}
+                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                  >
+                    {syarikahBiodataForm.englishSpeak}
+                  </span>
+
+                  {/* English Read */}
+                  <span
+                    style={{
+                      left: "32.44%",
+                      top: "64.14%",
+                      transform: "translateY(-82%)",
+                    }}
+                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                  >
+                    {syarikahBiodataForm.englishRead}
+                  </span>
+
+                  {/* Previous Employment Abroad */}
+                  {/* Country */}
+                  <span
+                    style={{
+                      left: "13.62%",
+                      top: "68.33%",
+                      transform: "translateY(-82%)",
+                    }}
+                    className="absolute max-w-[36%] truncate font-sans text-[10.5px] font-normal leading-none text-black uppercase"
+                  >
+                    {syarikahBiodataForm.prevEmploymentCountry}
+                  </span>
+
+                  {/* Period */}
+                  <span
+                    style={{
+                      left: "13.62%",
+                      top: "71.83%",
+                      transform: "translateY(-82%)",
+                    }}
+                    className="absolute max-w-[36%] truncate font-sans text-[10.5px] font-normal leading-none text-black uppercase"
+                  >
+                    {syarikahBiodataForm.prevEmploymentPeriod}
+                  </span>
+
+                  {/* Work Experience YES / NO */}
+                  {/* Driving */}
+                  <span
+                    style={{
+                      left: "17.99%",
+                      top: "77.55%",
+                      transform: "translateY(-82%)",
+                    }}
+                    className="absolute font-sans text-[10.5px] font-normal leading-none text-black uppercase"
+                  >
+                    {syarikahBiodataForm.driving}
+                  </span>
+
+                  {/* Cooking */}
+                  <span
+                    style={{
+                      left: "18.02%",
+                      top: "79.05%",
+                      transform: "translateY(-82%)",
+                    }}
+                    className="absolute font-sans text-[10.5px] font-normal leading-none text-black uppercase"
+                  >
+                    {syarikahBiodataForm.cooking}
+                  </span>
+
+                  {/* Cleaning */}
+                  <span
+                    style={{
+                      left: "17.95%",
+                      top: "80.80%",
+                      transform: "translateY(-82%)",
+                    }}
+                    className="absolute font-sans text-[10.5px] font-normal leading-none text-black uppercase"
+                  >
+                    {syarikahBiodataForm.cleaning}
+                  </span>
+
+                  {/* Washing */}
+                  <span
+                    style={{
+                      left: "17.95%",
+                      top: "82.46%",
+                      transform: "translateY(-82%)",
+                    }}
+                    className="absolute font-sans text-[10.5px] font-normal leading-none text-black uppercase"
+                  >
+                    {syarikahBiodataForm.washing}
+                  </span>
+
+                  {/* Baby Sitting */}
+                  <span
+                    style={{
+                      left: "17.95%",
+                      top: "84.13%",
+                      transform: "translateY(-82%)",
+                    }}
+                    className="absolute font-sans text-[10.5px] font-normal leading-none text-black uppercase"
+                  >
+                    {syarikahBiodataForm.babySitting}
+                  </span>
+
+                  {/* Ironing */}
+                  <span
+                    style={{
+                      left: "17.95%",
+                      top: "85.80%",
+                      transform: "translateY(-82%)",
+                    }}
+                    className="absolute font-sans text-[10.5px] font-normal leading-none text-black uppercase"
+                  >
+                    {syarikahBiodataForm.ironing}
+                  </span>
+
+                  {/* Care of Older */}
+                  <span
+                    style={{
+                      left: "17.95%",
+                      top: "87.46%",
+                      transform: "translateY(-82%)",
+                    }}
+                    className="absolute font-sans text-[10.5px] font-normal leading-none text-black uppercase"
+                  >
+                    {syarikahBiodataForm.careOfOlder}
+                  </span>
+
+                  {/* She Can Cook (Dishes List at Bottom) */}
+                  {syarikahBiodataForm.sheCanCook && (
+                    <div
+                      style={{
+                        left: "6.0%",
+                        top: "92.5%",
+                        width: "86%",
+                      }}
+                      className="absolute font-sans text-[9.5px] font-semibold leading-tight text-blue-950 uppercase"
+                    >
+                      {syarikahBiodataForm.sheCanCook}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -475,6 +475,7 @@ export interface OfficialRegistrationForm {
   accByName?: string; // ACC: (...................................)
   interviewMethod?: "TELEPON" | "VIDEO_CALL" | "DATANG_LANGSUNG"; // Metode Interview oleh Petugas PT Panca
   processTrack?: ProcessTrack; // Alur Penempatan: REKOM (Normal SISKOP2MI + BPJS-TK/PAP/KTKLN) atau NON_REKOM (Langsung Tiket & Berangkat)
+  fullBodyPhotoUrl?: string; // Foto Seluruh Badan (Full Body 3R/4R) untuk Printout Biodata Syarikah
   candidateNotes: string; // Catatan berkas
   sponsorOfficerName: string; // 2. Nama Sponsor & Petugas Lapangan/Rekrut
   sponsorOfficerPhone: string; // Nomor Telp / Hp Sponsor
@@ -522,6 +523,7 @@ export interface Candidate {
   fullName: string;
   gender: "P" | "L";
   avatarUrl?: string; // Pas Foto / Avatar CPMI (Data URL / Preset SVG / Foto Upload)
+  fullBodyPhotoUrl?: string; // Foto Seluruh Badan (Full Body 3R/4R) untuk Printout Biodata Syarikah
   birthPlace?: string;
   birthDate?: string;
   phone: string;
