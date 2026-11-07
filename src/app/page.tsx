@@ -7395,11 +7395,12 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
             {/* HEADER RESMI PT PANCA BANYU AJISAKTI */}
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-slate-900 px-6 py-4 text-white">
               <div className="flex items-center gap-3.5">
-                <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl border-2 border-rose-500 bg-white text-rose-600 shadow-sm">
-                  <span className="text-lg font-black leading-none">▲</span>
-                  <span className="text-[8px] font-black tracking-tighter text-slate-900">
-                    PBA
-                  </span>
+                <div className="flex h-13 w-13 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
+                  <img
+                    src="/logo-panca-banyu.png"
+                    alt="Logo PT Panca Banyu Ajisakti"
+                    className="h-full w-full object-contain"
+                  />
                 </div>
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
@@ -7606,7 +7607,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                           sponsorId: "sp-1",
                           branchId: "br-idm",
                           sourceMethod: "FORM_DIGITAL_SPONSOR",
-                          physicalFormImageUrl: "/form-pendaftaran-asli.jpg",
+                          physicalFormImageUrl: "/form-pendaftaran-f4-baru.svg",
                           fullName: `Nengsih Rahayu (${randNum})`,
                           nik: `321215580998${randNum}`,
                           gender: "P",
@@ -9400,19 +9401,13 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   <div className="mx-auto max-w-[850px] rounded-xs border border-slate-400 bg-white px-7 py-6 font-serif text-[11.5px] leading-[1.38] text-slate-950 shadow-2xl">
                     {/* KOP SURAT FORMULIR BARU F4s.pdf: LOGO KIRI + NAMA PT TENGAH + KOTAK No. Reg. & Tgl KANAN */}
                     <div className="grid grid-cols-12 items-start gap-2 border-b-2 border-slate-900 pb-2.5">
-                      {/* Logo Bulat Segitiga Merah Panca Banyu Ajisakti */}
+                      {/* Logo Resmi PT Panca Banyu Ajisakti */}
                       <div className="col-span-2 flex justify-start">
-                        <div className="flex h-20 w-20 flex-col items-center justify-center rounded-full border-2 border-slate-800 bg-white p-1 text-center">
-                          <span className="font-sans text-[7.5px] font-black tracking-tight text-slate-900 uppercase">
-                            PANCA BANYU
-                          </span>
-                          <span className="font-sans text-3xl font-black leading-none text-red-600">
-                            ▲
-                          </span>
-                          <span className="font-sans text-[7.5px] font-black tracking-tight text-slate-900 uppercase">
-                            AJISAKTI
-                          </span>
-                        </div>
+                        <img
+                          src="/logo-panca-banyu.png"
+                          alt="Logo PT Panca Banyu Ajisakti"
+                          className="h-20 w-24 object-contain"
+                        />
                       </div>
 
                       {/* Teks Kop Tengah */}
