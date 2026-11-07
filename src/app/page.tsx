@@ -7395,11 +7395,17 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
             {/* HEADER RESMI PT PANCA BANYU AJISAKTI */}
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-slate-900 px-6 py-4 text-white">
               <div className="flex items-center gap-3.5">
-                <div className="flex h-13 w-13 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
+                <div
+                  style={{ width: 52, height: 52 }}
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white p-1.5 shadow-sm"
+                >
                   <img
                     src="/logo-panca-banyu.png"
                     alt="Logo PT Panca Banyu Ajisakti"
-                    className="h-full w-full object-contain"
+                    width={40}
+                    height={40}
+                    style={{ width: 40, height: 40 }}
+                    className="h-10 w-10 object-contain"
                   />
                 </div>
                 <div>
@@ -9400,13 +9406,16 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                 return (
                   <div className="mx-auto max-w-[850px] rounded-xs border border-slate-400 bg-white px-7 py-6 font-serif text-[11.5px] leading-[1.38] text-slate-950 shadow-2xl">
                     {/* KOP SURAT FORMULIR BARU F4s.pdf: LOGO KIRI + NAMA PT TENGAH + KOTAK No. Reg. & Tgl KANAN */}
-                    <div className="grid grid-cols-12 items-start gap-2 border-b-2 border-slate-900 pb-2.5">
+                    <div className="grid grid-cols-12 items-center gap-2 border-b-2 border-slate-900 pb-2.5">
                       {/* Logo Resmi PT Panca Banyu Ajisakti */}
                       <div className="col-span-2 flex justify-start">
                         <img
                           src="/logo-panca-banyu.png"
                           alt="Logo PT Panca Banyu Ajisakti"
-                          className="h-20 w-24 object-contain"
+                          width={76}
+                          height={68}
+                          style={{ width: 76, height: 68 }}
+                          className="h-16 w-20 object-contain"
                         />
                       </div>
 
