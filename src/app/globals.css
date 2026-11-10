@@ -26,11 +26,13 @@
 
 /* =========================================================
    PRINT STYLES FOR OFFICIAL A4 LEGAL DOCUMENTS (P3MI)
+   Standar Surat Resmi: Margin Kiri 25mm, Kanan 20mm, Atas 15mm, Bawah 15mm
+   Terkunci Presisi 1 Halaman Penuh A4 (210mm x 297mm)
    ========================================================= */
 @media print {
   @page {
     size: A4 portrait;
-    margin: 8mm 12mm 8mm 12mm;
+    margin: 0 !important;
   }
 
   html,
@@ -39,18 +41,24 @@
     color: #0f172a !important;
     margin: 0 !important;
     padding: 0 !important;
-    font-size: 11.5px !important;
-    line-height: 1.4 !important;
+    width: 210mm !important;
+    height: 297mm !important;
+    max-height: 297mm !important;
+    overflow: hidden !important;
+    font-size: 11px !important;
+    line-height: 1.35 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  /* Sembunyikan elemen UI website saat cetak */
+  /* Sembunyikan semua elemen UI website saat cetak */
   header,
   aside,
   nav,
   footer,
   button,
+  select,
+  input,
   .print\:hidden {
     display: none !important;
   }
@@ -60,21 +68,30 @@
     padding: 0 !important;
     margin: 0 !important;
     display: block !important;
-    width: 100% !important;
+    width: 210mm !important;
     background: #ffffff !important;
   }
 
-  /* Kontainer lembar dokumen A4 */
+  /* Kontainer lembar dokumen A4 resmi presisi */
   .printable-document-sheet {
+    box-sizing: border-box !important;
+    width: 210mm !important;
+    max-width: 210mm !important;
+    height: 297mm !important;
+    max-height: 297mm !important;
+    padding-top: 15mm !important;
+    padding-bottom: 15mm !important;
+    padding-left: 25mm !important; /* Standar Resmi Margin Kiri (Arsip & Lubang Perforator 25mm) */
+    padding-right: 20mm !important; /* Standar Resmi Margin Kanan (20mm) */
+    margin: 0 auto !important;
     box-shadow: none !important;
     border: none !important;
-    padding: 0 !important;
-    margin: 0 auto !important;
-    width: 100% !important;
-    max-width: 100% !important;
     background: #ffffff !important;
+    overflow: hidden !important; /* Mencegah halaman kedua */
     page-break-after: avoid !important;
+    page-break-before: avoid !important;
     break-after: avoid !important;
+    break-before: avoid !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
@@ -82,6 +99,8 @@
   .print-avoid-break {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
   }
 }
 

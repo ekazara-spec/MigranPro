@@ -85,7 +85,7 @@ export default function DocumentPrintModule({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 print:space-y-0 print:m-0 print:p-0">
       {/* =========================================================
           NON-PRINTABLE HEADER, FILTERS & ACTION CONTROLS
           ========================================================= */}
@@ -236,7 +236,7 @@ export default function DocumentPrintModule({
         <div className="flex justify-center print:block print:w-full print:m-0 print:p-0">
           <div
             id="printable-document-sheet"
-            className="printable-document-sheet print-avoid-break w-full max-w-4xl rounded-2xl bg-white p-6 md:p-8 text-slate-900 shadow-xl border border-slate-200 text-xs font-sans print:p-0 print:m-0 print:border-none print:shadow-none print:max-w-none print:w-full print:rounded-none"
+            className="printable-document-sheet print-avoid-break w-full max-w-4xl rounded-2xl bg-white p-6 md:p-8 text-slate-900 shadow-xl border border-slate-200 text-xs font-sans print:m-0 print:border-none print:shadow-none print:max-w-none print:rounded-none"
           >
             {/* KOP SURAT RESMI P3MI (KOMPAK & ELEGAN UNTUK FORMAT A4) */}
             <div className="border-b-2 border-slate-900 pb-2.5 mb-3 text-center">
