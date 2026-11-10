@@ -3,6 +3,7 @@ import {
   buildDefaultFinanceForCandidate,
   buildDefaultRegistrationFormForCandidate,
   buildDefaultTrainingForCandidate,
+  createInitialRoles,
   getDaysRemaining,
   readDb,
   resetDbToSeed,
@@ -10,6 +11,7 @@ import {
   writeDb,
 } from "@/lib/db";
 import {
+  AppRole,
   BadilReason,
   BadilRecord,
   BadilType,
@@ -96,6 +98,9 @@ export async function POST(req: NextRequest) {
       "CREATE_MEDICAL_CLINIC",
       "CREATE_BPJS_FINANCING",
       "CREATE_STAFF",
+      "CREATE_ROLE",
+      "UPDATE_ROLE",
+      "DELETE_ROLE",
       "SEND_WHATSAPP_MESSAGE",
       "CREATE_CASH_JOURNAL",
       "CREATE_CASH_ADVANCE",
@@ -167,27 +172,188 @@ export async function POST(req: NextRequest) {
     // 2. MANAJEMEN STAF BARU
     if (action === "CREATE_STAFF") {
       const { name, email, role, branchId, phone, pinCode = "1234" } = body.payload;
-      const roleLabels: Record<UserRole, string> = {
-        DIREKTUR: "Direktur Utama (Akses Penuh)",
-        ADMIN_PUSAT: "Admin Operasional & Keuangan Pusat",
-        STAF_DOKUMEN: "Staf Dokumen, Medical & Visa",
-        KEPALA_CABANG: "Kepala Cabang Daerah",
-        PEREKRUT_PL: "Perekrut / Sponsor Lapangan (PL)",
-      };
+      if (!db.roles) db.roles = createInitialRoles();
+      const matchedRole = db.roles.find((r) => r.code === role);
+      const roleLabel = matchedRole ? matchedRole.name : String(role);
       const newStaff: StaffAccount = {
         id: `stf-${Date.now()}`,
         name: String(name).trim(),
         email: String(email).trim().toLowerCase(),
         role: role as UserRole,
-        roleLabel: roleLabels[role as UserRole] || role,
+        roleLabel,
         branchId: branchId || "ALL",
         phone: phone || "-",
         active: true,
         pinCode: String(pinCode || "1234"),
       };
       db.staffAccounts.push(newStaff);
+      db.auditLogs.unshift({
+        id: `aud-${Date.now()}`,
+        actorName: actorName || "Superadmin",
+        actorRole: actorRole || "DIREKTUR",
+        branchName: "Kantor Pusat Jakarta",
+        actionType: "STAFF_CREATED",
+        summary: `Menambahkan Akun Staf Baru: ${newStaff.name} (${newStaff.roleLabel})`,
+        details: `Email: ${newStaff.email} · Cabang: ${newStaff.branchId}`,
+        timestamp: nowTimestamp(),
+      });
       writeDb(db);
       return NextResponse.json({ ok: true, staff: newStaff, db });
+    }
+
+    // 2.1 MANAJEMEN ROLE: TAMBAH ROLE BARU (CUSTOM DYNAMIC ROLE)
+    if (action === "CREATE_ROLE") {
+      const {
+        code,
+        name,
+        description,
+        isReadOnly = false,
+        allowedScope = "ALL",
+        allowedMenus = [],
+        permissions,
+      } = body.payload;
+
+      if (!name || !code) {
+        return NextResponse.json(
+          { ok: false, error: "Nama Peran (Role) dan Kode Peran wajib diisi." },
+          { status: 400 }
+        );
+      }
+
+      const cleanCode = String(code).trim().toUpperCase().replace(/[^A-Z0-9_]/g, "_");
+      if (!db.roles) db.roles = createInitialRoles();
+
+      if (db.roles.some((r) => r.code === cleanCode)) {
+        return NextResponse.json(
+          { ok: false, error: `Kode Role '${cleanCode}' sudah digunakan. Silakan gunakan kode lain.` },
+          { status: 400 }
+        );
+      }
+
+      const newRole: AppRole = {
+        id: `role-${Date.now()}`,
+        code: cleanCode,
+        name: String(name).trim(),
+        description: String(description || "").trim(),
+        isSystemRole: false,
+        isReadOnly: Boolean(isReadOnly),
+        allowedScope: allowedScope || "ALL",
+        allowedMenus: Array.isArray(allowedMenus) && allowedMenus.length > 0 ? allowedMenus : ["beranda"],
+        permissions: permissions || {
+          canVerify: false,
+          canViewSensitive: false,
+          canSeeFinance: false,
+          canManageStaff: false,
+          canExecuteOperation: !isReadOnly,
+        },
+        createdAt: nowTimestamp().split(" ")[0],
+      };
+
+      db.roles.push(newRole);
+      db.auditLogs.unshift({
+        id: `aud-${Date.now()}`,
+        actorName: actorName || "Superadmin",
+        actorRole: actorRole || "DIREKTUR",
+        branchName: "Kantor Pusat Jakarta",
+        actionType: "ROLE_CREATED",
+        summary: `Membuat Peran Hak Akses Baru: ${newRole.name} (${newRole.code})`,
+        details: `Total Modul Diizinkan: ${newRole.allowedMenus.length} Modul · Mode: ${newRole.isReadOnly ? "View-Only" : "Akses Penuh"}`,
+        timestamp: nowTimestamp(),
+      });
+
+      writeDb(db);
+      return NextResponse.json({ ok: true, role: newRole, db });
+    }
+
+    // 2.2 MANAJEMEN ROLE: UPDATE MATRIX HAK AKSES MENU & PERIZINAN
+    if (action === "UPDATE_ROLE") {
+      const {
+        id,
+        name,
+        description,
+        isReadOnly,
+        allowedScope,
+        allowedMenus,
+        permissions,
+      } = body.payload;
+
+      if (!db.roles) db.roles = createInitialRoles();
+      const roleIndex = db.roles.findIndex((r) => r.id === id);
+      if (roleIndex === -1) {
+        return NextResponse.json(
+          { ok: false, error: "Data Peran (Role) tidak ditemukan." },
+          { status: 404 }
+        );
+      }
+
+      const target = db.roles[roleIndex];
+      if (name) target.name = String(name).trim();
+      if (description !== undefined) target.description = String(description).trim();
+      if (isReadOnly !== undefined) target.isReadOnly = Boolean(isReadOnly);
+      if (allowedScope) target.allowedScope = allowedScope;
+      if (Array.isArray(allowedMenus)) target.allowedMenus = allowedMenus;
+      if (permissions) target.permissions = { ...target.permissions, ...permissions };
+      target.updatedAt = nowTimestamp().split(" ")[0];
+
+      db.auditLogs.unshift({
+        id: `aud-${Date.now()}`,
+        actorName: actorName || "Superadmin",
+        actorRole: actorRole || "DIREKTUR",
+        branchName: "Kantor Pusat Jakarta",
+        actionType: "ROLE_UPDATED",
+        summary: `Memperbarui Hak Akses Modul Role: ${target.name} (${target.code})`,
+        details: `Total Modul Diizinkan: ${target.allowedMenus.length} Modul · Read-Only: ${target.isReadOnly}`,
+        timestamp: nowTimestamp(),
+      });
+
+      writeDb(db);
+      return NextResponse.json({ ok: true, role: target, db });
+    }
+
+    // 2.3 MANAJEMEN ROLE: HAPUS ROLE KUSTOM
+    if (action === "DELETE_ROLE") {
+      const { id } = body.payload;
+      if (!db.roles) db.roles = createInitialRoles();
+      const role = db.roles.find((r) => r.id === id);
+      if (!role) {
+        return NextResponse.json(
+          { ok: false, error: "Peran (Role) tidak ditemukan." },
+          { status: 404 }
+        );
+      }
+
+      if (role.isSystemRole) {
+        return NextResponse.json(
+          { ok: false, error: "Role bawaan sistem tidak dapat dihapus demi integritas keamanan." },
+          { status: 400 }
+        );
+      }
+
+      const staffUsingRole = db.staffAccounts.filter((s) => s.role === role.code);
+      if (staffUsingRole.length > 0) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: `Peran ini sedang digunakan oleh ${staffUsingRole.length} akun staf (${staffUsingRole.map((s) => s.name).join(", ")}). Silakan ubah peran staf terlebih dahulu.`,
+          },
+          { status: 400 }
+        );
+      }
+
+      db.roles = db.roles.filter((r) => r.id !== id);
+      db.auditLogs.unshift({
+        id: `aud-${Date.now()}`,
+        actorName: actorName || "Superadmin",
+        actorRole: actorRole || "DIREKTUR",
+        branchName: "Kantor Pusat Jakarta",
+        actionType: "ROLE_DELETED",
+        summary: `Menghapus Peran Hak Akses: ${role.name} (${role.code})`,
+        details: "Peran kustom berhasil dihapus dari sistem.",
+        timestamp: nowTimestamp(),
+      });
+
+      writeDb(db);
+      return NextResponse.json({ ok: true, db });
     }
 
     // 3. MODUL KEUANGAN: PEMBAYARAN FEE SPONSOR BERTAHAP (DP1, DP2, DP3, PELUNASAN)

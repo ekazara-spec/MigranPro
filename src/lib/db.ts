@@ -2,6 +2,7 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 import {
+  AppRole,
   AuditLog,
   BadilRecord,
   BpjsFinancingPartner,
@@ -36,6 +37,7 @@ export interface DatabaseSchema {
   branches: Branch[];
   sponsors: Sponsor[];
   staffAccounts: StaffAccount[];
+  roles?: AppRole[];
   candidates: Candidate[];
   cases: CaseTicket[];
   vacancies: JobVacancy[];
@@ -792,6 +794,205 @@ function createInitialTenants(): TenantCompany[] {
       picName: "H. Bambang Wijaya, S.E. (Direktur Utama)",
       isPrimary: true,
       createdAt: "2021-06-15",
+    },
+  ];
+}
+
+export function createInitialRoles(): AppRole[] {
+  return [
+    {
+      id: "role-direktur",
+      code: "DIREKTUR",
+      name: "Direktur Utama",
+      description: "Pimpinan eksekutif tertinggi P3MI dengan hak akses penuh ke seluruh modul, keuangan, dan otorisasi strategis.",
+      isSystemRole: true,
+      isReadOnly: false,
+      allowedScope: "ALL",
+      allowedMenus: [
+        "beranda",
+        "pengingat",
+        "cases",
+        "portal_cpmi",
+        "cpmi",
+        "vacancy",
+        "employer_matching",
+        "pelatihan",
+        "medical_visa",
+        "doc_print",
+        "keuangan",
+        "aruskas_kasbon",
+        "saas_tenants",
+        "cabang_audit",
+        "master_data",
+        "whatsapp_gateway",
+      ],
+      permissions: {
+        canVerify: true,
+        canViewSensitive: true,
+        canSeeFinance: true,
+        canManageStaff: true,
+        canExecuteOperation: true,
+      },
+      createdAt: "2024-01-01",
+    },
+    {
+      id: "role-admin-pusat",
+      code: "ADMIN_PUSAT",
+      name: "Admin Operasional Pusat",
+      description: "Administrator kantor pusat dengan wewenang eksekusi seluruh tahapan penempatan PMI, cetak dokumen, dan master data.",
+      isSystemRole: true,
+      isReadOnly: false,
+      allowedScope: "ALL",
+      allowedMenus: [
+        "beranda",
+        "pengingat",
+        "cases",
+        "portal_cpmi",
+        "cpmi",
+        "vacancy",
+        "employer_matching",
+        "pelatihan",
+        "medical_visa",
+        "doc_print",
+        "keuangan",
+        "aruskas_kasbon",
+        "saas_tenants",
+        "cabang_audit",
+        "master_data",
+        "whatsapp_gateway",
+      ],
+      permissions: {
+        canVerify: true,
+        canViewSensitive: true,
+        canSeeFinance: true,
+        canManageStaff: true,
+        canExecuteOperation: true,
+      },
+      createdAt: "2024-01-01",
+    },
+    {
+      id: "role-keuangan",
+      code: "STAF_KEUANGAN",
+      name: "Staf Keuangan & Kasir",
+      description: "Pengelola kas operasional masuk/keluar, pencairan komisi sponsor DP1-DP3, kasbon, dan invoice Syarikah Timur Tengah.",
+      isSystemRole: false,
+      isReadOnly: false,
+      allowedScope: "ALL",
+      allowedMenus: [
+        "beranda",
+        "keuangan",
+        "aruskas_kasbon",
+        "cpmi",
+        "pengingat",
+        "master_data",
+      ],
+      permissions: {
+        canVerify: false,
+        canViewSensitive: true,
+        canSeeFinance: true,
+        canManageStaff: false,
+        canExecuteOperation: true,
+      },
+      createdAt: "2024-01-01",
+    },
+    {
+      id: "role-staf-dokumen",
+      code: "STAF_DOKUMEN",
+      name: "Staf Dokumen & Imigrasi",
+      description: "Petugas verifikasi paspor, rekomendasi Disnaker, E-KTKLN, dan pencetakan berkas resmi penempatan.",
+      isSystemRole: true,
+      isReadOnly: false,
+      allowedScope: "ALL",
+      allowedMenus: [
+        "beranda",
+        "cpmi",
+        "doc_print",
+        "medical_visa",
+        "pengingat",
+        "cases",
+      ],
+      permissions: {
+        canVerify: true,
+        canViewSensitive: true,
+        canSeeFinance: false,
+        canManageStaff: false,
+        canExecuteOperation: true,
+      },
+      createdAt: "2024-01-01",
+    },
+    {
+      id: "role-instruktur-blk",
+      code: "INSTRUKTUR_BLK",
+      name: "Instruktur BLK-LN & Asrama",
+      description: "Pengelola pelatihan bahasa Arab, keterampilan tata graha / babysitter, monitoring asrama & sertifikasi uji kompetensi.",
+      isSystemRole: false,
+      isReadOnly: false,
+      allowedScope: "ALL",
+      allowedMenus: [
+        "beranda",
+        "pelatihan",
+        "cpmi",
+        "pengingat",
+      ],
+      permissions: {
+        canVerify: false,
+        canViewSensitive: false,
+        canSeeFinance: false,
+        canManageStaff: false,
+        canExecuteOperation: true,
+      },
+      createdAt: "2024-01-01",
+    },
+    {
+      id: "role-kepala-cabang",
+      code: "KEPALA_CABANG",
+      name: "Kepala Kantor Cabang Daerah",
+      description: "Pos pantau daerah (View-Only). Memantau perkembangan tahapan CPMI asal wilayah cabangnya tanpa hak eksekusi.",
+      isSystemRole: true,
+      isReadOnly: true,
+      allowedScope: "BRANCH",
+      allowedMenus: [
+        "beranda",
+        "pengingat",
+        "cases",
+        "portal_cpmi",
+        "cpmi",
+        "vacancy",
+        "employer_matching",
+        "pelatihan",
+        "medical_visa",
+        "doc_print",
+      ],
+      permissions: {
+        canVerify: false,
+        canViewSensitive: true,
+        canSeeFinance: false,
+        canManageStaff: false,
+        canExecuteOperation: false,
+      },
+      createdAt: "2024-01-01",
+    },
+    {
+      id: "role-perekrut-pl",
+      code: "PEREKRUT_PL",
+      name: "Perekrut Lapangan (PL/Sponsor)",
+      description: "Perekrut lapangan untuk memantau status pendaftaran CPMI dan transparansi portal mandiri.",
+      isSystemRole: true,
+      isReadOnly: true,
+      allowedScope: "OWN",
+      allowedMenus: [
+        "beranda",
+        "cpmi",
+        "portal_cpmi",
+      ],
+      permissions: {
+        canVerify: false,
+        canViewSensitive: false,
+        canSeeFinance: false,
+        canManageStaff: false,
+        canExecuteOperation: false,
+      },
+      createdAt: "2024-01-01",
     },
   ];
 }
@@ -1703,6 +1904,7 @@ function createInitialSeed(): DatabaseSchema {
     branches,
     sponsors,
     staffAccounts: createInitialStaff(),
+    roles: createInitialRoles(),
     candidates,
     cases: createInitialCases(),
     vacancies: createInitialVacancies(),
@@ -2911,6 +3113,9 @@ export function syncExpirationsAndTasks(db: DatabaseSchema): void {
     if (!b.status) b.status = "ACTIVE";
   }
 
+  if (!db.roles || db.roles.length === 0) {
+    db.roles = createInitialRoles();
+  }
   if (!db.staffAccounts || db.staffAccounts.length === 0) {
     db.staffAccounts = createInitialStaff();
   }

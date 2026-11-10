@@ -23,7 +23,30 @@ export type UserRole =
   | "ADMIN_PUSAT"
   | "KEPALA_CABANG"
   | "STAF_DOKUMEN"
-  | "PEREKRUT_PL";
+  | "PEREKRUT_PL"
+  | "STAF_KEUANGAN"
+  | "INSTRUKTUR_BLK"
+  | (string & {});
+
+export interface AppRole {
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+  isSystemRole: boolean;
+  isReadOnly: boolean;
+  allowedScope: "ALL" | "BRANCH" | "OWN";
+  allowedMenus: string[];
+  permissions: {
+    canVerify: boolean;
+    canViewSensitive: boolean;
+    canSeeFinance: boolean;
+    canManageStaff: boolean;
+    canExecuteOperation: boolean;
+  };
+  createdAt: string;
+  updatedAt?: string;
+}
 
 export type DocType =
   | "KTP"
@@ -407,7 +430,11 @@ export interface AuditLog {
     | "FINANCE_PAYMENT"
     | "TRAINING_UPDATED"
     | "BADIL_PROCESSED"
-    | "MASTER_DATA_UPDATED";
+    | "MASTER_DATA_UPDATED"
+    | "STAFF_CREATED"
+    | "ROLE_CREATED"
+    | "ROLE_UPDATED"
+    | "ROLE_DELETED";
   summary: string;
   details?: string;
   timestamp: string;
