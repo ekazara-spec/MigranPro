@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 80" width="240" height="80">
+  <defs>
+    <linearGradient id="siskopGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f3d75" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#eab308" />
+      <stop offset="100%" stop-color="#f59e0b" />
+    </linearGradient>
+  </defs>
+
+  <!-- Border Box -->
+  <rect x="2" y="2" width="236" height="76" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+
+  <!-- Left: Emblem / Shield -->
+  <g transform="translate(10, 8)">
+    <!-- Outer Shield -->
+    <path d="M30 4 L56 12 C56 42 30 58 30 58 C30 58 4 42 4 12 Z" fill="url(#siskopGrad)" />
+    <!-- Inner Accent -->
+    <path d="M30 8 L51 15 C51 38 30 52 30 52 C30 52 9 38 9 15 Z" fill="#ffffff" opacity="0.15" />
+    
+    <!-- Garuda / Wings / Globe Abstract Symbol -->
+    <!-- Globe Circle -->
+    <circle cx="30" cy="27" r="14" fill="#ffffff" />
+    <!-- Lat/Long Lines -->
+    <ellipse cx="30" cy="27" rx="14" ry="7" fill="none" stroke="#0f3d75" stroke-width="1.2" />
+    <line x1="30" y1="13" x2="30" y2="41" stroke="#0f3d75" stroke-width="1.2" />
+    <line x1="16" y1="27" x2="44" y2="27" stroke="#0f3d75" stroke-width="1.2" />
+    
+    <!-- Red-White Indonesian Ribbon at Bottom of Shield -->
+    <rect x="18" y="42" width="24" height="4" fill="#dc2626" rx="1" />
+    <rect x="18" y="46" width="24" height="4" fill="#ffffff" rx="1" stroke="#cbd5e1" stroke-width="0.5" />
+  </g>
+
+  <!-- Right: Typography -->
+  <g transform="translate(74, 20)">
+    <!-- SISKOP2MI Bold Brand -->
+    <text x="0" y="14" font-family="'Arial Black', Impact, sans-serif" font-size="18" font-weight="900" fill="#0f3d75" letter-spacing="0.5">
+      SISKOP2MI
+    </text>
+    
+    <!-- Gold Underline / Bar -->
+    <rect x="0" y="19" width="150" height="2.5" fill="url(#goldGrad)" rx="1.2" />
+
+    <!-- Subtitle: KEMNAKER RI / SPSK -->
+    <text x="0" y="32" font-family="Arial, Helvetica, sans-serif" font-size="9" font-weight="800" fill="#1e293b" letter-spacing="0.3">
+      KEMNAKER RI · SPSK
+    </text>
+    
+    <text x="0" y="43" font-family="Arial, Helvetica, sans-serif" font-size="7.5" font-weight="600" fill="#64748b">
+      SISTEM PENEMPATAN SATU KANAL
+    </text>
+  </g>
+</svg>

@@ -198,26 +198,44 @@ export default function DocumentPrintModule({
             {/* KOP SURAT RESMI P3MI */}
             <div className="border-b-4 border-double border-slate-900 pb-4 text-center">
               <div className="flex items-center justify-between gap-4">
-                <div className="h-16 w-16 shrink-0 rounded-xl bg-slate-900 text-white font-black flex items-center justify-center text-xl print:text-black print:bg-white print:border-2 print:border-black">
-                  PBA
+                {/* Logo Resmi P3MI (PT. Panca Banyu Ajisakti) */}
+                <div className="h-20 w-24 shrink-0 flex items-center justify-center">
+                  <img
+                    src={activeTenant?.logoUrl || "/logo-panca-banyu.png"}
+                    alt={`Logo ${tenantName}`}
+                    width={90}
+                    height={76}
+                    style={{ width: 90, height: 76 }}
+                    className="h-20 w-24 object-contain"
+                  />
                 </div>
-                <div className="flex-1">
+
+                {/* Teks Legalitas Kop Surat Tengah */}
+                <div className="flex-1 text-center">
                   <h1 className="text-xl md:text-2xl font-black tracking-wide uppercase text-slate-900">
                     {tenantName}
                   </h1>
-                  <p className="text-xs md:text-sm font-bold text-slate-700">
+                  <p className="text-xs md:text-sm font-bold text-slate-800">
                     SURAT IZIN PERUSAHAAN PENEMPATAN PEKERJA MIGRAN INDONESIA (SIP3MI)
                   </p>
-                  <p className="text-xs font-mono font-bold text-sky-800 print:text-black">
+                  <p className="text-xs font-mono font-bold text-sky-900 print:text-black">
                     {tenantLicense}
                   </p>
-                  <p className="text-[11px] text-slate-600 mt-1">
+                  <p className="text-[11px] text-slate-700 font-medium mt-0.5">
                     Kantor Pusat: {tenantAddress} · Telp: {tenantPhone} · Email: {tenantEmail}
                   </p>
                 </div>
-                <div className="h-16 w-16 shrink-0 flex flex-col items-center justify-center border border-slate-400 p-1 rounded text-center text-[9px] font-mono">
-                  <QrCode className="h-8 w-8 text-slate-800" />
-                  <span>SISKOP2MI</span>
+
+                {/* Logo Resmi SISKOP2MI (KEMNAKER RI - SPSK) */}
+                <div className="h-20 w-44 shrink-0 flex items-center justify-end">
+                  <img
+                    src="/logo-siskop2mi.svg"
+                    alt="Logo Resmi SISKOP2MI Kemnaker RI"
+                    width={176}
+                    height={64}
+                    style={{ width: 176, height: 64 }}
+                    className="h-16 w-44 object-contain"
+                  />
                 </div>
               </div>
             </div>
