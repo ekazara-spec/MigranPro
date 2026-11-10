@@ -12083,15 +12083,178 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
               </div>
 
               <div>
-                <label className="font-bold text-slate-700 block mb-1">
-                  Instansi Penerbit / Sarana Kesehatan (Klinik)
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="font-bold text-slate-800 text-xs">
+                    {editingDoc.doc.docType === "MEDICAL"
+                      ? "🏥 Sarana Kesehatan / Klinik Medical (Terhubung Master Wafid GCC)"
+                      : editingDoc.doc.docType === "PASPOR"
+                      ? "🏛️ Kantor Imigrasi Penerbit Paspor (Terhubung Master Kanim)"
+                      : editingDoc.doc.docType === "SERTIFIKAT_KOMPETENSI"
+                      ? "🏫 BLK-LN / LSP Penguji Kompetensi (Terhubung Master BLK)"
+                      : editingDoc.doc.docType === "VISA"
+                      ? "🌍 Kedutaan / Visa Center (Terhubung Master KBSA/VFS)"
+                      : editingDoc.doc.docType === "TIKET_EKTKLN"
+                      ? "✈️ Maskapai Penerbangan (Terhubung Master Airlines)"
+                      : ["KTP", "KK", "AKTA_IJAZAH", "IZIN_KELUARGA"].includes(editingDoc.doc.docType)
+                      ? "🏢 Disdukcapil Penerbit Berkas (Terhubung Master Disdukcapil)"
+                      : "Instansi Penerbit / Sarana Kesehatan (Klinik)"}
+                  </label>
+                  <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-2 py-0.5 rounded border border-sky-200">
+                    ⚡ Master Data Terintegrasi
+                  </span>
+                </div>
+
+                {/* 1. Dropdown Pilihan Klinik Medical Wafid / GAMCA */}
+                {editingDoc.doc.docType === "MEDICAL" && (db.masterMedicalClinics?.length || 0) > 0 && (
+                  <div className="mb-2">
+                    <select
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val) {
+                          setDocForm({ ...docForm, issuedBy: val });
+                        }
+                      }}
+                      className="w-full rounded-lg border border-teal-400 bg-teal-50 px-3 py-2 text-xs font-bold text-teal-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    >
+                      <option value="">-- Pilih dari Master Klinik GAMCA / Wafid GCC Resmi --</option>
+                      {db.masterMedicalClinics
+                        ?.filter((m) => m.active !== false)
+                        .map((m) => (
+                          <option key={m.id} value={`${m.name} (${m.wafidCode || m.type})`}>
+                            🏥 {m.name} · {m.city} [{m.type === "WAFID_GAMCA" ? "Wafid GCC" : m.type}]
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* 2. Dropdown Pilihan Kantor Imigrasi (Kanim) */}
+                {editingDoc.doc.docType === "PASPOR" && (db.masterImmigrationOffices?.length || 0) > 0 && (
+                  <div className="mb-2">
+                    <select
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val) {
+                          setDocForm({ ...docForm, issuedBy: val });
+                        }
+                      }}
+                      className="w-full rounded-lg border border-sky-400 bg-sky-50 px-3 py-2 text-xs font-bold text-sky-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    >
+                      <option value="">-- Pilih dari Master Kantor Imigrasi (Kanim) --</option>
+                      {db.masterImmigrationOffices
+                        ?.filter((k) => k.active !== false)
+                        .map((k) => (
+                          <option key={k.id} value={k.name}>
+                            🏛️ {k.code} — {k.name} ({k.city}, {k.province})
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* 3. Dropdown Pilihan Disdukcapil */}
+                {["KTP", "KK", "AKTA_IJAZAH", "IZIN_KELUARGA"].includes(editingDoc.doc.docType) &&
+                  (db.masterDisdukcapil?.length || 0) > 0 && (
+                    <div className="mb-2">
+                      <select
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val) {
+                            setDocForm({ ...docForm, issuedBy: val });
+                          }
+                        }}
+                        className="w-full rounded-lg border border-indigo-400 bg-indigo-50 px-3 py-2 text-xs font-bold text-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      >
+                        <option value="">-- Pilih dari Master Disdukcapil Sentra CPMI --</option>
+                        {db.masterDisdukcapil
+                          ?.filter((d) => d.active !== false)
+                          .map((d) => (
+                            <option key={d.id} value={d.officeName}>
+                              🏢 {d.officeName} ({d.regencyCity}, {d.province})
+                            </option>
+                          ))}
+                      </select>
+                    </div>
+                  )}
+
+                {/* 4. Dropdown Pilihan BLK-LN & LSP */}
+                {editingDoc.doc.docType === "SERTIFIKAT_KOMPETENSI" && (db.masterBlkLn?.length || 0) > 0 && (
+                  <div className="mb-2">
+                    <select
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val) {
+                          setDocForm({ ...docForm, issuedBy: val });
+                        }
+                      }}
+                      className="w-full rounded-lg border border-amber-400 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    >
+                      <option value="">-- Pilih dari Master BLK-LN PT. PBA / LSP BNSP --</option>
+                      {db.masterBlkLn
+                        ?.filter((b) => b.active !== false)
+                        .map((b) => (
+                          <option key={b.id} value={`${b.name} (VIN: ${b.vinKemnaker})`}>
+                            🏫 {b.name} · Grade {b.accreditationGrade} ({b.city})
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* 5. Dropdown Pilihan Kedutaan / VFS Tasheer */}
+                {editingDoc.doc.docType === "VISA" && (db.masterEmbassies?.length || 0) > 0 && (
+                  <div className="mb-2">
+                    <select
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val) {
+                          setDocForm({ ...docForm, issuedBy: val });
+                        }
+                      }}
+                      className="w-full rounded-lg border border-purple-400 bg-purple-50 px-3 py-2 text-xs font-bold text-purple-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    >
+                      <option value="">-- Pilih dari Master Kedutaan / VFS Tasheer --</option>
+                      {db.masterEmbassies
+                        ?.filter((e) => e.active !== false)
+                        .map((e) => (
+                          <option key={e.id} value={e.name}>
+                            🌍 {e.name} ({e.country} · {e.institutionType})
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* 6. Dropdown Pilihan Maskapai Penerbangan */}
+                {editingDoc.doc.docType === "TIKET_EKTKLN" && (db.masterAirlines?.length || 0) > 0 && (
+                  <div className="mb-2">
+                    <select
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val) {
+                          setDocForm({ ...docForm, issuedBy: val });
+                        }
+                      }}
+                      className="w-full rounded-lg border border-sky-400 bg-sky-50 px-3 py-2 text-xs font-bold text-sky-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    >
+                      <option value="">-- Pilih dari Master Maskapai Penerbangan --</option>
+                      {db.masterAirlines
+                        ?.filter((a) => a.active !== false)
+                        .map((a) => (
+                          <option key={a.id} value={`${a.name} (${a.iataCode})`}>
+                            ✈️ {a.name} ({a.iataCode}/${a.icaoCode}) - Hub: {a.mainHub}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                )}
+
                 <input
                   type="text"
                   value={docForm.issuedBy}
                   onChange={(e) => setDocForm({ ...docForm, issuedBy: e.target.value })}
-                  placeholder="Contoh: Imigrasi Cirebon / Klinik Utama Pramita"
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                  placeholder="Ketik manual nama instansi/klinik jika diperlukan..."
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs"
                 />
               </div>
 
