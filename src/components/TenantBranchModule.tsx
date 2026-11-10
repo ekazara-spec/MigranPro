@@ -96,17 +96,14 @@ export default function TenantBranchModule({
     setSaving(true);
     setFeedbackMsg(null);
     try {
-      const isEdit = Boolean(editingTenant);
-      const action = isEdit ? "UPDATE_TENANT" : "CREATE_TENANT";
-      const payload = isEdit
-        ? { tenantId: editingTenant?.id, updates: tenantForm }
-        : tenantForm;
+      const targetTenantId = editingTenant?.id || activeTenant?.id || "tenant-panca";
+      const payload = { tenantId: targetTenantId, updates: tenantForm };
 
       const res = await fetch("/api/p3mi", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action,
+          action: "UPDATE_TENANT",
           actorName,
           actorRole,
           payload,
@@ -114,11 +111,11 @@ export default function TenantBranchModule({
       });
 
       const data = await res.json();
-      if (!data.ok) throw new Error(data.error || "Gagal menyimpan data tenant.");
+      if (!data.ok) throw new Error(data.error || "Gagal menyimpan data profil perusahaan.");
 
       setFeedbackMsg({
         type: "success",
-        text: isEdit ? "Data tenant P3MI berhasil diperbarui!" : "Perusahaan P3MI (Tenant Baru) berhasil ditambahkan!",
+        text: "Profil resmi PT. Panca Banyu Ajisakti berhasil diperbarui!",
       });
       setShowAddTenantModal(false);
       setEditingTenant(null);
@@ -540,7 +537,7 @@ export default function TenantBranchModule({
 
             <form onSubmit={handleSaveTenant} className="space-y-4 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="sm:col-span-2">
+                <div>
                   <label className="block text-slate-300 font-semibold mb-1">Nama Legal Perusahaan P3MI</label>
                   <input
                     type="text"
@@ -549,6 +546,17 @@ export default function TenantBranchModule({
                     onChange={(e) => setTenantForm({ ...tenantForm, name: e.target.value })}
                     className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white font-bold"
                     placeholder="PT. PANCA BANYU AJISAKTI"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">Nama Merk / Brand</label>
+                  <input
+                    type="text"
+                    required
+                    value={tenantForm.brandName}
+                    onChange={(e) => setTenantForm({ ...tenantForm, brandName: e.target.value })}
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white"
+                    placeholder="Panca Banyu Ajisakti"
                   />
                 </div>
                 <div>

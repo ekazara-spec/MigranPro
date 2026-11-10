@@ -773,7 +773,7 @@ function createInitialVacancies(): JobVacancy[] {
   ];
 }
 
-function createInitialTenants(): TenantCompany[] {
+export function createInitialTenants(): TenantCompany[] {
   // Aplikasi didedikasikan tunggal khusus PT. PANCA BANYU AJISAKTI
   return [
     {
@@ -3107,7 +3107,21 @@ export function syncExpirationsAndTasks(db: DatabaseSchema): void {
   ];
 
   // Aplikasi didedikasikan tunggal khusus PT. PANCA BANYU AJISAKTI
-  db.tenants = createInitialTenants();
+  if (!db.tenants || db.tenants.length === 0) {
+    db.tenants = createInitialTenants();
+  } else {
+    // Pertahankan perubahan profil PT. Panca Banyu Ajisakti yang sudah diedit user
+    const pancaTenant =
+      db.tenants.find((t) => t.id === "tenant-panca" || t.isPrimary) ||
+      db.tenants[0];
+    if (pancaTenant) {
+      pancaTenant.id = "tenant-panca";
+      pancaTenant.isPrimary = true;
+      db.tenants = [pancaTenant];
+    } else {
+      db.tenants = createInitialTenants();
+    }
+  }
   for (const b of db.branches) {
     b.tenantId = "tenant-panca";
     if (!b.status) b.status = "ACTIVE";

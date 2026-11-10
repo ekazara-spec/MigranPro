@@ -4,6 +4,7 @@ import {
   buildDefaultRegistrationFormForCandidate,
   buildDefaultTrainingForCandidate,
   createInitialRoles,
+  createInitialTenants,
   getDaysRemaining,
   readDb,
   resetDbToSeed,
@@ -2017,9 +2018,14 @@ export async function POST(req: NextRequest) {
 
     if (action === "UPDATE_TENANT") {
       const { tenantId, updates } = body.payload;
-      const t = db.tenants?.find((x) => x.id === tenantId);
+      if (!db.tenants || db.tenants.length === 0) {
+        db.tenants = createInitialTenants();
+      }
+      const list = db.tenants!;
+      let t = list.find((x) => x.id === tenantId) || list[0];
       if (!t) {
-        return NextResponse.json({ ok: false, error: "Tenant P3MI tidak ditemukan." }, { status: 404 });
+        t = createInitialTenants()[0];
+        list.push(t);
       }
       Object.assign(t, updates);
 
