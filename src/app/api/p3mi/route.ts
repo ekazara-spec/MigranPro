@@ -36,6 +36,12 @@ import {
   InterviewStatus,
   JobVacancy,
   JourneyStage,
+  MasterAirline,
+  MasterBlkLn,
+  MasterDisdukcapil,
+  MasterEmbassy,
+  MasterImmigrationOffice,
+  MasterMedicalClinic,
   MedicalClinicPartner,
   OfficialRegistrationForm,
   ProcessTrack,
@@ -110,6 +116,18 @@ export async function POST(req: NextRequest) {
       "UPDATE_SYARIKAH_INVOICE",
       "CREATE_EMPLOYER_INTERVIEW",
       "UPDATE_EMPLOYER_INTERVIEW",
+      "CREATE_MASTER_ITEM",
+      "UPDATE_MASTER_ITEM",
+      "DELETE_MASTER_ITEM",
+      "TOGGLE_MASTER_STATUS",
+      "UPDATE_FOREIGN_AGENCY",
+      "DELETE_FOREIGN_AGENCY",
+      "UPDATE_MEDICAL_CLINIC",
+      "DELETE_MEDICAL_CLINIC",
+      "UPDATE_SPONSOR",
+      "DELETE_SPONSOR",
+      "UPDATE_BPJS_FINANCING",
+      "DELETE_BPJS_FINANCING",
     ];
 
     if (
@@ -2438,6 +2456,301 @@ export async function POST(req: NextRequest) {
 
       writeDb(db);
       return NextResponse.json({ ok: true, interview: item, db });
+    }
+
+    // ============================================================
+    // MODUL MASTER DATA OPERASIONAL TERPADU P3MI
+    // (Kanim, Disdukcapil, Medical Wafid, Airlines, BLK-LN, Kedutaan)
+    // ============================================================
+
+    if (action === "CREATE_MASTER_ITEM") {
+      const { entityType, data } = body.payload;
+      const ts = Date.now();
+      let createdName = "";
+
+      if (entityType === "KANIM") {
+        if (!db.masterImmigrationOffices) db.masterImmigrationOffices = [];
+        const newItem: MasterImmigrationOffice = {
+          id: `kanim-${ts}`,
+          code: data.code || `KANIM-${db.masterImmigrationOffices.length + 1}`,
+          name: data.name,
+          city: data.city || "-",
+          province: data.province || "-",
+          address: data.address || "-",
+          phone: data.phone || "-",
+          headOfOfficeName: data.headOfOfficeName || "-",
+          headOfOfficeTitle: data.headOfOfficeTitle || "Kepala Kantor Imigrasi",
+          active: true,
+        };
+        db.masterImmigrationOffices.push(newItem);
+        createdName = newItem.name;
+      } else if (entityType === "DISDUKCAPIL") {
+        if (!db.masterDisdukcapil) db.masterDisdukcapil = [];
+        const newItem: MasterDisdukcapil = {
+          id: `dukcapil-${ts}`,
+          code: data.code || `DUKCAPIL-${db.masterDisdukcapil.length + 1}`,
+          regencyCity: data.regencyCity,
+          province: data.province || "-",
+          officeName: data.officeName || `Disdukcapil ${data.regencyCity}`,
+          address: data.address || "-",
+          phone: data.phone || "-",
+          active: true,
+        };
+        db.masterDisdukcapil.push(newItem);
+        createdName = newItem.officeName;
+      } else if (entityType === "CLINIC") {
+        if (!db.masterMedicalClinics) db.masterMedicalClinics = [];
+        const newItem: MasterMedicalClinic = {
+          id: `med-${ts}`,
+          code: data.code || `WAFID-${db.masterMedicalClinics.length + 1}`,
+          name: data.name,
+          type: data.type || "WAFID_GAMCA",
+          wafidCode: data.wafidCode || "-",
+          city: data.city || "-",
+          address: data.address || "-",
+          phone: data.phone || "-",
+          doctorInCharge: data.doctorInCharge || "-",
+          active: true,
+        };
+        db.masterMedicalClinics.push(newItem);
+        createdName = newItem.name;
+      } else if (entityType === "AIRLINE") {
+        if (!db.masterAirlines) db.masterAirlines = [];
+        const newItem: MasterAirline = {
+          id: `air-${ts}`,
+          iataCode: (data.iataCode || "XX").toUpperCase(),
+          icaoCode: (data.icaoCode || "XXX").toUpperCase(),
+          name: data.name,
+          country: data.country || "Arab Saudi",
+          mainHub: data.mainHub || "-",
+          active: true,
+        };
+        db.masterAirlines.push(newItem);
+        createdName = `${newItem.name} (${newItem.iataCode})`;
+      } else if (entityType === "BLK") {
+        if (!db.masterBlkLn) db.masterBlkLn = [];
+        const newItem: MasterBlkLn = {
+          id: `blk-${ts}`,
+          code: data.code || `BLK-${db.masterBlkLn.length + 1}`,
+          name: data.name,
+          ownership: data.ownership || "INTERNAL_PBA",
+          vinKemnaker: data.vinKemnaker || "-",
+          accreditationGrade: data.accreditationGrade || "A",
+          city: data.city || "-",
+          address: data.address || "-",
+          phone: data.phone || "-",
+          picName: data.picName || "-",
+          capacity: Number(data.capacity) || 50,
+          active: true,
+        };
+        db.masterBlkLn.push(newItem);
+        createdName = newItem.name;
+      } else if (entityType === "EMBASSY") {
+        if (!db.masterEmbassies) db.masterEmbassies = [];
+        const newItem: MasterEmbassy = {
+          id: `emb-${ts}`,
+          code: data.code || `EMB-${db.masterEmbassies.length + 1}`,
+          country: data.country || "Arab Saudi",
+          institutionType: data.institutionType || "EMBASSY",
+          name: data.name,
+          address: data.address || "-",
+          phone: data.phone || "-",
+          email: data.email || "-",
+          appointmentUrl: data.appointmentUrl || "",
+          active: true,
+        };
+        db.masterEmbassies.push(newItem);
+        createdName = newItem.name;
+      } else {
+        return NextResponse.json({ ok: false, error: "Tipe entitas master tidak valid." }, { status: 400 });
+      }
+
+      db.auditLogs.unshift({
+        id: `aud-${Date.now()}`,
+        actorName,
+        actorRole: actorRole as UserRole,
+        branchName,
+        actionType: "MASTER_DATA_UPDATED",
+        summary: `Menambahkan Master Data [${entityType}]: ${createdName}`,
+        details: `Tersimpan dalam database master PT. Panca Banyu Ajisakti secara permanen.`,
+        timestamp: nowTimestamp(),
+      });
+
+      writeDb(db);
+      return NextResponse.json({ ok: true, db });
+    }
+
+    if (action === "UPDATE_MASTER_ITEM") {
+      const { entityType, id, data } = body.payload;
+      let updatedName = "";
+
+      if (entityType === "KANIM") {
+        const item = db.masterImmigrationOffices?.find((x) => x.id === id);
+        if (!item) return NextResponse.json({ ok: false, error: "Data Kantor Imigrasi tidak ditemukan." }, { status: 404 });
+        Object.assign(item, data);
+        updatedName = item.name;
+      } else if (entityType === "DISDUKCAPIL") {
+        const item = db.masterDisdukcapil?.find((x) => x.id === id);
+        if (!item) return NextResponse.json({ ok: false, error: "Data Disdukcapil tidak ditemukan." }, { status: 404 });
+        Object.assign(item, data);
+        updatedName = item.officeName;
+      } else if (entityType === "CLINIC") {
+        const item = db.masterMedicalClinics?.find((x) => x.id === id);
+        if (!item) return NextResponse.json({ ok: false, error: "Data Klinik Medical tidak ditemukan." }, { status: 404 });
+        Object.assign(item, data);
+        updatedName = item.name;
+      } else if (entityType === "AIRLINE") {
+        const item = db.masterAirlines?.find((x) => x.id === id);
+        if (!item) return NextResponse.json({ ok: false, error: "Data Maskapai tidak ditemukan." }, { status: 404 });
+        Object.assign(item, data);
+        updatedName = item.name;
+      } else if (entityType === "BLK") {
+        const item = db.masterBlkLn?.find((x) => x.id === id);
+        if (!item) return NextResponse.json({ ok: false, error: "Data BLK-LN tidak ditemukan." }, { status: 404 });
+        Object.assign(item, data);
+        updatedName = item.name;
+      } else if (entityType === "EMBASSY") {
+        const item = db.masterEmbassies?.find((x) => x.id === id);
+        if (!item) return NextResponse.json({ ok: false, error: "Data Kedutaan / Visa Center tidak ditemukan." }, { status: 404 });
+        Object.assign(item, data);
+        updatedName = item.name;
+      }
+
+      db.auditLogs.unshift({
+        id: `aud-${Date.now()}`,
+        actorName,
+        actorRole: actorRole as UserRole,
+        branchName,
+        actionType: "MASTER_DATA_UPDATED",
+        summary: `Memperbarui Master Data [${entityType}]: ${updatedName}`,
+        details: `Perubahan data operasional master berhasil disimpan ke database.`,
+        timestamp: nowTimestamp(),
+      });
+
+      writeDb(db);
+      return NextResponse.json({ ok: true, db });
+    }
+
+    if (action === "TOGGLE_MASTER_STATUS") {
+      const { entityType, id } = body.payload;
+      let targetName = "";
+      let newStatus = true;
+
+      if (entityType === "KANIM") {
+        const item = db.masterImmigrationOffices?.find((x) => x.id === id);
+        if (item) { item.active = !item.active; targetName = item.name; newStatus = item.active; }
+      } else if (entityType === "DISDUKCAPIL") {
+        const item = db.masterDisdukcapil?.find((x) => x.id === id);
+        if (item) { item.active = !item.active; targetName = item.officeName; newStatus = item.active; }
+      } else if (entityType === "CLINIC") {
+        const item = db.masterMedicalClinics?.find((x) => x.id === id);
+        if (item) { item.active = !item.active; targetName = item.name; newStatus = item.active; }
+      } else if (entityType === "AIRLINE") {
+        const item = db.masterAirlines?.find((x) => x.id === id);
+        if (item) { item.active = !item.active; targetName = item.name; newStatus = item.active; }
+      } else if (entityType === "BLK") {
+        const item = db.masterBlkLn?.find((x) => x.id === id);
+        if (item) { item.active = !item.active; targetName = item.name; newStatus = item.active; }
+      } else if (entityType === "EMBASSY") {
+        const item = db.masterEmbassies?.find((x) => x.id === id);
+        if (item) { item.active = !item.active; targetName = item.name; newStatus = item.active; }
+      }
+
+      db.auditLogs.unshift({
+        id: `aud-${Date.now()}`,
+        actorName,
+        actorRole: actorRole as UserRole,
+        branchName,
+        actionType: "MASTER_DATA_UPDATED",
+        summary: `Ubah Status Master [${entityType}]: ${targetName} -> ${newStatus ? "AKTIF" : "NON-AKTIF"}`,
+        details: `Status data master telah disinkronisasi.`,
+        timestamp: nowTimestamp(),
+      });
+
+      writeDb(db);
+      return NextResponse.json({ ok: true, db });
+    }
+
+    if (action === "DELETE_MASTER_ITEM") {
+      const { entityType, id } = body.payload;
+      let deletedName = "";
+
+      if (entityType === "KANIM") {
+        const item = db.masterImmigrationOffices?.find((x) => x.id === id);
+        deletedName = item?.name || id;
+        db.masterImmigrationOffices = db.masterImmigrationOffices?.filter((x) => x.id !== id);
+      } else if (entityType === "DISDUKCAPIL") {
+        const item = db.masterDisdukcapil?.find((x) => x.id === id);
+        deletedName = item?.officeName || id;
+        db.masterDisdukcapil = db.masterDisdukcapil?.filter((x) => x.id !== id);
+      } else if (entityType === "CLINIC") {
+        const item = db.masterMedicalClinics?.find((x) => x.id === id);
+        deletedName = item?.name || id;
+        db.masterMedicalClinics = db.masterMedicalClinics?.filter((x) => x.id !== id);
+      } else if (entityType === "AIRLINE") {
+        const item = db.masterAirlines?.find((x) => x.id === id);
+        deletedName = item?.name || id;
+        db.masterAirlines = db.masterAirlines?.filter((x) => x.id !== id);
+      } else if (entityType === "BLK") {
+        const item = db.masterBlkLn?.find((x) => x.id === id);
+        deletedName = item?.name || id;
+        db.masterBlkLn = db.masterBlkLn?.filter((x) => x.id !== id);
+      } else if (entityType === "EMBASSY") {
+        const item = db.masterEmbassies?.find((x) => x.id === id);
+        deletedName = item?.name || id;
+        db.masterEmbassies = db.masterEmbassies?.filter((x) => x.id !== id);
+      }
+
+      db.auditLogs.unshift({
+        id: `aud-${Date.now()}`,
+        actorName,
+        actorRole: actorRole as UserRole,
+        branchName,
+        actionType: "MASTER_DATA_UPDATED",
+        summary: `Hapus Master Data [${entityType}]: ${deletedName}`,
+        details: `Entri data telah dihapus dari database master.`,
+        timestamp: nowTimestamp(),
+      });
+
+      writeDb(db);
+      return NextResponse.json({ ok: true, db });
+    }
+
+    // UPDATE / DELETE UNTUK SYARIKAH, KLINIK, SPONSOR, BPJS
+    if (action === "UPDATE_FOREIGN_AGENCY") {
+      const { id, updates } = body.payload;
+      const agn = db.foreignAgencies?.find((x) => x.id === id);
+      if (!agn) return NextResponse.json({ ok: false, error: "Agensi tidak ditemukan." }, { status: 404 });
+      Object.assign(agn, updates);
+      writeDb(db);
+      return NextResponse.json({ ok: true, db });
+    }
+
+    if (action === "UPDATE_SPONSOR") {
+      const { id, updates } = body.payload;
+      const sp = db.sponsors?.find((x) => x.id === id);
+      if (!sp) return NextResponse.json({ ok: false, error: "Sponsor tidak ditemukan." }, { status: 404 });
+      Object.assign(sp, updates);
+      writeDb(db);
+      return NextResponse.json({ ok: true, db });
+    }
+
+    if (action === "UPDATE_MEDICAL_CLINIC") {
+      const { id, updates } = body.payload;
+      const cl = db.medicalClinics?.find((x) => x.id === id);
+      if (!cl) return NextResponse.json({ ok: false, error: "Klinik tidak ditemukan." }, { status: 404 });
+      Object.assign(cl, updates);
+      writeDb(db);
+      return NextResponse.json({ ok: true, db });
+    }
+
+    if (action === "UPDATE_BPJS_FINANCING") {
+      const { id, updates } = body.payload;
+      const bp = db.bpjsFinancingPartners?.find((x) => x.id === id);
+      if (!bp) return NextResponse.json({ ok: false, error: "Mitra BPJS/Bank tidak ditemukan." }, { status: 404 });
+      Object.assign(bp, updates);
+      writeDb(db);
+      return NextResponse.json({ ok: true, db });
     }
 
     return NextResponse.json(

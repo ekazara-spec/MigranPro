@@ -874,3 +874,82 @@ export interface EmployerInterview {
   createdAt: string;
 }
 
+// ============================================================
+// MASTER DATA OPERASIONAL TERPADU
+// ============================================================
+
+export interface MasterImmigrationOffice {
+  id: string;
+  code: string;
+  name: string;
+  city: string;
+  province: string;
+  address: string;
+  phone: string;
+  headOfOfficeName: string;
+  headOfOfficeTitle: string;
+  active: boolean;
+}
+
+export interface MasterDisdukcapil {
+  id: string;
+  code: string;
+  regencyCity: string;
+  province: string;
+  officeName: string;
+  address: string;
+  phone: string;
+  active: boolean;
+}
+
+export interface MasterMedicalClinic {
+  id: string;
+  code: string;
+  name: string;
+  type: "WAFID_GAMCA" | "PRA_MEDICAL" | "RS_RUJUKAN";
+  wafidCode?: string;
+  city: string;
+  address: string;
+  phone: string;
+  doctorInCharge?: string;
+  active: boolean;
+}
+
+export interface MasterAirline {
+  id: string;
+  iataCode: string;
+  icaoCode: string;
+  name: string;
+  country: string;
+  mainHub: string;
+  active: boolean;
+}
+
+export interface MasterBlkLn {
+  id: string;
+  code: string;
+  name: string;
+  ownership: "INTERNAL_PBA" | "MITRA_DAERAH";
+  vinKemnaker: string;
+  accreditationGrade: "A" | "B" | "C";
+  city: string;
+  address: string;
+  phone: string;
+  picName: string;
+  capacity: number;
+  active: boolean;
+}
+
+export interface MasterEmbassy {
+  id: string;
+  code: string;
+  country: string;
+  institutionType: "EMBASSY" | "VFS_TASHEER" | "CONSULATE";
+  name: string;
+  address: string;
+  phone: string;
+  email: string;
+  appointmentUrl?: string;
+  active: boolean;
+}
+

@@ -18,6 +18,12 @@ import {
   ForeignAgency,
   JobVacancy,
   JourneyStage,
+  MasterAirline,
+  MasterBlkLn,
+  MasterDisdukcapil,
+  MasterEmbassy,
+  MasterImmigrationOffice,
+  MasterMedicalClinic,
   MedicalClinicPartner,
   OfficialRegistrationForm,
   ProcessTrack,
@@ -53,6 +59,12 @@ export interface DatabaseSchema {
   cashAdvances?: CashAdvance[];
   syarikahInvoices?: SyarikahInvoice[];
   employerInterviews?: EmployerInterview[];
+  masterImmigrationOffices?: MasterImmigrationOffice[];
+  masterDisdukcapil?: MasterDisdukcapil[];
+  masterMedicalClinics?: MasterMedicalClinic[];
+  masterAirlines?: MasterAirline[];
+  masterBlkLn?: MasterBlkLn[];
+  masterEmbassies?: MasterEmbassy[];
 }
 
 const IS_SERVERLESS = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
@@ -1919,6 +1931,12 @@ function createInitialSeed(): DatabaseSchema {
     cashAdvances: createInitialCashAdvances(),
     syarikahInvoices: createInitialSyarikahInvoices(),
     employerInterviews: createInitialEmployerInterviews(),
+    masterImmigrationOffices: createInitialMasterImmigrationOffices(),
+    masterDisdukcapil: createInitialMasterDisdukcapil(),
+    masterMedicalClinics: createInitialMasterMedicalClinics(),
+    masterAirlines: createInitialMasterAirlines(),
+    masterBlkLn: createInitialMasterBlkLn(),
+    masterEmbassies: createInitialMasterEmbassies(),
   };
 
   syncExpirationsAndTasks(db);
@@ -2151,6 +2169,519 @@ export function createInitialBpjsFinancing(): BpjsFinancingPartner[] {
       picName: "Ust. Fauzan Hakim (BSI International Desk)",
       phone: "14040 / 021-30405555",
       status: "ACTIVE",
+    },
+  ];
+}
+
+// ============================================================
+// GENERATOR DATA AWAL MASTER DATA OPERASIONAL TERPADU P3MI
+// (Kanim, Disdukcapil, Medical Wafid, Airlines, BLK-LN, Kedutaan)
+// ============================================================
+
+export function createInitialMasterImmigrationOffices(): MasterImmigrationOffice[] {
+  return [
+    {
+      id: "kanim-jkt-timur",
+      code: "KANIM-JKT-1",
+      name: "Kantor Imigrasi Kelas I TPI Jakarta Timur",
+      city: "Jakarta Timur",
+      province: "DKI Jakarta",
+      address: "Jl. Bekasi Timur Raya No. 169, Cipinang Besar Utara, Jatinegara, Jakarta Timur 13410",
+      phone: "(021) 8509962 / (021) 8509964",
+      headOfOfficeName: "R. H. Sigit Setyawan, S.H., M.H.",
+      headOfOfficeTitle: "Kepala Kantor Imigrasi Kelas I TPI Jakarta Timur",
+      active: true,
+    },
+    {
+      id: "kanim-jkt-pusat",
+      code: "KANIM-JKT-PUS",
+      name: "Kantor Imigrasi Kelas I Khusus Non TPI Jakarta Pusat",
+      city: "Jakarta Pusat",
+      province: "DKI Jakarta",
+      address: "Jl. Merpati Blok B12 No. 3, RW 10, Gn. Sahari Sel., Kemayoran, Jakarta Pusat 10720",
+      phone: "(021) 6541209",
+      headOfOfficeName: "Bambang Trianto, S.Sos., M.Si.",
+      headOfOfficeTitle: "Kepala Kantor Imigrasi Kelas I Khusus Non TPI Jakarta Pusat",
+      active: true,
+    },
+    {
+      id: "kanim-cirebon",
+      code: "KANIM-CRB-1",
+      name: "Kantor Imigrasi Kelas I TPI Cirebon",
+      city: "Cirebon",
+      province: "Jawa Barat",
+      address: "Jl. Sultan Ageng Tirtayasa No. 51, Kedawung, Cirebon, Jawa Barat 45153",
+      phone: "(0231) 488241 / 488242",
+      headOfOfficeName: "Nur Raisha Pujiastuti, S.H.",
+      headOfOfficeTitle: "Kepala Kantor Imigrasi Kelas I TPI Cirebon",
+      active: true,
+    },
+    {
+      id: "kanim-cilacap",
+      code: "KANIM-CLP-2",
+      name: "Kantor Imigrasi Kelas II Non TPI Cilacap",
+      city: "Cilacap",
+      province: "Jawa Tengah",
+      address: "Jl. Urip Sumoharjo No. 249, Gumilir, Cilacap Utara, Cilacap, Jawa Tengah 53231",
+      phone: "(0282) 541133",
+      headOfOfficeName: "Yoga Aria Perdana, S.H., M.Si.",
+      headOfOfficeTitle: "Kepala Kantor Imigrasi Kelas II Non TPI Cilacap",
+      active: true,
+    },
+    {
+      id: "kanim-semarang",
+      code: "KANIM-SMG-1",
+      name: "Kantor Imigrasi Kelas I TPI Semarang",
+      city: "Semarang",
+      province: "Jawa Tengah",
+      address: "Jl. Siliwangi No. 514, Kembangarum, Semarang Barat, Kota Semarang, Jawa Tengah 50148",
+      phone: "(024) 7606166",
+      headOfOfficeName: "Guntur Sahat Hamonangan, S.H.",
+      headOfOfficeTitle: "Kepala Kantor Imigrasi Kelas I TPI Semarang",
+      active: true,
+    },
+    {
+      id: "kanim-surabaya",
+      code: "KANIM-SBY-KHUSUS",
+      name: "Kantor Imigrasi Kelas I Khusus TPI Surabaya",
+      city: "Surabaya / Sidoarjo",
+      province: "Jawa Timur",
+      address: "Jl. Raya Juanda No. 22, Sedati Agung, Sedati, Sidoarjo, Jawa Timur 61253",
+      phone: "(031) 8690534",
+      headOfOfficeName: "Chicco Ahmad Muttaqin, S.E., M.M.",
+      headOfOfficeTitle: "Kepala Kantor Imigrasi Kelas I Khusus TPI Surabaya",
+      active: true,
+    },
+    {
+      id: "kanim-soetta",
+      code: "KANIM-CGK-TPI",
+      name: "Kantor Imigrasi Kelas I Khusus TPI Soekarno-Hatta",
+      city: "Tangerang",
+      province: "Banten",
+      address: "Kawasan Bandara Internasional Soekarno-Hatta, Tangerang, Banten 15126",
+      phone: "(021) 5507185",
+      headOfOfficeName: "Subki Miuldi, S.Kom., M.H.",
+      headOfOfficeTitle: "Kepala Kantor Imigrasi Kelas I Khusus TPI Soekarno-Hatta",
+      active: true,
+    },
+    {
+      id: "kanim-mataram",
+      code: "KANIM-MTR-1",
+      name: "Kantor Imigrasi Kelas I TPI Mataram",
+      city: "Mataram",
+      province: "Nusa Tenggara Barat",
+      address: "Jl. Udayana No. 2, Monjok Barat, Selaparang, Kota Mataram, NTB 83122",
+      phone: "(0370) 632520",
+      headOfOfficeName: "Pungki Handoyo, S.H., M.Si.",
+      headOfOfficeTitle: "Kepala Kantor Imigrasi Kelas I TPI Mataram",
+      active: true,
+    },
+    {
+      id: "kanim-karawang",
+      code: "KANIM-KRW-2",
+      name: "Kantor Imigrasi Kelas II Non TPI Karawang",
+      city: "Karawang",
+      province: "Jawa Barat",
+      address: "Jl. Jend. Ahmad Yani No. 16, Nagasari, Kec. Karawang Barat, Karawang 41312",
+      phone: "(0267) 402220",
+      headOfOfficeName: "Petrus Teguh Aprianto, S.H.",
+      headOfOfficeTitle: "Kepala Kantor Imigrasi Kelas II Non TPI Karawang",
+      active: true,
+    },
+  ];
+}
+
+export function createInitialMasterDisdukcapil(): MasterDisdukcapil[] {
+  return [
+    {
+      id: "dukcapil-idm",
+      code: "DUKCAPIL-3212",
+      regencyCity: "Kabupaten Indramayu",
+      province: "Jawa Barat",
+      officeName: "Dinas Kependudukan dan Pencatatan Sipil Kab. Indramayu",
+      address: "Jl. RA Kartini No. 14, Margadadi, Kec. Indramayu, Kab. Indramayu, Jawa Barat 45211",
+      phone: "(0234) 272046 / WhatsApp 0811-2442-120",
+      active: true,
+    },
+    {
+      id: "dukcapil-crb",
+      code: "DUKCAPIL-3209",
+      regencyCity: "Kabupaten Cirebon",
+      province: "Jawa Barat",
+      officeName: "Dinas Kependudukan dan Pencatatan Sipil Kab. Cirebon",
+      address: "Jl. Sunan Kalijaga No. 10, Sumber, Cirebon, Jawa Barat 45611",
+      phone: "(0231) 321197",
+      active: true,
+    },
+    {
+      id: "dukcapil-clp",
+      code: "DUKCAPIL-3301",
+      regencyCity: "Kabupaten Cilacap",
+      province: "Jawa Tengah",
+      officeName: "Dinas Kependudukan dan Pencatatan Sipil Kab. Cilacap",
+      address: "Jl. Kauman No. 26, Kandang Macan, Sidanegara, Kec. Cilacap Tengah, Kab. Cilacap, Jawa Tengah 53223",
+      phone: "(0282) 534015",
+      active: true,
+    },
+    {
+      id: "dukcapil-kdl",
+      code: "DUKCAPIL-3324",
+      regencyCity: "Kabupaten Kendal",
+      province: "Jawa Tengah",
+      officeName: "Dinas Kependudukan dan Pencatatan Sipil Kab. Kendal",
+      address: "Jl. Pemuda No. 37, Pegulon, Kec. Kendal, Kab. Kendal, Jawa Tengah 51313",
+      phone: "(0294) 381664",
+      active: true,
+    },
+    {
+      id: "dukcapil-sbg",
+      code: "DUKCAPIL-3213",
+      regencyCity: "Kabupaten Subang",
+      province: "Jawa Barat",
+      officeName: "Dinas Kependudukan dan Pencatatan Sipil Kab. Subang",
+      address: "Jl. Mayjen Sutoyo No. 15, Karanganyar, Kec. Subang, Kab. Subang, Jawa Barat 41211",
+      phone: "(0260) 411477",
+      active: true,
+    },
+    {
+      id: "dukcapil-mjl",
+      code: "DUKCAPIL-3210",
+      regencyCity: "Kabupaten Majalengka",
+      province: "Jawa Barat",
+      officeName: "Dinas Kependudukan dan Pencatatan Sipil Kab. Majalengka",
+      address: "Jl. Gerakan Koperasi No. 19, Majalengka Wetan, Kec. Majalengka, Jawa Barat 45411",
+      phone: "(0233) 281488",
+      active: true,
+    },
+    {
+      id: "dukcapil-krw",
+      code: "DUKCAPIL-3215",
+      regencyCity: "Kabupaten Karawang",
+      province: "Jawa Barat",
+      officeName: "Dinas Kependudukan dan Pencatatan Sipil Kab. Karawang",
+      address: "Jl. Panatayuda I No. 4, Nagasari, Kec. Karawang Barat, Karawang, Jawa Barat 41314",
+      phone: "(0267) 402241",
+      active: true,
+    },
+    {
+      id: "dukcapil-skb",
+      code: "DUKCAPIL-3202",
+      regencyCity: "Kabupaten Sukabumi",
+      province: "Jawa Barat",
+      officeName: "Dinas Kependudukan dan Pencatatan Sipil Kab. Sukabumi",
+      address: "Jl. Raya Rambay No. 70, Cisaat, Kec. Cisaat, Kab. Sukabumi, Jawa Barat 43152",
+      phone: "(0266) 224422",
+      active: true,
+    },
+    {
+      id: "dukcapil-cjr",
+      code: "DUKCAPIL-3203",
+      regencyCity: "Kabupaten Cianjur",
+      province: "Jawa Barat",
+      officeName: "Dinas Kependudukan dan Pencatatan Sipil Kab. Cianjur",
+      address: "Jl. Raya Bandung No. 65, Sadewata, Bojong, Kec. Karangtengah, Kab. Cianjur, Jawa Barat 43281",
+      phone: "(0263) 261664",
+      active: true,
+    },
+    {
+      id: "dukcapil-lotim",
+      code: "DUKCAPIL-5203",
+      regencyCity: "Kabupaten Lombok Timur",
+      province: "Nusa Tenggara Barat",
+      officeName: "Dinas Kependudukan dan Pencatatan Sipil Kab. Lombok Timur",
+      address: "Jl. Prof. M. Yamin No. 55, Selong, Kab. Lombok Timur, Nusa Tenggara Barat 83612",
+      phone: "(0376) 21102",
+      active: true,
+    },
+    {
+      id: "dukcapil-jkt-timur",
+      code: "DUKCAPIL-3175",
+      regencyCity: "Kota Jakarta Timur",
+      province: "DKI Jakarta",
+      officeName: "Suku Dinas Kependudukan dan Pencatatan Sipil Kota Adm. Jakarta Timur",
+      address: "Jl. Dr. Sumarno Blok D Lt. 3, Sentra Primer Pulo Gebang, Penggilingan, Cakung, Jakarta Timur 13950",
+      phone: "(021) 48703893",
+      active: true,
+    },
+  ];
+}
+
+export function createInitialMasterMedicalClinics(): MasterMedicalClinic[] {
+  return [
+    {
+      id: "med-wafid-01",
+      code: "WAFID-JKT-01",
+      name: "Bio Medix Diagnostic Center Jakarta",
+      type: "WAFID_GAMCA",
+      wafidCode: "WAFID-ID-0012",
+      city: "Jakarta Timur",
+      address: "Jl. Dewi Sartika No. 294, Cawang, Kec. Kramat Jati, Jakarta Timur 13630",
+      phone: "(021) 80878120",
+      doctorInCharge: "dr. H. Muhammad Farhan, Sp.PK",
+      active: true,
+    },
+    {
+      id: "med-wafid-02",
+      code: "WAFID-JKT-02",
+      name: "Puri Medika Medical Examination Center",
+      type: "WAFID_GAMCA",
+      wafidCode: "WAFID-ID-0028",
+      city: "Jakarta Utara",
+      address: "Jl. Kebon Bawang No. 1, Tanjung Priok, Jakarta Utara 14320",
+      phone: "(021) 43902341",
+      doctorInCharge: "dr. Siti Rahmawati, Sp.Ok",
+      active: true,
+    },
+    {
+      id: "med-wafid-03",
+      code: "WAFID-CRB-01",
+      name: "Klinik Utama Kencana Cirebon (Wafid GCC)",
+      type: "WAFID_GAMCA",
+      wafidCode: "WAFID-ID-0045",
+      city: "Cirebon",
+      address: "Jl. Dr. Wahidin Sudirohusodo No. 42, Sukapura, Kejaksan, Cirebon 45122",
+      phone: "(0231) 209811",
+      doctorInCharge: "dr. Bambang Setiawan, Sp.Rad",
+      active: true,
+    },
+    {
+      id: "med-wafid-04",
+      code: "WAFID-SBY-01",
+      name: "Medilab Diagnostic Center Surabaya",
+      type: "WAFID_GAMCA",
+      wafidCode: "WAFID-ID-0033",
+      city: "Surabaya",
+      address: "Jl. Raya Darmo No. 88, DR. Soetomo, Tegalsari, Kota Surabaya 60264",
+      phone: "(031) 5678229",
+      doctorInCharge: "dr. Hendra Gunawan, Sp.PK",
+      active: true,
+    },
+    {
+      id: "med-pra-01",
+      code: "PRA-MED-PBA",
+      name: "Klinik Pratama Panca Banyu Husada (Internal In-House)",
+      type: "PRA_MEDICAL",
+      wafidCode: "-",
+      city: "Jakarta Timur",
+      address: "Jl. Kayu Manis No. 51-B, Balekambang, Kramat Jati, Jakarta Timur",
+      phone: "(021) 2937373",
+      doctorInCharge: "dr. Amanda Putri, MARS",
+      active: true,
+    },
+    {
+      id: "med-rujuk-01",
+      code: "RS-RUJUK-POLRI",
+      name: "RS Bhayangkara Tk. I R. Said Sukanto (RS Polri Kramat Jati)",
+      type: "RS_RUJUKAN",
+      wafidCode: "RS-RUJUK-001",
+      city: "Jakarta Timur",
+      address: "Jl. Raya Bogor No. 1, Kramat Jati, Jakarta Timur 13510",
+      phone: "(021) 8093288",
+      doctorInCharge: "dr. Ahmad Faisal, Sp.B",
+      active: true,
+    },
+  ];
+}
+
+export function createInitialMasterAirlines(): MasterAirline[] {
+  return [
+    {
+      id: "air-sv",
+      iataCode: "SV",
+      icaoCode: "SVA",
+      name: "Saudia (Saudi Arabian Airlines)",
+      country: "Arab Saudi",
+      mainHub: "JED (King Abdulaziz Jeddah) / RUH (King Khalid Riyadh)",
+      active: true,
+    },
+    {
+      id: "air-ga",
+      iataCode: "GA",
+      icaoCode: "GIA",
+      name: "Garuda Indonesia",
+      country: "Indonesia",
+      mainHub: "CGK (Soekarno-Hatta Jakarta) / DPS (Ngurah Rai Bali)",
+      active: true,
+    },
+    {
+      id: "air-xy",
+      iataCode: "XY",
+      icaoCode: "KNE",
+      name: "Flynas",
+      country: "Arab Saudi",
+      mainHub: "RUH (King Khalid Riyadh) / JED (King Abdulaziz)",
+      active: true,
+    },
+    {
+      id: "air-f3",
+      iataCode: "F3",
+      icaoCode: "FAD",
+      name: "Flyadeal",
+      country: "Arab Saudi",
+      mainHub: "JED (King Abdulaziz Jeddah)",
+      active: true,
+    },
+    {
+      id: "air-ek",
+      iataCode: "EK",
+      icaoCode: "UAE",
+      name: "Emirates",
+      country: "Uni Emirat Arab",
+      mainHub: "DXB (Dubai International)",
+      active: true,
+    },
+    {
+      id: "air-qr",
+      iataCode: "QR",
+      icaoCode: "QTR",
+      name: "Qatar Airways",
+      country: "Qatar",
+      mainHub: "DOH (Hamad International Doha)",
+      active: true,
+    },
+    {
+      id: "air-wy",
+      iataCode: "WY",
+      icaoCode: "OMA",
+      name: "Oman Air",
+      country: "Oman",
+      mainHub: "MCT (Muscat International)",
+      active: true,
+    },
+    {
+      id: "air-ku",
+      iataCode: "KU",
+      icaoCode: "KAC",
+      name: "Kuwait Airways",
+      country: "Kuwait",
+      mainHub: "KWI (Kuwait International)",
+      active: true,
+    },
+  ];
+}
+
+export function createInitialMasterBlkLn(): MasterBlkLn[] {
+  return [
+    {
+      id: "blk-pba-pusat",
+      code: "BLK-PBA-01",
+      name: "BLK-LN PT. Panca Banyu Ajisakti (Balai Latihan Kerja Mandiri Pusat)",
+      ownership: "INTERNAL_PBA",
+      vinKemnaker: "2105317501",
+      accreditationGrade: "A",
+      city: "Jakarta Timur",
+      address: "Jl. Kayu Manis No. 51-53, Balekambang, Kec. Kramat Jati, Jakarta Timur 13530",
+      phone: "(021) 2937373 / 0811-9877-665",
+      picName: "Drs. H. Mulyadi (Instruktur Kepala)",
+      capacity: 120,
+      active: true,
+    },
+    {
+      id: "blk-mitra-idm",
+      code: "BLK-IDM-02",
+      name: "BLK-LN Pantura Mandiri Indramayu",
+      ownership: "MITRA_DAERAH",
+      vinKemnaker: "1904321201",
+      accreditationGrade: "A",
+      city: "Indramayu",
+      address: "Jl. Raya Jatibarang - Indramayu Km 3, Lobener Lor, Jatibarang, Indramayu 45273",
+      phone: "(0234) 351890",
+      picName: "Hj. Siti Aminah",
+      capacity: 80,
+      active: true,
+    },
+    {
+      id: "blk-mitra-clp",
+      code: "BLK-CLP-03",
+      name: "BLK-LN Bina Taruna Mandiri Cilacap",
+      ownership: "MITRA_DAERAH",
+      vinKemnaker: "2008330101",
+      accreditationGrade: "B",
+      city: "Cilacap",
+      address: "Jl. Gatot Subroto No. 45-B, Sidanegara, Cilacap Tengah 53223",
+      phone: "(0282) 534901",
+      picName: "Hendro Prasetyo",
+      capacity: 60,
+      active: true,
+    },
+    {
+      id: "blk-lsp-bnsp",
+      code: "LSP-PRAMUGRIYA-01",
+      name: "Lembaga Sertifikasi Profesi (LSP) Pramugriya Indonesia · Terlisensi BNSP",
+      ownership: "MITRA_DAERAH",
+      vinKemnaker: "BNSP-LSP-899-ID",
+      accreditationGrade: "A",
+      city: "Jakarta Selatan",
+      address: "Gedung Naker Promosi Lt. 4, Jl. Gatot Subroto Kav. 44, Jakarta Selatan",
+      phone: "(021) 5255733",
+      picName: "Ir. Bambang Trihatmojo (Master Asesor)",
+      capacity: 200,
+      active: true,
+    },
+  ];
+}
+
+export function createInitialMasterEmbassies(): MasterEmbassy[] {
+  return [
+    {
+      id: "emb-kbsa",
+      code: "EMB-SA-KBSA",
+      country: "Arab Saudi",
+      institutionType: "EMBASSY",
+      name: "Kedutaan Besar Kerajaan Arab Saudi (KBSA Jakarta)",
+      address: "Jl. H. R. Rasuna Said Kav. B-3, Kuningan Timur, Setiabudi, Jakarta Selatan 12950",
+      phone: "(021) 28094000",
+      email: "idemb@mofa.gov.sa",
+      appointmentUrl: "https://visa.mofa.gov.sa",
+      active: true,
+    },
+    {
+      id: "emb-vfs-jkt",
+      code: "VFS-TASHEER-JKT",
+      country: "Arab Saudi",
+      institutionType: "VFS_TASHEER",
+      name: "VFS Tasheer International Visa Service Center - Jakarta Kuningan",
+      address: "Kuningan City Mall Lantai 2, Jl. Prof. Dr. Satrio Kav. 18, Setiabudi, Jakarta Selatan 12940",
+      phone: "(021) 30418700",
+      email: "info.saudiarabia@vfstasheer.com",
+      appointmentUrl: "https://vc.tasheer.com",
+      active: true,
+    },
+    {
+      id: "emb-vfs-sby",
+      code: "VFS-TASHEER-SBY",
+      country: "Arab Saudi",
+      institutionType: "VFS_TASHEER",
+      name: "VFS Tasheer International Visa Service Center - Surabaya",
+      address: "Grand City Mall Lantai 3, Jl. Walikota Mustajab No. 1, Ketabang, Genteng, Kota Surabaya 60272",
+      phone: "(031) 5459000",
+      email: "info.sub.saudiarabia@vfstasheer.com",
+      appointmentUrl: "https://vc.tasheer.com",
+      active: true,
+    },
+    {
+      id: "emb-oman",
+      code: "EMB-OM-JKT",
+      country: "Oman",
+      institutionType: "EMBASSY",
+      name: "Kedutaan Besar Kesultanan Oman Jakarta",
+      address: "Jl. Denpasar Barat No. 1, Kuningan, Karet Kuningan, Setiabudi, Jakarta Selatan 12950",
+      phone: "(021) 5268481",
+      email: "jakarta@mofa.gov.om",
+      appointmentUrl: "https://evisa.rop.gov.om",
+      active: true,
+    },
+    {
+      id: "emb-yordania",
+      code: "EMB-JO-JKT",
+      country: "Yordania",
+      institutionType: "EMBASSY",
+      name: "Kedutaan Besar Kerajaan Hashemite Yordania Jakarta",
+      address: "Jl. Denpasar Raya Blok A.13 No. 1, Kuningan, Setiabudi, Jakarta Selatan 12950",
+      phone: "(021) 5211185",
+      email: "jakarta@fm.gov.jo",
+      appointmentUrl: "https://international.moi.gov.jo",
+      active: true,
     },
   ];
 }
@@ -3168,12 +3699,26 @@ export function syncExpirationsAndTasks(db: DatabaseSchema): void {
   if (!db.medicalClinics || db.medicalClinics.length === 0) {
     db.medicalClinics = createInitialMedicalClinics();
   }
-  if (
-    !db.bpjsFinancingPartners ||
-    db.bpjsFinancingPartners.length === 0 ||
-    db.bpjsFinancingPartners.some((bp) => bp.code.includes("KUR-"))
-  ) {
+  if (!db.bpjsFinancingPartners || db.bpjsFinancingPartners.length === 0 || db.bpjsFinancingPartners.some((bp) => bp.code.includes("KUR-"))) {
     db.bpjsFinancingPartners = createInitialBpjsFinancing();
+  }
+  if (!db.masterImmigrationOffices || db.masterImmigrationOffices.length === 0) {
+    db.masterImmigrationOffices = createInitialMasterImmigrationOffices();
+  }
+  if (!db.masterDisdukcapil || db.masterDisdukcapil.length === 0) {
+    db.masterDisdukcapil = createInitialMasterDisdukcapil();
+  }
+  if (!db.masterMedicalClinics || db.masterMedicalClinics.length === 0) {
+    db.masterMedicalClinics = createInitialMasterMedicalClinics();
+  }
+  if (!db.masterAirlines || db.masterAirlines.length === 0) {
+    db.masterAirlines = createInitialMasterAirlines();
+  }
+  if (!db.masterBlkLn || db.masterBlkLn.length === 0) {
+    db.masterBlkLn = createInitialMasterBlkLn();
+  }
+  if (!db.masterEmbassies || db.masterEmbassies.length === 0) {
+    db.masterEmbassies = createInitialMasterEmbassies();
   }
   if (
     !db.sponsorSubmissions ||

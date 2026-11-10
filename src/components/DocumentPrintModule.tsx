@@ -17,7 +17,7 @@ import {
   QrCode,
   ShieldCheck,
 } from "lucide-react";
-import { Candidate, TenantCompany } from "@/lib/types";
+import { Candidate, MasterImmigrationOffice, TenantCompany } from "@/lib/types";
 
 interface DocumentPrintModuleProps {
   candidates: Candidate[];
@@ -25,6 +25,7 @@ interface DocumentPrintModuleProps {
   isBranchViewOnly: boolean;
   preselectedCandidateId?: string;
   onOpenSyarikahBiodata?: (candidate: Candidate) => void;
+  masterImmigrationOffices?: MasterImmigrationOffice[];
 }
 
 export type DocTemplateType =
@@ -40,11 +41,17 @@ export default function DocumentPrintModule({
   isBranchViewOnly,
   preselectedCandidateId,
   onOpenSyarikahBiodata,
+  masterImmigrationOffices = [],
 }: DocumentPrintModuleProps) {
   const [selectedCandidateId, setSelectedCandidateId] = useState<string>(
     preselectedCandidateId || candidates[0]?.id || ""
   );
   const [selectedDocType, setSelectedDocType] = useState<DocTemplateType>("PENGANTAR_PASPOR");
+  const [selectedKanimId, setSelectedKanimId] = useState<string>(
+    masterImmigrationOffices[0]?.id || ""
+  );
+
+  const selectedKanim = masterImmigrationOffices.find((k) => k.id === selectedKanimId) || masterImmigrationOffices[0] || null;
 
   const candidate = candidates.find((c) => c.id === selectedCandidateId) || candidates[0] || null;
 
@@ -189,6 +196,35 @@ export default function DocumentPrintModule({
             </div>
           </div>
         </div>
+
+        {/* Dynamic Selector Kanim jika memilih Surat Pengantar Paspor */}
+        {selectedDocType === "PENGANTAR_PASPOR" && masterImmigrationOffices.length > 0 && (
+          <div className="rounded-xl border border-sky-700/60 bg-sky-950/60 p-4">
+            <label className="block text-xs font-bold text-sky-300 uppercase mb-1.5">
+              🏛️ Pilih Kantor Imigrasi Tujuan (Terhubung Master Data Kanim):
+            </label>
+            <div className="flex flex-wrap items-center gap-3">
+              <select
+                value={selectedKanimId || selectedKanim?.id || ""}
+                onChange={(e) => setSelectedKanimId(e.target.value)}
+                className="flex-1 rounded-lg border border-sky-600 bg-slate-900 px-3 py-2 text-xs text-white font-semibold outline-none focus:ring-1 focus:ring-sky-400"
+              >
+                {masterImmigrationOffices
+                  .filter((k) => k.active !== false)
+                  .map((k) => (
+                    <option key={k.id} value={k.id}>
+                      {k.code} — {k.name} ({k.city}, {k.province})
+                    </option>
+                  ))}
+              </select>
+              {selectedKanim && (
+                <span className="text-xs text-sky-200">
+                  Pejabat: <strong className="text-white">{selectedKanim.headOfOfficeName || "-"}</strong> ({selectedKanim.headOfOfficeTitle || "Kepala Kanim"})
+                </span>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Dokumen Paper Area (A4 Layout) */}
@@ -256,8 +292,12 @@ export default function DocumentPrintModule({
 
                 <div className="mt-4">
                   <p className="font-bold">Kepada Yth.</p>
-                  <p className="font-bold">Kepala Kantor Imigrasi Kelas I / Non TPI</p>
-                  <p>Di Tempat</p>
+                  <p className="font-bold">{selectedKanim?.headOfOfficeTitle || "Kepala Kantor Imigrasi"}</p>
+                  <p className="font-bold text-slate-900">{selectedKanim?.name || "Kantor Imigrasi Kelas I / Non TPI"}</p>
+                  <p className="text-xs text-slate-600">{selectedKanim?.address || "Di Tempat"}</p>
+                  <p className="text-xs font-semibold text-slate-800">
+                    di {selectedKanim ? selectedKanim.city : "Tempat"}
+                  </p>
                 </div>
 
                 <p className="text-justify">
@@ -314,7 +354,7 @@ export default function DocumentPrintModule({
                 </p>
 
                 <p>
-                  Demikian surat pengantar permohonan ini kami sampaikan, atas bantuan dan kerja sama Bapak/Ibu Kepala Kantor Imigrasi diucapkan terima kasih.
+                  Demikian surat pengantar permohonan ini kami sampaikan, atas bantuan dan kerja sama Bapak/Ibu {selectedKanim?.headOfOfficeTitle || "Kepala Kantor Imigrasi"} beserta jajaran diucapkan terima kasih.
                 </p>
 
                 {/* Tanda Tangan */}

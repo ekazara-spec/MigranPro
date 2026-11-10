@@ -85,6 +85,12 @@ import {
   EmployerInterview,
   SyarikahInvoice,
   WhatsAppNotification,
+  MasterAirline,
+  MasterBlkLn,
+  MasterDisdukcapil,
+  MasterEmbassy,
+  MasterImmigrationOffice,
+  MasterMedicalClinic,
 } from "@/lib/types";
 
 import TenantBranchModule from "@/components/TenantBranchModule";
@@ -93,6 +99,7 @@ import WhatsAppGatewayModule from "@/components/WhatsAppGatewayModule";
 import CashAndAdvancesModule from "@/components/CashAndAdvancesModule";
 import EmployerMatchingModule from "@/components/EmployerMatchingModule";
 import RoleAndPermissionModule from "@/components/RoleAndPermissionModule";
+import { MasterPartnerDatabaseModule } from "@/components/MasterPartnerDatabaseModule";
 
 interface DbPayload {
   tenants?: TenantCompany[];
@@ -115,6 +122,12 @@ interface DbPayload {
   cashAdvances?: CashAdvance[];
   syarikahInvoices?: SyarikahInvoice[];
   employerInterviews?: EmployerInterview[];
+  masterImmigrationOffices?: MasterImmigrationOffice[];
+  masterDisdukcapil?: MasterDisdukcapil[];
+  masterMedicalClinics?: MasterMedicalClinic[];
+  masterAirlines?: MasterAirline[];
+  masterBlkLn?: MasterBlkLn[];
+  masterEmbassies?: MasterEmbassy[];
 }
 
 const ROLE_PERMISSIONS: Record<
@@ -969,6 +982,18 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
         "UPDATE_SYARIKAH_INVOICE",
         "CREATE_EMPLOYER_INTERVIEW",
         "UPDATE_EMPLOYER_INTERVIEW",
+        "CREATE_MASTER_ITEM",
+        "UPDATE_MASTER_ITEM",
+        "DELETE_MASTER_ITEM",
+        "TOGGLE_MASTER_STATUS",
+        "UPDATE_FOREIGN_AGENCY",
+        "DELETE_FOREIGN_AGENCY",
+        "UPDATE_MEDICAL_CLINIC",
+        "DELETE_MEDICAL_CLINIC",
+        "UPDATE_SPONSOR",
+        "DELETE_SPONSOR",
+        "UPDATE_BPJS_FINANCING",
+        "DELETE_BPJS_FINANCING",
       ];
       if (restricted.includes(action)) {
         setToast({
@@ -3515,6 +3540,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
               isBranchViewOnly={isBranchViewOnly}
               preselectedCandidateId={selectedCandidate?.id}
               onOpenSyarikahBiodata={(c) => openSyarikahBiodataModal(c)}
+              masterImmigrationOffices={db.masterImmigrationOffices || []}
             />
           )}
 
@@ -6934,589 +6960,28 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
           )}
 
           {/* =========================================================
-              TAB 11: MODUL MASTER DATA & DATABASE MITRA EKOSISTEM P3MI + KENDALI BADIL
+              MODUL MASTER DATA & DATABASE MITRA EKOSISTEM P3MI TERPADU
              ========================================================= */}
           {activeNav === "master_data" && (
-            <div className="space-y-6">
-              {/* Ringkasan KPI Master Data & Mitra P3MI */}
-              <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
-                <button
-                  onClick={() => setMasterSubTab("AGENCY")}
-                  className={`rounded-2xl border p-4 text-left transition ${
-                    masterSubTab === "AGENCY"
-                      ? "border-sky-500 bg-sky-50/70 ring-2 ring-sky-500/20"
-                      : "border-slate-200 bg-white hover:border-slate-300"
-                  }`}
-                >
-                  <span className="text-[11px] font-bold uppercase text-sky-700 block">
-                    1. Agensi / Syarikah
-                  </span>
-                  <p className="mt-1.5 text-2xl font-extrabold text-slate-900">
-                    {db.foreignAgencies?.length || 0}
-                  </p>
-                  <p className="mt-0.5 text-[11px] text-slate-500">
-                    Mitra Timteng (SPSK/Tadbeer) & Asia
-                  </p>
-                </button>
-
-                <button
-                  onClick={() => setMasterSubTab("SPONSOR")}
-                  className={`rounded-2xl border p-4 text-left transition ${
-                    masterSubTab === "SPONSOR"
-                      ? "border-emerald-500 bg-emerald-50/70 ring-2 ring-emerald-500/20"
-                      : "border-slate-200 bg-white hover:border-slate-300"
-                  }`}
-                >
-                  <span className="text-[11px] font-bold uppercase text-emerald-700 block">
-                    2. Database Sponsor (PL)
-                  </span>
-                  <p className="mt-1.5 text-2xl font-extrabold text-slate-900">
-                    {db.sponsors.length}
-                  </p>
-                  <p className="mt-0.5 text-[11px] text-slate-500">
-                    Korlap & Rekening Termin DP1–Lunas
-                  </p>
-                </button>
-
-                <button
-                  onClick={() => setMasterSubTab("CLINIC")}
-                  className={`rounded-2xl border p-4 text-left transition ${
-                    masterSubTab === "CLINIC"
-                      ? "border-teal-500 bg-teal-50/70 ring-2 ring-teal-500/20"
-                      : "border-slate-200 bg-white hover:border-slate-300"
-                  }`}
-                >
-                  <span className="text-[11px] font-bold uppercase text-teal-700 block">
-                    3. Klinik Medical / Wafid
-                  </span>
-                  <p className="mt-1.5 text-2xl font-extrabold text-slate-900">
-                    {db.medicalClinics?.length || 0}
-                  </p>
-                  <p className="mt-0.5 text-[11px] text-slate-500">
-                    Wafid (GAMCA GCC) & Kemenkes RI
-                  </p>
-                </button>
-
-                <button
-                  onClick={() => setMasterSubTab("BPJS_KUR")}
-                  className={`rounded-2xl border p-4 text-left transition ${
-                    masterSubTab === "BPJS_KUR"
-                      ? "border-purple-500 bg-purple-50/70 ring-2 ring-purple-500/20"
-                      : "border-slate-200 bg-white hover:border-slate-300"
-                  }`}
-                >
-                  <span className="text-[11px] font-bold uppercase text-purple-700 block">
-                    4. Mitra BPJS & Bank KUR
-                  </span>
-                  <p className="mt-1.5 text-2xl font-extrabold text-slate-900">
-                    {db.bpjsFinancingPartners?.length || 0}
-                  </p>
-                  <p className="mt-0.5 text-[11px] text-slate-500">
-                    BPJS PMI, Asuransi & Bank KUR
-                  </p>
-                </button>
-
-                <button
-                  onClick={() => setMasterSubTab("BADIL_BRANCH")}
-                  className={`rounded-2xl border p-4 text-left transition ${
-                    masterSubTab === "BADIL_BRANCH"
-                      ? "border-amber-500 bg-amber-50/70 ring-2 ring-amber-500/20"
-                      : "border-slate-200 bg-white hover:border-slate-300"
-                  }`}
-                >
-                  <span className="text-[11px] font-bold uppercase text-amber-800 block">
-                    5. Kendali Badil & Cabang
-                  </span>
-                  <p className="mt-1.5 text-2xl font-extrabold text-amber-900">
-                    {db.badilRecords?.length || 0} Badil
-                  </p>
-                  <p className="mt-0.5 text-[11px] text-slate-500">
-                    & {db.branches.length} Kantor Cabang P3MI
-                  </p>
-                </button>
-              </div>
-
-              {/* SUB-TAB 1: DATABASE AGENSI MITRA LUAR NEGERI & SYARIKAH TIMUR TENGAH */}
-              {masterSubTab === "AGENCY" && (
-                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-sky-600">
-                        Master Database Agensi Mitra Luar Negeri & Syarikah Timur Tengah
-                      </span>
-                      <h2 className="text-base font-bold text-slate-900">
-                        Daftar Syarikah (Saudi SPSK, UAE Tadbeer, Kuwait, Oman, Yordania) & Agensi Asia Timur
-                      </h2>
-                      <p className="text-xs text-slate-500">
-                        Mencakup nomor izin Wakalah / Musaned / TETO, tarif standar Wakalah/Agency Fee, dan masa garansi pergantian Badil (90–180 hari).
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setShowAddAgencyModal(true)}
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800"
-                    >
-                      <Plus className="h-4 w-4 text-sky-400" />
-                      + Tambah Agensi / Syarikah Baru
-                    </button>
-                  </div>
-
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse text-left text-xs">
-                      <thead>
-                        <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-bold uppercase text-slate-600">
-                          <th className="py-3 px-3">Kode & Nama Agensi / Syarikah</th>
-                          <th className="py-3 px-3">Negara & Kawasan</th>
-                          <th className="py-3 px-3">No. Lisensi / Wakalah & Skema</th>
-                          <th className="py-3 px-3">PIC & Kontak</th>
-                          <th className="py-3 px-3 text-right">Standar Wakalah/Agency Fee</th>
-                          <th className="py-3 px-3 text-center">Garansi Badil</th>
-                          <th className="py-3 px-3 text-center">Masa Berlaku MOU</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {db.foreignAgencies?.map((ag) => (
-                          <tr key={ag.id} className="hover:bg-slate-50/80">
-                            <td className="py-3.5 px-3">
-                              <span className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] font-bold text-slate-700">
-                                {ag.code}
-                              </span>
-                              <p className="mt-1 font-bold text-slate-900">{ag.name}</p>
-                            </td>
-                            <td className="py-3.5 px-3">
-                              <span className="font-bold text-slate-900 block">{ag.country}</span>
-                              <span
-                                className={`mt-0.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                                  ag.region === "TIMUR_TENGAH"
-                                    ? "bg-amber-100 text-amber-900"
-                                    : "bg-sky-100 text-sky-800"
-                                }`}
-                              >
-                                {ag.region === "TIMUR_TENGAH" ? "Timur Tengah (GCC)" : "Asia Pasifik"}
-                              </span>
-                            </td>
-                            <td className="py-3.5 px-3">
-                              <span className="font-mono font-semibold text-teal-800 block">
-                                {ag.licenseOrWakalahNo}
-                              </span>
-                              <span className="text-[11px] text-slate-500">{ag.scheme}</span>
-                            </td>
-                            <td className="py-3.5 px-3">
-                              <p className="font-semibold text-slate-800">{ag.picName}</p>
-                              <p className="text-[11px] text-slate-500">{ag.phoneEmail}</p>
-                            </td>
-                            <td className="py-3.5 px-3 text-right font-bold text-emerald-700">
-                              {formatRupiah(ag.defaultAgencyFeeIdr)}
-                            </td>
-                            <td className="py-3.5 px-3 text-center">
-                              <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-900 border border-amber-200">
-                                {ag.warrantyDays} Hari
-                              </span>
-                            </td>
-                            <td className="py-3.5 px-3 text-center">
-                              <span className="font-mono font-semibold text-slate-800 block">
-                                {ag.mouExpiryDate}
-                              </span>
-                              <span className="rounded-full bg-teal-100 px-2 py-0.5 text-[10px] font-bold text-teal-800">
-                                {ag.status}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {/* SUB-TAB 2: DATABASE SPONSOR / PEREKRUT LAPANGAN (PL) */}
-              {masterSubTab === "SPONSOR" && (
-                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">
-                        Master Database Sponsor / Perekrut Lapangan (PL)
-                      </span>
-                      <h2 className="text-base font-bold text-slate-900">
-                        Data Mitra Perekrut Lapangan, Wilayah Korlap & Rekening Pencairan Termin (DP1–Pelunasan)
-                      </h2>
-                    </div>
-                    <button
-                      onClick={() => setShowAddSponsorModal(true)}
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700"
-                    >
-                      <Plus className="h-4 w-4" />
-                      + Tambah Sponsor (PL) Baru
-                    </button>
-                  </div>
-
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse text-left text-xs">
-                      <thead>
-                        <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-bold uppercase text-slate-600">
-                          <th className="py-3 px-3">Kode & Nama Sponsor (PL)</th>
-                          <th className="py-3 px-3">Wilayah Korlap & Cabang</th>
-                          <th className="py-3 px-3">No. HP & Rekening Bank</th>
-                          <th className="py-3 px-3 text-center">Jumlah CPMI</th>
-                          <th className="py-3 px-3 text-right">Standar Fee / CPMI</th>
-                          <th className="py-3 px-3 text-right">Sudah Cair (DP1–Lunas)</th>
-                          <th className="py-3 px-3 text-right">Sisa Terutang</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {db.sponsors.map((sp) => {
-                          const cpmiCount = db.candidates.filter(
-                            (c) => c.sponsorId === sp.id
-                          ).length;
-                          const brName =
-                            db.branches.find((b) => b.id === sp.branchId)?.name || sp.branchId;
-                          return (
-                            <tr key={sp.id} className="hover:bg-slate-50/80">
-                              <td className="py-3.5 px-3">
-                                <span className="rounded bg-emerald-100 px-1.5 py-0.5 font-mono text-[10px] font-bold text-emerald-900">
-                                  {sp.code}
-                                </span>
-                                <p className="mt-1 font-bold text-slate-900">{sp.name}</p>
-                              </td>
-                              <td className="py-3.5 px-3">
-                                <p className="font-semibold text-slate-800">{sp.area}</p>
-                                <p className="text-[11px] text-slate-500">{brName}</p>
-                              </td>
-                              <td className="py-3.5 px-3">
-                                <p className="font-mono text-slate-800">{sp.phone}</p>
-                                <p className="text-[11px] font-semibold text-sky-700">
-                                  🏦 {sp.bankAccount || "BRI / Mandiri Terdaftar"}
-                                </p>
-                              </td>
-                              <td className="py-3.5 px-3 text-center">
-                                <span className="rounded-full bg-slate-100 px-2.5 py-1 font-bold text-slate-900">
-                                  {cpmiCount} CPMI
-                                </span>
-                              </td>
-                              <td className="py-3.5 px-3 text-right font-bold text-slate-900">
-                                {formatRupiah(sp.commissionPerCpmi)}
-                              </td>
-                              <td className="py-3.5 px-3 text-right font-bold text-emerald-700">
-                                {formatRupiah(sp.paidAmount)}
-                              </td>
-                              <td className="py-3.5 px-3 text-right font-bold text-rose-600">
-                                {formatRupiah(sp.payableAmount)}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {/* SUB-TAB 3: DATABASE MITRA KLINIK MEDICAL CHECK-UP (WAFID GCC & KEMENKES RI) */}
-              {masterSubTab === "CLINIC" && (
-                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-teal-700">
-                        Master Mitra Sarana Kesehatan & Klinik Medical Check-Up
-                      </span>
-                      <h2 className="text-base font-bold text-slate-900">
-                        Daftar Klinik Terakreditasi Wafid (eks-GAMCA Timur Tengah) & Kemenkes RI (Asia Pasifik)
-                      </h2>
-                    </div>
-                    <button
-                      onClick={() => setShowAddClinicModal(true)}
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-teal-600 px-4 py-2 text-xs font-bold text-white hover:bg-teal-700"
-                    >
-                      <Plus className="h-4 w-4" />
-                      + Tambah Klinik Mitra MCU
-                    </button>
-                  </div>
-
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse text-left text-xs">
-                      <thead>
-                        <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-bold uppercase text-slate-600">
-                          <th className="py-3 px-3">Kode & Nama Klinik / RS</th>
-                          <th className="py-3 px-3">Jenis Akreditasi</th>
-                          <th className="py-3 px-3">Kota & Dokter PIC</th>
-                          <th className="py-3 px-3">Negara Tujuan Layanan</th>
-                          <th className="py-3 px-3 text-right">Tarif Standar MCU</th>
-                          <th className="py-3 px-3 text-center">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {db.medicalClinics?.map((cl) => (
-                          <tr key={cl.id} className="hover:bg-slate-50/80">
-                            <td className="py-3.5 px-3">
-                              <span className="rounded bg-teal-50 px-1.5 py-0.5 font-mono text-[10px] font-bold text-teal-800 border border-teal-200">
-                                {cl.code}
-                              </span>
-                              <p className="mt-1 font-bold text-slate-900">{cl.name}</p>
-                            </td>
-                            <td className="py-3.5 px-3">
-                              <span
-                                className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-                                  cl.accreditation === "WAFID_GCC_GAMCA"
-                                    ? "bg-amber-100 text-amber-900"
-                                    : cl.accreditation === "WAFID_DAN_KEMENKES"
-                                    ? "bg-purple-100 text-purple-900"
-                                    : "bg-sky-100 text-sky-900"
-                                }`}
-                              >
-                                {cl.accreditation === "WAFID_GCC_GAMCA"
-                                  ? "★ WAFID / GAMCA (Timur Tengah)"
-                                  : cl.accreditation === "WAFID_DAN_KEMENKES"
-                                  ? "★ WAFID GCC & KEMENKES RI"
-                                  : "KEMENKES RI (Asia Pasifik)"}
-                              </span>
-                            </td>
-                            <td className="py-3.5 px-3">
-                              <p className="font-semibold text-slate-800">{cl.city}</p>
-                              <p className="text-[11px] text-slate-500">
-                                {cl.picName} · {cl.phone}
-                              </p>
-                            </td>
-                            <td className="py-3.5 px-3 text-slate-700 font-medium">
-                              {cl.targetCountries}
-                            </td>
-                            <td className="py-3.5 px-3 text-right font-bold text-slate-900">
-                              {formatRupiah(cl.standardMcuFeeIdr)}
-                            </td>
-                            <td className="py-3.5 px-3 text-center">
-                              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
-                                {cl.status}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {/* SUB-TAB 4: DATABASE MITRA BPJS KETENAGAKERJAAN, ASURANSI & BANK KUR PMI */}
-              {masterSubTab === "BPJS_KUR" && (
-                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-purple-700">
-                        Master Mitra Pelindungan Jaminan Sosial & Perbankan KUR PMI
-                      </span>
-                      <h2 className="text-base font-bold text-slate-900">
-                        Database BPJS Ketenagakerjaan PMI, Konsorsium Asuransi & Bank Penyalur KUR / Payroll Syariah
-                      </h2>
-                    </div>
-                    <button
-                      onClick={() => setShowAddBpjsModal(true)}
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-purple-600 px-4 py-2 text-xs font-bold text-white hover:bg-purple-700"
-                    >
-                      <Plus className="h-4 w-4" />
-                      + Tambah Mitra BPJS / Bank KUR
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    {db.bpjsFinancingPartners?.map((pt) => (
-                      <div
-                        key={pt.id}
-                        className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 text-xs space-y-2.5"
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <span
-                              className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-                                pt.partnerType === "BPJS_KETENAGAKERJAAN"
-                                  ? "bg-teal-100 text-teal-900"
-                                  : pt.partnerType === "ASURANSI_PMI"
-                                  ? "bg-sky-100 text-sky-900"
-                                  : "bg-amber-100 text-amber-900"
-                              }`}
-                            >
-                              {pt.partnerType}
-                            </span>
-                            <h3 className="mt-1.5 text-sm font-bold text-slate-900">{pt.name}</h3>
-                          </div>
-                          <span className="font-mono text-[10px] font-bold text-slate-500">
-                            {pt.code}
-                          </span>
-                        </div>
-                        <div className="rounded-xl bg-white p-3 border border-slate-200/80 space-y-1">
-                          <p className="text-slate-700">
-                            <strong>Skema / Paket:</strong> {pt.programPackage}
-                          </p>
-                          <p className="text-emerald-700 font-bold">
-                            <strong>Premi / Plafon & Bunga:</strong> {pt.premiumOrRateInfo}
-                          </p>
-                        </div>
-                        <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
-                          <span>PIC: {pt.picName}</span>
-                          <span className="font-mono">{pt.phone}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* SUB-TAB 5: BUKU BESAR KENDALI BADIL TIMUR TENGAH & MASTER KANTOR CABANG */}
-              {masterSubTab === "BADIL_BRANCH" && (
-                <div className="space-y-6">
-                  {/* BUKU BESAR KENDALI BADIL (PENGGANTI SLOT PENEMPATAN) */}
-                  <div className="rounded-2xl border border-amber-300 bg-white p-6 shadow-sm">
-                    <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-amber-700">
-                          Kendali Badil (بديل · Replacement Candidate) Timur Tengah & Umum
-                        </span>
-                        <h2 className="text-base font-bold text-slate-900">
-                          Buku Besar Pergantian Kandidat Badil (Pra-Terbang Wafid/Visa & Klaim Masa Garansi 90 Hari)
-                        </h2>
-                        <p className="text-xs text-slate-500">
-                          Mencatat otomatis peralihan slot Wakalah/Job Order dari CPMI Awal ke CPMI Pengganti (Badil), Carry-Over DP Sponsor, dan Sunk Cost.
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => setShowBadilModal(true)}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-950 shadow-sm hover:bg-amber-400"
-                      >
-                        <RefreshCw className="h-4 w-4" />
-                        + Proses Pergantian Badil Baru
-                      </button>
-                    </div>
-
-                    <div className="space-y-3">
-                      {db.badilRecords?.map((bd) => (
-                        <div
-                          key={bd.id}
-                          className="rounded-2xl border border-amber-200 bg-amber-50/50 p-4 text-xs"
-                        >
-                          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-200/80 pb-3">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span className="rounded-md bg-amber-500 px-2 py-0.5 font-mono text-[11px] font-black text-slate-950">
-                                {bd.code}
-                              </span>
-                              <span className="font-bold text-slate-900 text-sm">
-                                {bd.destinationCountry} · {bd.agencyPartner}
-                              </span>
-                              <span className="rounded-full bg-white px-2.5 py-0.5 text-[10px] font-bold text-amber-900 border border-amber-300">
-                                {bd.badilType === "GARANSI_90_HARI"
-                                  ? "Badil Masa Garansi (< 90 Hari)"
-                                  : "Badil Pra-Terbang (Wafid/Visa/Batal)"}
-                              </span>
-                            </div>
-                            <span className="text-[11px] text-slate-500">
-                              Diproses: <strong>{bd.createdAt}</strong> oleh {bd.processedBy}
-                            </span>
-                          </div>
-
-                          <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-4">
-                            <div className="rounded-xl bg-white p-3 border border-rose-200">
-                              <span className="text-[10px] font-bold uppercase text-rose-600 block">
-                                Kandidat Awal (Digantikan)
-                              </span>
-                              <strong className="text-slate-900 block mt-0.5">
-                                {bd.originalCandidateName}
-                              </strong>
-                              <span className="font-mono text-[11px] text-slate-500">
-                                {bd.originalRegNumber} · Alasan: {bd.reason}
-                              </span>
-                            </div>
-
-                            <div className="rounded-xl bg-white p-3 border border-teal-300">
-                              <span className="text-[10px] font-bold uppercase text-teal-700 block">
-                                Kandidat Badil (Pengganti)
-                              </span>
-                              <strong className="text-slate-900 block mt-0.5">
-                                {bd.replacementCandidateName}
-                              </strong>
-                              <button
-                                onClick={() => {
-                                  setSelectedCandidateId(bd.replacementCandidateId);
-                                  setActiveNav("cpmi");
-                                }}
-                                className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-sky-600 hover:underline"
-                              >
-                                {bd.replacementRegNumber} · Buka Berkas →
-                              </button>
-                            </div>
-
-                            <div className="rounded-xl bg-white p-3 border border-amber-200">
-                              <span className="text-[10px] font-bold uppercase text-slate-500 block">
-                                Perlakuan DP Sponsor & Sunk Cost
-                              </span>
-                              <strong className="text-emerald-700 block mt-0.5">
-                                Carry-Over DP: {formatRupiah(bd.transferredSponsorDpAmount)}
-                              </strong>
-                              <span className="text-[11px] text-rose-600 font-semibold">
-                                Sunk Cost Awal: {formatRupiah(bd.sunkCostAmount)}
-                              </span>
-                            </div>
-
-                            <div className="rounded-xl bg-white p-3 border border-amber-200">
-                              <span className="text-[10px] font-bold uppercase text-slate-500 block">
-                                Skema Wakalah / Agency Fee
-                              </span>
-                              <strong className="text-slate-900 block mt-0.5">
-                                {bd.wakalahFeeScheme === "FREE_WARRANTY_REPLACEMENT"
-                                  ? "Free Replacement Garansi (Rp 0)"
-                                  : "100% Wakalah Fee Utuh"}
-                              </strong>
-                              <span className="text-[11px] text-slate-500">
-                                Majikan: {bd.employerName}
-                              </span>
-                            </div>
-                          </div>
-
-                          <p className="mt-2.5 text-[11px] text-slate-600">
-                            <strong>Catatan Kronologi Badil:</strong> {bd.reasonNotes}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* MASTER KANTOR CABANG & BLK-LN P3MI */}
-                  <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-sky-600">
-                          Master Jaringan Kantor Cabang Daerah & BLK-LN
-                        </span>
-                        <h3 className="text-base font-bold text-slate-900">
-                          Daftar Kantor Cabang P3MI PT Panca Banyu Ajisakti
-                        </h3>
-                      </div>
-                      <button
-                        onClick={() => setShowAddBranchModal(true)}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800"
-                      >
-                        <Plus className="h-4 w-4 text-sky-400" />
-                        + Tambah Kantor Cabang Baru
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                      {db.branches.map((br) => (
-                        <div
-                          key={br.id}
-                          className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs"
-                        >
-                          <span className="rounded bg-sky-100 px-2 py-0.5 font-mono text-[10px] font-bold text-sky-900">
-                            {br.code}
-                          </span>
-                          <h4 className="mt-1.5 font-bold text-slate-900 text-sm">{br.name}</h4>
-                          <p className="text-slate-500 mt-0.5">Kota: {br.city}</p>
-                          <p className="mt-2 font-semibold text-slate-700">
-                            Kepala Cabang: {br.headName}
-                          </p>
-                          <p className="font-mono text-[11px] text-slate-500">{br.phone}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+            <MasterPartnerDatabaseModule
+              db={db}
+              loggedInStaff={loggedInStaff}
+              onRefreshDb={fetchDb}
+              onTriggerApi={async (action, payload) => {
+                const { data } = await callApi(action, payload);
+                if (data?.ok) {
+                  if (data.db) setDb(data.db);
+                  else await fetchDb();
+                  setToast({
+                    type: "success",
+                    title: "Master Data Berhasil Disimpan",
+                    details: ["Perubahan data tersimpan permanen di database PT. Panca Banyu Ajisakti."],
+                  });
+                  return true;
+                }
+                return false;
+              }}
+            />
           )}
         </main>
       </div>
