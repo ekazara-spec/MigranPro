@@ -2454,97 +2454,87 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
 
         {/* Menu Navigasi Utama Terkelompok Berdasarkan Urutan Kerja */}
         <nav className="flex-1 space-y-4 px-3 py-4 text-sm overflow-y-auto">
-          {/* GROUP 1: ADMINISTRATOR */}
+          {/* GROUP 1: INFORMATION (DASHBOARD & MONITORING) */}
           <div className="space-y-1">
-            <div className="px-2 pb-1 text-[10px] font-extrabold uppercase tracking-wider text-sky-400 flex items-center justify-between">
+            <div className="px-2 pb-1 text-[10px] font-extrabold uppercase tracking-wider text-indigo-400 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
-                <ShieldCheck className="h-3.5 w-3.5 text-sky-400" />
-                Administrator
+                <LayoutDashboard className="h-3.5 w-3.5 text-indigo-400" />
+                Information
               </span>
-              <span className="rounded bg-sky-500/20 px-1.5 py-0.2 text-[9px] font-bold text-sky-300">Pusat</span>
+              <span className="rounded bg-indigo-500/20 px-1.5 py-0.2 text-[9px] font-bold text-indigo-300">Pusat Info</span>
             </div>
 
             <button
-              onClick={() => setActiveNav("saas_tenants")}
+              onClick={() => setActiveNav("beranda")}
               className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
-                activeNav === "saas_tenants"
-                  ? "bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-sm font-bold"
-                  : "text-slate-300 hover:bg-white/5 hover:text-white"
-              }`}
-            >
-              <span className="flex items-center gap-2.5">
-                <Building2 className="h-4 w-4 text-sky-400" />
-                Profil PT & Cabang
-              </span>
-              <span className="rounded bg-sky-500/20 px-1.5 py-0.5 text-[10px] text-sky-200">
-                PBA Pusat
-              </span>
-            </button>
-
-            <button
-              onClick={() => setActiveNav("cabang_audit")}
-              className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
-                activeNav === "cabang_audit"
+                activeNav === "beranda"
                   ? "bg-sky-500 text-white shadow-sm font-bold"
                   : "text-slate-300 hover:bg-white/5 hover:text-white"
               }`}
             >
               <span className="flex items-center gap-2.5">
-                <History className="h-4 w-4 text-sky-400" />
-                Staf, Sponsor & Audit
-              </span>
-              <span className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] text-slate-300">
-                RBAC
-              </span>
-            </button>
-          </div>
-
-          {/* GROUP 2: SETTING / PENGATURAN */}
-          <div className="space-y-1 pt-2 border-t border-slate-700/60">
-            <div className="px-2 pb-1 text-[10px] font-extrabold uppercase tracking-wider text-amber-400 flex items-center justify-between">
-              <span className="flex items-center gap-1.5">
-                <FolderKanban className="h-3.5 w-3.5 text-amber-400" />
-                Setting / Pengaturan
-              </span>
-              <span className="rounded bg-amber-500/20 px-1.5 py-0.2 text-[9px] font-bold text-amber-300">Config</span>
-            </div>
-
-            <button
-              onClick={() => setActiveNav("master_data")}
-              className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
-                activeNav === "master_data"
-                  ? "bg-amber-500 text-slate-950 font-bold shadow-sm"
-                  : "text-amber-300 hover:bg-white/5 hover:text-white"
-              }`}
-            >
-              <span className="flex items-center gap-2.5">
-                <FolderKanban className="h-4 w-4" />
-                Master Data & Mitra
-              </span>
-              <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-bold text-amber-200">
-                Syarikah/Mitra
+                <LayoutDashboard className="h-4 w-4" />
+                Beranda (Dashboard)
               </span>
             </button>
 
             <button
-              onClick={() => setActiveNav("whatsapp_gateway")}
+              onClick={() => setActiveNav("pengingat")}
               className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
-                activeNav === "whatsapp_gateway"
-                  ? "bg-gradient-to-r from-emerald-600 to-green-600 text-white shadow-sm font-bold"
+                activeNav === "pengingat"
+                  ? "bg-sky-500 text-white shadow-sm font-bold"
                   : "text-slate-300 hover:bg-white/5 hover:text-white"
               }`}
             >
               <span className="flex items-center gap-2.5">
-                <MessageSquarePlus className="h-4 w-4 text-emerald-400" />
-                WhatsApp Gateway
+                <Bell className="h-4 w-4" />
+                Pengingat Dokumen
               </span>
-              <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] text-emerald-200">
-                Auto WA
+              {stats.criticalDocsCount > 0 && (
+                <span className="rounded-full bg-rose-500 px-2 py-0.5 text-[11px] font-bold text-white">
+                  {stats.criticalDocsCount}
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => setActiveNav("cases")}
+              className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
+                activeNav === "cases"
+                  ? "bg-sky-500 text-white shadow-sm font-bold"
+                  : "text-slate-300 hover:bg-white/5 hover:text-white"
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <LifeBuoy className="h-4 w-4" />
+                Case (Pengaduan PMI)
+              </span>
+              {stats.openCasesCount > 0 && (
+                <span className="rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-bold text-slate-950">
+                  {stats.openCasesCount}
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => setActiveNav("portal_cpmi")}
+              className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
+                activeNav === "portal_cpmi"
+                  ? "bg-teal-600 text-white shadow-sm font-bold"
+                  : "text-teal-300 hover:bg-white/5 hover:text-white"
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <Smartphone className="h-4 w-4" />
+                Portal Mandiri CPMI
+              </span>
+              <span className="rounded bg-teal-500/20 px-1.5 py-0.5 text-[10px] text-teal-200">
+                Cek NIK
               </span>
             </button>
           </div>
 
-          {/* GROUP 3: OPERASIONAL */}
+          {/* GROUP 2: OPERASIONAL */}
           <div className="space-y-1 pt-2 border-t border-slate-700/60">
             <div className="px-2 pb-1 text-[10px] font-extrabold uppercase tracking-wider text-teal-400 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
@@ -2657,7 +2647,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
             </button>
           </div>
 
-          {/* GROUP 4: FINANCE & ACCOUNTING */}
+          {/* GROUP 3: FINANCE & ACCOUNTING */}
           <div className="space-y-1 pt-2 border-t border-slate-700/60">
             <div className="px-2 pb-1 text-[10px] font-extrabold uppercase tracking-wider text-emerald-400 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
@@ -2702,82 +2692,92 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
             </button>
           </div>
 
-          {/* GROUP 5: INFORMATION */}
-          <div className="space-y-1 pt-2 border-t border-slate-700/60 pb-2">
-            <div className="px-2 pb-1 text-[10px] font-extrabold uppercase tracking-wider text-indigo-400 flex items-center justify-between">
+          {/* GROUP 4: ADMINISTRATOR */}
+          <div className="space-y-1 pt-2 border-t border-slate-700/60">
+            <div className="px-2 pb-1 text-[10px] font-extrabold uppercase tracking-wider text-sky-400 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
-                <LayoutDashboard className="h-3.5 w-3.5 text-indigo-400" />
-                Information
+                <ShieldCheck className="h-3.5 w-3.5 text-sky-400" />
+                Administrator
               </span>
-              <span className="rounded bg-indigo-500/20 px-1.5 py-0.2 text-[9px] font-bold text-indigo-300">Pusat Info</span>
+              <span className="rounded bg-sky-500/20 px-1.5 py-0.2 text-[9px] font-bold text-sky-300">Pusat</span>
             </div>
 
             <button
-              onClick={() => setActiveNav("beranda")}
+              onClick={() => setActiveNav("saas_tenants")}
               className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
-                activeNav === "beranda"
+                activeNav === "saas_tenants"
+                  ? "bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-sm font-bold"
+                  : "text-slate-300 hover:bg-white/5 hover:text-white"
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <Building2 className="h-4 w-4 text-sky-400" />
+                Profil PT & Cabang
+              </span>
+              <span className="rounded bg-sky-500/20 px-1.5 py-0.5 text-[10px] text-sky-200">
+                PBA Pusat
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveNav("cabang_audit")}
+              className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
+                activeNav === "cabang_audit"
                   ? "bg-sky-500 text-white shadow-sm font-bold"
                   : "text-slate-300 hover:bg-white/5 hover:text-white"
               }`}
             >
               <span className="flex items-center gap-2.5">
-                <LayoutDashboard className="h-4 w-4" />
-                Beranda (Dashboard)
+                <History className="h-4 w-4 text-sky-400" />
+                Staf, Sponsor & Audit
+              </span>
+              <span className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] text-slate-300">
+                RBAC
+              </span>
+            </button>
+          </div>
+
+          {/* GROUP 5: SETTING / PENGATURAN */}
+          <div className="space-y-1 pt-2 border-t border-slate-700/60 pb-2">
+            <div className="px-2 pb-1 text-[10px] font-extrabold uppercase tracking-wider text-amber-400 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <FolderKanban className="h-3.5 w-3.5 text-amber-400" />
+                Setting / Pengaturan
+              </span>
+              <span className="rounded bg-amber-500/20 px-1.5 py-0.2 text-[9px] font-bold text-amber-300">Config</span>
+            </div>
+
+            <button
+              onClick={() => setActiveNav("master_data")}
+              className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
+                activeNav === "master_data"
+                  ? "bg-amber-500 text-slate-950 font-bold shadow-sm"
+                  : "text-amber-300 hover:bg-white/5 hover:text-white"
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <FolderKanban className="h-4 w-4" />
+                Master Data & Mitra
+              </span>
+              <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-bold text-amber-200">
+                Syarikah/Mitra
               </span>
             </button>
 
             <button
-              onClick={() => setActiveNav("pengingat")}
+              onClick={() => setActiveNav("whatsapp_gateway")}
               className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
-                activeNav === "pengingat"
-                  ? "bg-sky-500 text-white shadow-sm font-bold"
+                activeNav === "whatsapp_gateway"
+                  ? "bg-gradient-to-r from-emerald-600 to-green-600 text-white shadow-sm font-bold"
                   : "text-slate-300 hover:bg-white/5 hover:text-white"
               }`}
             >
               <span className="flex items-center gap-2.5">
-                <Bell className="h-4 w-4" />
-                Pengingat Dokumen
+                <MessageSquarePlus className="h-4 w-4 text-emerald-400" />
+                WhatsApp Gateway
               </span>
-              {stats.criticalDocsCount > 0 && (
-                <span className="rounded-full bg-rose-500 px-2 py-0.5 text-[11px] font-bold text-white">
-                  {stats.criticalDocsCount}
-                </span>
-              )}
-            </button>
-
-            <button
-              onClick={() => setActiveNav("cases")}
-              className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
-                activeNav === "cases"
-                  ? "bg-sky-500 text-white shadow-sm font-bold"
-                  : "text-slate-300 hover:bg-white/5 hover:text-white"
-              }`}
-            >
-              <span className="flex items-center gap-2.5">
-                <LifeBuoy className="h-4 w-4" />
-                Case (Pengaduan PMI)
-              </span>
-              {stats.openCasesCount > 0 && (
-                <span className="rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-bold text-slate-950">
-                  {stats.openCasesCount}
-                </span>
-              )}
-            </button>
-
-            <button
-              onClick={() => setActiveNav("portal_cpmi")}
-              className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
-                activeNav === "portal_cpmi"
-                  ? "bg-teal-600 text-white shadow-sm font-bold"
-                  : "text-teal-300 hover:bg-white/5 hover:text-white"
-              }`}
-            >
-              <span className="flex items-center gap-2.5">
-                <Smartphone className="h-4 w-4" />
-                Portal Mandiri CPMI
-              </span>
-              <span className="rounded bg-teal-500/20 px-1.5 py-0.5 text-[10px] text-teal-200">
-                Cek NIK
+              <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] text-emerald-200">
+                Auto WA
               </span>
             </button>
           </div>
