@@ -250,62 +250,43 @@ export default function TenantBranchModule({
         </div>
       )}
 
-      {/* Top Header & Tenant Selector */}
+      {/* Top Header PT. Panca Banyu Ajisakti */}
       <div className="flex flex-col gap-4 rounded-2xl border border-slate-700/60 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-6 shadow-xl lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-sky-400">
-            <Building2 className="h-4 w-4" />
-            Modul 1: Manajemen Multi-Tenant & Cabang SaaS
+        <div className="flex items-center gap-4">
+          <div className="h-16 w-16 shrink-0 rounded-2xl bg-white p-2 border border-slate-600 shadow-md flex items-center justify-center">
+            <img
+              src="/logo-panca-banyu.png"
+              alt="Logo PT Panca Banyu Ajisakti"
+              className="h-full w-full object-contain"
+            />
           </div>
-          <h2 className="mt-1 text-2xl font-black text-white">
-            Kelola Perusahaan P3MI & Jaringan Kantor Cabang
-          </h2>
-          <p className="mt-1 text-sm text-slate-300">
-            Arsitektur Multi-Tenant mandiri untuk masing-masing P3MI dengan isolasi data kandidat, perizinan SIP3MI Kemnaker, dan kuota langganan SaaS.
-          </p>
+          <div>
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-sky-400">
+              <Building2 className="h-4 w-4" />
+              Modul 1: Profil Perusahaan & Jaringan Kantor Cabang
+            </div>
+            <h2 className="mt-0.5 text-2xl font-black text-white">
+              PT. PANCA BANYU AJISAKTI
+            </h2>
+            <p className="mt-0.5 text-xs text-slate-300">
+              Aplikasi Didedikasikan Khusus untuk PT. Panca Banyu Ajisakti (SIP3MI NO. 502/MEN/2021) · Penempatan PMI Kawasan Timur Tengah
+            </p>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/80 px-3 py-2 text-sm text-white">
-            <span className="text-xs text-slate-400">Pilih Tenant:</span>
-            <select
-              value={selectedTenantId}
-              onChange={(e) => onSelectTenant(e.target.value)}
-              className="bg-transparent font-bold text-sky-300 outline-none cursor-pointer"
-            >
-              {tenants.map((t) => (
-                <option key={t.id} value={t.id} className="bg-slate-900 text-white">
-                  {t.name} {t.isPrimary ? "(Utama)" : ""} [{t.planTier}]
-                </option>
-              ))}
-            </select>
-          </div>
+          <span className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3.5 py-2 text-xs font-bold text-emerald-300">
+            <ShieldCheck className="h-4 w-4 text-emerald-400" />
+            SIP3MI Kemnaker RI Resmi
+          </span>
 
-          {!isBranchViewOnly && (
+          {!isBranchViewOnly && activeTenant && (
             <button
-              onClick={() => {
-                setEditingTenant(null);
-                setTenantForm({
-                  code: `P3MI-${tenants.length + 1}`,
-                  name: "",
-                  brandName: "",
-                  licenseNo: "SIP3MI NO. .../MEN/2026",
-                  logoUrl: "/logo-panca-banyu.png",
-                  planTier: "PRO",
-                  planExpiresAt: "2027-12-31",
-                  maxCandidates: 500,
-                  maxBranches: 10,
-                  address: "",
-                  phone: "",
-                  email: "",
-                  picName: "",
-                });
-                setShowAddTenantModal(true);
-              }}
-              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-sky-500/20 transition hover:brightness-110"
+              onClick={() => openEditTenant(activeTenant)}
+              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-sky-500/20 transition hover:brightness-110 cursor-pointer"
             >
-              <Plus className="h-4 w-4" />
-              Tambah Perusahaan P3MI (Tenant)
+              <Edit3 className="h-4 w-4" />
+              Edit Profil Perusahaan
             </button>
           )}
         </div>
@@ -318,32 +299,28 @@ export default function TenantBranchModule({
           <div className="rounded-2xl border border-slate-700/60 bg-slate-800/80 p-6 lg:col-span-2 shadow-lg">
             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 border-b border-slate-700/60 pb-5">
               <div className="flex items-start gap-4">
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-blue-700 text-white font-black text-xl shadow-md">
-                  {activeTenant.code.slice(0, 3)}
+                <div className="h-16 w-16 shrink-0 rounded-2xl bg-white p-2 border border-slate-600 shadow-md flex items-center justify-center">
+                  <img
+                    src="/logo-panca-banyu.png"
+                    alt="Logo PT Panca Banyu Ajisakti"
+                    className="h-full w-full object-contain"
+                  />
                 </div>
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="text-xl font-black text-white">{activeTenant.name}</h3>
-                    {activeTenant.isPrimary && (
-                      <span className="rounded-full bg-emerald-500/20 border border-emerald-500/40 px-2 py-0.5 text-[11px] font-bold text-emerald-300">
-                        P3MI Utama
-                      </span>
-                    )}
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
-                        activeTenant.status === "ACTIVE"
-                          ? "bg-sky-500/20 text-sky-300 border border-sky-500/40"
-                          : "bg-rose-500/20 text-rose-300 border border-rose-500/40"
-                      }`}
-                    >
+                    <span className="rounded-full bg-emerald-500/20 border border-emerald-500/40 px-2 py-0.5 text-[11px] font-bold text-emerald-300">
+                      P3MI Tunggal
+                    </span>
+                    <span className="rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/40 px-2 py-0.5 text-[11px] font-bold">
                       {activeTenant.status}
                     </span>
                   </div>
                   <p className="text-sm font-semibold text-slate-300 mt-0.5">
                     Merk / Brand: <span className="text-amber-300">{activeTenant.brandName}</span>
                   </p>
-                  <p className="text-xs text-sky-400 font-mono mt-1">
-                    {activeTenant.licenseNo} (Kemnaker RI)
+                  <p className="text-xs text-sky-400 font-mono mt-1 font-bold">
+                    {activeTenant.licenseNo} (Kementerian Ketenagakerjaan RI)
                   </p>
                 </div>
               </div>
@@ -354,7 +331,7 @@ export default function TenantBranchModule({
                   className="flex items-center gap-1.5 rounded-lg border border-slate-600 bg-slate-700/60 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-700"
                 >
                   <Edit3 className="h-3.5 w-3.5" />
-                  Edit Profil Legal
+                  Edit Legalitas
                 </button>
               )}
             </div>
@@ -370,7 +347,7 @@ export default function TenantBranchModule({
               <div className="flex items-start gap-2.5">
                 <ShieldCheck className="h-4 w-4 shrink-0 text-slate-400 mt-0.5" />
                 <div>
-                  <span className="font-semibold text-white">Penanggung Jawab (PIC / Direktur):</span>
+                  <span className="font-semibold text-white">Penanggung Jawab (Direktur Utama):</span>
                   <p className="text-slate-300 mt-0.5">{activeTenant.picName}</p>
                 </div>
               </div>
@@ -389,35 +366,35 @@ export default function TenantBranchModule({
             </div>
           </div>
 
-          {/* Kartu Status Paket SaaS & Kuota */}
+          {/* Kartu Status Kapasitas Penempatan */}
           <div className="rounded-2xl border border-slate-700/60 bg-gradient-to-br from-slate-800 to-slate-900 p-6 shadow-lg space-y-5">
             <div className="flex items-center justify-between border-b border-slate-700 pb-3">
               <div className="flex items-center gap-2 text-xs font-bold uppercase text-slate-400">
                 <Sparkles className="h-4 w-4 text-amber-400" />
-                Paket Langganan SaaS
+                Kapasitas Penempatan
               </div>
-              <span className="rounded-full bg-amber-500/20 border border-amber-500/40 px-2.5 py-0.5 text-xs font-black text-amber-300">
-                {activeTenant.planTier}
+              <span className="rounded-full bg-emerald-500/20 border border-emerald-500/40 px-2.5 py-0.5 text-xs font-black text-emerald-300">
+                SPSK ZERO COST
               </span>
             </div>
 
             <div className="text-xs text-slate-400 flex items-center justify-between">
-              <span>Masa Berlaku Lisensi SaaS:</span>
-              <span className="font-bold text-white">{activeTenant.planExpiresAt}</span>
+              <span>Wilayah Operasional:</span>
+              <span className="font-bold text-white">Kawasan Timur Tengah</span>
             </div>
 
             {/* Meter Kuota CPMI */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-300 font-medium">Kuota Pendaftaran CPMI:</span>
+                <span className="text-slate-300 font-medium">Total Kandidat CPMI Terdata:</span>
                 <span className="font-bold text-sky-400">
-                  {candidatesCount} / {activeTenant.maxCandidates} CPMI ({candidateUsagePct}%)
+                  {candidatesCount} CPMI
                 </span>
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-slate-700">
                 <div
                   className="h-full rounded-full bg-sky-500 transition-all"
-                  style={{ width: `${candidateUsagePct}%` }}
+                  style={{ width: `${Math.min(100, (candidatesCount / 500) * 100)}%` }}
                 />
               </div>
             </div>
@@ -425,21 +402,21 @@ export default function TenantBranchModule({
             {/* Meter Kuota Cabang */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-300 font-medium">Kuota Kantor Cabang:</span>
+                <span className="text-slate-300 font-medium">Jaringan Kantor Cabang & BLK-LN:</span>
                 <span className="font-bold text-indigo-400">
-                  {tenantBranches.length} / {activeTenant.maxBranches} Cabang ({branchUsagePct}%)
+                  {tenantBranches.length} Kantor Daerah
                 </span>
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-slate-700">
                 <div
                   className="h-full rounded-full bg-indigo-500 transition-all"
-                  style={{ width: `${branchUsagePct}%` }}
+                  style={{ width: `${Math.min(100, (tenantBranches.length / 10) * 100)}%` }}
                 />
               </div>
             </div>
 
             <div className="rounded-xl border border-sky-500/20 bg-sky-500/10 p-3 text-[11px] text-sky-200">
-              💡 Seluruh data CPMI, dokumen digital, transaksi kasbon & invoice Wakalah terkunci aman sesuai hak tenant masing-masing.
+              💡 Sistem beroperasi eksklusif untuk PT. Panca Banyu Ajisakti dengan kendali operasional tunggal oleh Kantor Pusat Jakarta.
             </div>
           </div>
         </div>
@@ -544,14 +521,14 @@ export default function TenantBranchModule({
         </div>
       </div>
 
-      {/* Modal Tambah / Edit Tenant */}
+      {/* Modal Edit Profil Perusahaan PT. Panca Banyu Ajisakti */}
       {showAddTenantModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-2xl rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+          <div className="w-full max-w-xl rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-700 pb-3">
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
                 <Building2 className="h-5 w-5 text-sky-400" />
-                {editingTenant ? "Edit Perusahaan P3MI (Tenant)" : "Tambah Perusahaan P3MI Baru (SaaS Tenant)"}
+                Edit Profil Legal PT. PANCA BANYU AJISAKTI
               </h3>
               <button
                 onClick={() => setShowAddTenantModal(false)}
@@ -563,37 +540,15 @@ export default function TenantBranchModule({
 
             <form onSubmit={handleSaveTenant} className="space-y-4 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Kode Perusahaan</label>
-                  <input
-                    type="text"
-                    required
-                    value={tenantForm.code}
-                    onChange={(e) => setTenantForm({ ...tenantForm, code: e.target.value })}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white"
-                    placeholder="Contoh: PBA, AFATH, NGS"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Nama Legal PT. P3MI</label>
+                <div className="sm:col-span-2">
+                  <label className="block text-slate-300 font-semibold mb-1">Nama Legal Perusahaan P3MI</label>
                   <input
                     type="text"
                     required
                     value={tenantForm.name}
                     onChange={(e) => setTenantForm({ ...tenantForm, name: e.target.value })}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white font-bold"
                     placeholder="PT. PANCA BANYU AJISAKTI"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Nama Brand / Merk</label>
-                  <input
-                    type="text"
-                    required
-                    value={tenantForm.brandName}
-                    onChange={(e) => setTenantForm({ ...tenantForm, brandName: e.target.value })}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white"
-                    placeholder="PANCA AGENCY / PAS MIGRAN"
                   />
                 </div>
                 <div>
@@ -603,85 +558,41 @@ export default function TenantBranchModule({
                     required
                     value={tenantForm.licenseNo}
                     onChange={(e) => setTenantForm({ ...tenantForm, licenseNo: e.target.value })}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white font-mono"
                     placeholder="SIP3MI NO. 502/MEN/2021"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Paket SaaS</label>
-                  <select
-                    value={tenantForm.planTier}
-                    onChange={(e) => setTenantForm({ ...tenantForm, planTier: e.target.value as any })}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white"
-                  >
-                    <option value="FREE_TRIAL">FREE TRIAL (Uji Coba 14 Hari)</option>
-                    <option value="PRO">PRO (Hingga 500 CPMI & 10 Cabang)</option>
-                    <option value="ENTERPRISE">ENTERPRISE (Tanpa Batas Kuota)</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Masa Berlaku SaaS</label>
-                  <input
-                    type="date"
-                    required
-                    value={tenantForm.planExpiresAt}
-                    onChange={(e) => setTenantForm({ ...tenantForm, planExpiresAt: e.target.value })}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Batas Kuota CPMI</label>
-                  <input
-                    type="number"
-                    min="10"
-                    required
-                    value={tenantForm.maxCandidates}
-                    onChange={(e) => setTenantForm({ ...tenantForm, maxCandidates: Number(e.target.value) })}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Batas Kantor Cabang</label>
-                  <input
-                    type="number"
-                    min="1"
-                    required
-                    value={tenantForm.maxBranches}
-                    onChange={(e) => setTenantForm({ ...tenantForm, maxBranches: Number(e.target.value) })}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Nama Direktur / PIC</label>
+                  <label className="block text-slate-300 font-semibold mb-1">Nama Direktur Utama / Penanggung Jawab</label>
                   <input
                     type="text"
                     required
                     value={tenantForm.picName}
                     onChange={(e) => setTenantForm({ ...tenantForm, picName: e.target.value })}
                     className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white"
-                    placeholder="H. Bambang Wijaya, S.E."
+                    placeholder="Direktur Utama"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Nomor Telepon Kantor</label>
+                  <label className="block text-slate-300 font-semibold mb-1">Nomor Telepon Kantor Pusat</label>
                   <input
                     type="text"
                     required
                     value={tenantForm.phone}
                     onChange={(e) => setTenantForm({ ...tenantForm, phone: e.target.value })}
                     className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white"
-                    placeholder="021-87901122"
+                    placeholder="+62-21 2937373"
                   />
                 </div>
-                <div className="sm:col-span-2">
-                  <label className="block text-slate-300 font-semibold mb-1">Email Resmi</label>
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">Email Resmi Kantor</label>
                   <input
                     type="email"
                     required
                     value={tenantForm.email}
                     onChange={(e) => setTenantForm({ ...tenantForm, email: e.target.value })}
                     className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white"
-                    placeholder="operasional@pancabanyuajisakti.co.id"
+                    placeholder="pancabanyu@yahoo.com"
                   />
                 </div>
                 <div className="sm:col-span-2">
@@ -692,25 +603,29 @@ export default function TenantBranchModule({
                     value={tenantForm.address}
                     onChange={(e) => setTenantForm({ ...tenantForm, address: e.target.value })}
                     className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white"
-                    placeholder="Jl. Kayu Manis No. 51, Jakarta Timur"
+                    placeholder="Jl. Kayu Manis No. 51, Kel. Balekambang, Kec. Kramat Jati, Jakarta Timur"
                   />
                 </div>
+              </div>
+
+              <div className="rounded-xl border border-sky-500/20 bg-sky-500/10 p-3 text-[11px] text-sky-200">
+                Informasi profil ini disematkan otomatis pada Kop Surat Resmi seluruh dokumen cetak (Surat Pengantar Paspor, Rekom Disnaker, Perjanjian Kerja, dan CV Syarikah KSA).
               </div>
 
               <div className="flex justify-end gap-3 pt-3 border-t border-slate-700">
                 <button
                   type="button"
                   onClick={() => setShowAddTenantModal(false)}
-                  className="rounded-lg border border-slate-600 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800"
+                  className="rounded-lg border border-slate-600 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800 cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="rounded-lg bg-sky-600 px-5 py-2 text-xs font-bold text-white hover:bg-sky-500 disabled:opacity-50"
+                  className="rounded-lg bg-sky-600 px-5 py-2 text-xs font-bold text-white hover:bg-sky-500 disabled:opacity-50 cursor-pointer"
                 >
-                  {saving ? "Menyimpan..." : "Simpan Perusahaan P3MI"}
+                  {saving ? "Menyimpan..." : "Simpan Profil PT"}
                 </button>
               </div>
             </form>

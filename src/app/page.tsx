@@ -2501,10 +2501,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
           >
             <span className="flex items-center gap-2.5">
               <Building2 className="h-4 w-4 text-sky-400" />
-              1. Tenant & Cabang (SaaS)
+              1. Profil PT & Cabang
             </span>
             <span className="rounded bg-sky-500/20 px-1.5 py-0.5 text-[10px] text-sky-200">
-              Multi-P3MI
+              PBA Pusat
             </span>
           </button>
 
@@ -2774,7 +2774,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
             <div className="flex items-center gap-2">
               <h1 className="text-lg font-bold text-slate-900">
                 {activeNav === "beranda" && "Command Center Operasional P3MI"}
-                {activeNav === "saas_tenants" && "Modul 1: Manajemen Multi-Tenant P3MI & Kantor Cabang (SaaS)"}
+                {activeNav === "saas_tenants" && "Modul 1: Profil Perusahaan PT. Panca Banyu Ajisakti & Jaringan Kantor Cabang"}
                 {activeNav === "doc_print" && "Modul 2: Cetak Dokumen Otomatis (Surat Paspor, Rekom Desa, PK Resmi, CV Syarikah)"}
                 {activeNav === "whatsapp_gateway" && "Modul 3: Integrasi WhatsApp Gateway Otomatis (Notifikasi & Direct Chat)"}
                 {activeNav === "aruskas_kasbon" && "Modul 4: Modul Akuntansi & Arus Kas Bank / Kasbon (Buku Kas & Invoice Wakalah)"}

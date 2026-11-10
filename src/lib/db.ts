@@ -772,6 +772,7 @@ function createInitialVacancies(): JobVacancy[] {
 }
 
 function createInitialTenants(): TenantCompany[] {
+  // Aplikasi didedikasikan tunggal khusus PT. PANCA BANYU AJISAKTI
   return [
     {
       id: "tenant-panca",
@@ -782,8 +783,8 @@ function createInitialTenants(): TenantCompany[] {
       logoUrl: "/logo-panca-banyu.png",
       planTier: "ENTERPRISE",
       planExpiresAt: "2028-12-31",
-      maxCandidates: 1000,
-      maxBranches: 20,
+      maxCandidates: 2500,
+      maxBranches: 25,
       status: "ACTIVE",
       address: "Jl. Kayu Manis No. 51, Kel. Balekambang, Kec. Kramat Jati, Jakarta Timur",
       phone: "+62-21 2937373",
@@ -791,44 +792,6 @@ function createInitialTenants(): TenantCompany[] {
       picName: "H. Bambang Wijaya, S.E. (Direktur Utama)",
       isPrimary: true,
       createdAt: "2021-06-15",
-    },
-    {
-      id: "tenant-alfath",
-      code: "P3MI-AFM",
-      name: "PT. AL-FATH MANPOWER INTERNASIONAL",
-      brandName: "Al-Fath Manpower",
-      licenseNo: "SIP3MI NO. 219/MEN/2022",
-      logoUrl: "/logo-panca-banyu.png",
-      planTier: "PRO",
-      planExpiresAt: "2027-08-31",
-      maxCandidates: 250,
-      maxBranches: 5,
-      status: "ACTIVE",
-      address: "Jl. Pemuda No. 88, Cirebon, Jawa Barat",
-      phone: "+62-231 489921",
-      email: "admin@alfath-manpower.id",
-      picName: "Hj. Siti Nurhaliza (Direktur)",
-      isPrimary: false,
-      createdAt: "2022-09-01",
-    },
-    {
-      id: "tenant-nusantara",
-      code: "P3MI-NGS",
-      name: "PT. NUSANTARA GLOBAL SERVICE",
-      brandName: "Nusantara Global",
-      licenseNo: "SIP3MI NO. 118/MEN/2020",
-      logoUrl: "/logo-panca-banyu.png",
-      planTier: "FREE_TRIAL",
-      planExpiresAt: "2026-12-31",
-      maxCandidates: 50,
-      maxBranches: 2,
-      status: "ACTIVE",
-      address: "Kawasan Industri Modern, Cilegon, Banten",
-      phone: "+62-254 771234",
-      email: "contact@nusantaraglobal.co.id",
-      picName: "Drs. Hendra Gunawan",
-      isPrimary: false,
-      createdAt: "2024-01-10",
     },
   ];
 }
@@ -2941,11 +2904,10 @@ export function syncExpirationsAndTasks(db: DatabaseSchema): void {
     "Malaysia",
   ];
 
-  if (!db.tenants || db.tenants.length === 0) {
-    db.tenants = createInitialTenants();
-  }
+  // Aplikasi didedikasikan tunggal khusus PT. PANCA BANYU AJISAKTI
+  db.tenants = createInitialTenants();
   for (const b of db.branches) {
-    if (!b.tenantId) b.tenantId = "tenant-panca";
+    b.tenantId = "tenant-panca";
     if (!b.status) b.status = "ACTIVE";
   }
 
