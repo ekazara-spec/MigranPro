@@ -319,7 +319,7 @@ export function buildDefaultTrainingForCandidate(c: Candidate): TrainingRecord {
       c.processTrack === "NON_REKOM"
         ? "Jalur Non-Rekom: Tanpa wajib PAP/E-KTKLN, fokus kesiapan bahasa Arab/Inggris praktis & langsung proses tiket keberangkatan."
         : isTrained
-        ? "Kompeten & lulus ujian sertifikasi BNSP, PAP serta wawancara Syarikah/Majikan Timur Tengah."
+        ? "Kompeten & lulus uji kompetensi LSP serta sertifikat resmi BNSP dari BLK-LN."
         : "Sedang mengikuti kelas intensif Bahasa Arab & keterampilan di asrama BLK-LN.",
   };
 }
