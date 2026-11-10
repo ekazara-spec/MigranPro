@@ -44,17 +44,41 @@ export type DocStatus =
   | "REJECTED"
   | "EXPIRED";
 
+export interface TenantCompany {
+  id: string;
+  code: string;
+  name: string;
+  brandName: string;
+  licenseNo: string; // Nomor Izin SIP3MI Kemnaker RI
+  logoUrl: string;
+  planTier: "FREE_TRIAL" | "PRO" | "ENTERPRISE";
+  planExpiresAt: string;
+  maxCandidates: number;
+  maxBranches: number;
+  status: "ACTIVE" | "SUSPENDED" | "EXPIRED";
+  address: string;
+  phone: string;
+  email: string;
+  picName: string;
+  isPrimary?: boolean;
+  createdAt: string;
+}
+
 export interface Branch {
   id: string;
+  tenantId?: string;
   code: string;
   name: string;
   city: string;
   headName: string;
   phone: string;
+  address?: string;
+  status?: "ACTIVE" | "INACTIVE";
 }
 
 export interface Sponsor {
   id: string;
+  tenantId?: string;
   code: string;
   name: string;
   phone: string;
@@ -132,6 +156,7 @@ export interface TrainingRecord {
 
 export interface StaffAccount {
   id: string;
+  tenantId?: string;
   name: string;
   email: string;
   role: UserRole;
@@ -518,6 +543,7 @@ export interface SponsorFormSubmission {
 
 export interface Candidate {
   id: string;
+  tenantId?: string;
   regNumber: string;
   nik?: string;
   fullName: string;
@@ -703,3 +729,121 @@ export const DOC_TEMPLATE_CONFIG: {
     description: "Syarat mutlak sebelum status CPMI menjadi Deployed (Berangkat)",
   },
 ];
+
+// --- MODUL 3: INTEGRASI WHATSAPP GATEWAY OTOMATIS ---
+export type WhatsAppMessageType =
+  | "STAGE_UPDATE"
+  | "COMMISSION_PAID"
+  | "EXPIRY_REMINDER"
+  | "INTERVIEW_INVITE"
+  | "GENERAL";
+
+export interface WhatsAppNotification {
+  id: string;
+  recipientPhone: string;
+  recipientName: string;
+  recipientRole: "CPMI" | "SPONSOR" | "CABANG" | "SYARIKAH";
+  candidateId?: string;
+  candidateName?: string;
+  messageType: WhatsAppMessageType;
+  title: string;
+  messageBody: string;
+  status: "SENT" | "PENDING" | "FAILED";
+  sentAt: string;
+}
+
+// --- MODUL 4: AKUNTANSI, ARUS KAS BANK & KASBON ---
+export type CashTransactionType = "MASUK" | "KELUAR";
+
+export type CashJournalCategory =
+  | "INVOICE_WAKALAH"
+  | "DP_SPONSOR"
+  | "PELUNASAN_SPONSOR"
+  | "MEDICAL_PAYMENT"
+  | "PASPOR_PAYMENT"
+  | "BLK_TRAINING"
+  | "TIKET_FLIGHT"
+  | "KASBON_SPONSOR"
+  | "KASBON_STAF"
+  | "OPERASIONAL_KANTOR"
+  | "LAINNYA";
+
+export interface CashJournal {
+  id: string;
+  tenantId?: string;
+  branchId: string;
+  transactionDate: string;
+  type: CashTransactionType;
+  category: CashJournalCategory;
+  amount: number;
+  recipientOrPayer: string;
+  description: string;
+  paymentMethod: "BANK_TRANSFER" | "CASH" | "GIRO";
+  bankAccountName?: string;
+  referenceNumber?: string;
+  candidateId?: string;
+  createdBy: string;
+  createdAt: string;
+}
+
+export interface CashAdvanceDeduction {
+  id: string;
+  date: string;
+  amount: number;
+  note: string;
+}
+
+export interface CashAdvance {
+  id: string;
+  tenantId?: string;
+  borrowerId: string;
+  borrowerName: string;
+  borrowerType: "SPONSOR" | "STAF";
+  amount: number;
+  remainingAmount: number;
+  reason: string;
+  dateGiven: string;
+  status: "DIAJUKAN" | "DISETUJUI" | "LUNAS";
+  approvedBy?: string;
+  deductions: CashAdvanceDeduction[];
+}
+
+export interface SyarikahInvoice {
+  id: string;
+  tenantId?: string;
+  invoiceNumber: string;
+  syarikahName: string;
+  destinationCountry: string;
+  candidateCount: number;
+  candidateNames: string[];
+  currency: "SAR" | "USD" | "IDR";
+  totalAmount: number;
+  paidAmount: number;
+  dueDate: string;
+  issuedDate: string;
+  status: "DRAFT" | "SENT" | "PARTIAL" | "PAID";
+  notes?: string;
+}
+
+// --- MODUL 5: SELEKSI & WAWANCARA MAJIKAN (MATCHING) ---
+export type InterviewStatus = "SCHEDULED" | "PASSED" | "FAILED" | "RESCHEDULED";
+
+export interface EmployerInterview {
+  id: string;
+  tenantId?: string;
+  candidateId: string;
+  candidateName: string;
+  syarikahName: string;
+  jobSector: string;
+  interviewDate: string;
+  interviewTimeKsa: string;
+  interviewMethod: "ZOOM" | "GOOGLE_MEET" | "WHATSAPP_VIDEO";
+  meetingLinkOrPhone: string;
+  interviewerName: string;
+  interpreterName: string;
+  status: InterviewStatus;
+  agreedSalarySar?: number;
+  notes?: string;
+  createdAt: string;
+}
+

@@ -77,10 +77,23 @@ import {
   SponsorFormSubmission,
   SponsorInstallment,
   StaffAccount,
+  TenantCompany,
   UserRole,
+  CashAdvance,
+  CashJournal,
+  EmployerInterview,
+  SyarikahInvoice,
+  WhatsAppNotification,
 } from "@/lib/types";
 
+import TenantBranchModule from "@/components/TenantBranchModule";
+import DocumentPrintModule from "@/components/DocumentPrintModule";
+import WhatsAppGatewayModule from "@/components/WhatsAppGatewayModule";
+import CashAndAdvancesModule from "@/components/CashAndAdvancesModule";
+import EmployerMatchingModule from "@/components/EmployerMatchingModule";
+
 interface DbPayload {
+  tenants?: TenantCompany[];
   branches: Branch[];
   sponsors: Sponsor[];
   staffAccounts: StaffAccount[];
@@ -94,6 +107,11 @@ interface DbPayload {
   medicalClinics?: MedicalClinicPartner[];
   bpjsFinancingPartners?: BpjsFinancingPartner[];
   sponsorSubmissions?: SponsorFormSubmission[];
+  whatsAppLogs?: WhatsAppNotification[];
+  cashJournals?: CashJournal[];
+  cashAdvances?: CashAdvance[];
+  syarikahInvoices?: SyarikahInvoice[];
+  employerInterviews?: EmployerInterview[];
 }
 
 const ROLE_PERMISSIONS: Record<
@@ -103,6 +121,8 @@ const ROLE_PERMISSIONS: Record<
     canViewSensitive: boolean;
     canSeeFinance: boolean;
     canManageStaff: boolean;
+    canExecuteOperation: boolean;
+    isReadOnlyCabang: boolean;
   }
 > = {
   DIREKTUR: {
@@ -110,30 +130,40 @@ const ROLE_PERMISSIONS: Record<
     canViewSensitive: true,
     canSeeFinance: true,
     canManageStaff: true,
+    canExecuteOperation: true,
+    isReadOnlyCabang: false,
   },
   ADMIN_PUSAT: {
     canVerify: true,
     canViewSensitive: true,
     canSeeFinance: true,
     canManageStaff: true,
+    canExecuteOperation: true,
+    isReadOnlyCabang: false,
   },
   STAF_DOKUMEN: {
     canVerify: true,
     canViewSensitive: true,
     canSeeFinance: false,
     canManageStaff: false,
+    canExecuteOperation: true,
+    isReadOnlyCabang: false,
   },
   KEPALA_CABANG: {
-    canVerify: true,
+    canVerify: false,
     canViewSensitive: true,
     canSeeFinance: false,
     canManageStaff: false,
+    canExecuteOperation: false,
+    isReadOnlyCabang: true,
   },
   PEREKRUT_PL: {
     canVerify: false,
     canViewSensitive: false,
     canSeeFinance: false,
     canManageStaff: false,
+    canExecuteOperation: false,
+    isReadOnlyCabang: true,
   },
 };
 
@@ -233,6 +263,11 @@ export default function PASMigranProCommandCenter() {
   const [loading, setLoading] = useState(true);
   const [activeNav, setActiveNav] = useState<
     | "beranda"
+    | "saas_tenants"
+    | "doc_print"
+    | "whatsapp_gateway"
+    | "aruskas_kasbon"
+    | "employer_matching"
     | "cpmi"
     | "keuangan"
     | "pelatihan"
@@ -351,6 +386,26 @@ export default function PASMigranProCommandCenter() {
     nik: "",
     gender: "P" as "P" | "L",
     branchId: "br-idm",
+  });
+
+  // State Modul 1: Manajemen Tenant & Cabang (SaaS Multi-Tenant)
+  const [selectedTenantId, setSelectedTenantId] = useState<string>("tenant-panca");
+  const [showAddTenantModal, setShowAddTenantModal] = useState(false);
+  const [editingTenant, setEditingTenant] = useState<TenantCompany | null>(null);
+  const [tenantForm, setTenantForm] = useState({
+    code: "",
+    name: "",
+    brandName: "",
+    licenseNo: "",
+    logoUrl: "/logo-panca-banyu.png",
+    planTier: "ENTERPRISE" as "FREE_TRIAL" | "PRO" | "ENTERPRISE",
+    planExpiresAt: "2028-12-31",
+    maxCandidates: 1000,
+    maxBranches: 20,
+    address: "",
+    phone: "",
+    email: "",
+    picName: "",
   });
 
   // State Portal Mandiri CPMI/PMI
@@ -806,6 +861,45 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
   const perms = ROLE_PERMISSIONS[currentRole];
 
   async function callApi(action: string, payload: Record<string, unknown> = {}) {
+    if (isBranchViewOnly) {
+      const restricted = [
+        "CHANGE_STAGE",
+        "UPDATE_DOCUMENT",
+        "PAY_SPONSOR_INSTALLMENT",
+        "PROCESS_BADIL",
+        "CREATE_CANDIDATE",
+        "UPDATE_CANDIDATE",
+        "CREATE_TENANT",
+        "UPDATE_TENANT",
+        "CREATE_BRANCH",
+        "UPDATE_BRANCH",
+        "CREATE_FOREIGN_AGENCY",
+        "CREATE_SPONSOR",
+        "CREATE_MEDICAL_CLINIC",
+        "CREATE_BPJS_FINANCING",
+        "CREATE_STAFF",
+        "SEND_WHATSAPP_MESSAGE",
+        "CREATE_CASH_JOURNAL",
+        "CREATE_CASH_ADVANCE",
+        "REPAY_CASH_ADVANCE",
+        "CREATE_SYARIKAH_INVOICE",
+        "UPDATE_SYARIKAH_INVOICE",
+        "CREATE_EMPLOYER_INTERVIEW",
+        "UPDATE_EMPLOYER_INTERVIEW",
+      ];
+      if (restricted.includes(action)) {
+        setToast({
+          type: "error",
+          title: "Akses Ditolak: Mode Pantau Cabang (View-Only)",
+          details: [
+            "Administrasi eksekusi seluruh proses operasional hanya dapat dilakukan oleh Admin Pusat / Direktur.",
+            "Akun Cabang hanya memiliki hak pantau perkembangan CPMI.",
+          ],
+        });
+        return { status: 403, data: { ok: false, error: "Akses Ditolak: Mode Pantau Cabang." } };
+      }
+    }
+
     const branchObj = db?.branches.find((b) => b.id === selectedBranchId);
     const res = await fetch("/api/p3mi", {
       method: "POST",
@@ -819,6 +913,13 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
       }),
     });
     const data = await res.json();
+    if (!res.ok || !data.ok) {
+      setToast({
+        type: "error",
+        title: "Gagal Memproses Permintaan",
+        details: [data.error || "Terjadi kesalahan pada server."],
+      });
+    }
     if (data.db) {
       setDb(data.db);
     }
@@ -858,6 +959,19 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
       ],
     });
   }
+
+  const isBranchViewOnly = perms.isReadOnlyCabang || (loggedInStaff?.branchId !== "ALL" && loggedInStaff?.role === "KEPALA_CABANG");
+
+  const activeTenant = useMemo(() => {
+    if (!db?.tenants || db.tenants.length === 0) return null;
+    return db.tenants.find((t) => t.id === selectedTenantId) || db.tenants[0] || null;
+  }, [db, selectedTenantId]);
+
+  const tenantBranches = useMemo(() => {
+    if (!db) return [];
+    if (!activeTenant) return db.branches;
+    return db.branches.filter((b) => !b.tenantId || b.tenantId === activeTenant.id);
+  }, [db, activeTenant]);
 
   // Filter kandidat berdasarkan cabang, pencarian, tahapan, alur proses (Rekom vs Non-Rekom), dan negara tujuan Timur Tengah
   const filteredCandidates = useMemo(() => {
@@ -2339,7 +2453,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
         </div>
 
         {/* Menu Navigasi Utama */}
-        <nav className="flex-1 space-y-1 px-3 py-4 text-sm">
+        <nav className="flex-1 space-y-1 px-3 py-4 text-sm overflow-y-auto">
           <button
             onClick={() => setActiveNav("beranda")}
             className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
@@ -2370,6 +2484,101 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
               {stats.totalCpmi}
             </span>
           </button>
+
+          {/* SEKSI 5 MODUL UTAMA OPERASIONAL P3MI */}
+          <div className="pt-3 pb-1 px-2 text-[10px] font-bold uppercase tracking-wider text-amber-400 flex items-center justify-between border-t border-slate-700/60 mt-2">
+            <span>5 Modul Terintegrasi</span>
+            <span className="rounded bg-amber-500/20 px-1 py-0.2 text-[9px] text-amber-300">P3MI</span>
+          </div>
+
+          <button
+            onClick={() => setActiveNav("saas_tenants")}
+            className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
+              activeNav === "saas_tenants"
+                ? "bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-sm font-bold"
+                : "text-slate-300 hover:bg-white/5 hover:text-white"
+            }`}
+          >
+            <span className="flex items-center gap-2.5">
+              <Building2 className="h-4 w-4 text-sky-400" />
+              1. Tenant & Cabang (SaaS)
+            </span>
+            <span className="rounded bg-sky-500/20 px-1.5 py-0.5 text-[10px] text-sky-200">
+              Multi-P3MI
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveNav("doc_print")}
+            className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
+              activeNav === "doc_print"
+                ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-sm font-bold"
+                : "text-slate-300 hover:bg-white/5 hover:text-white"
+            }`}
+          >
+            <span className="flex items-center gap-2.5">
+              <Printer className="h-4 w-4 text-emerald-400" />
+              2. Cetak Dokumen (PDF)
+            </span>
+            <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] text-emerald-200">
+              Kanim/PK
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveNav("whatsapp_gateway")}
+            className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
+              activeNav === "whatsapp_gateway"
+                ? "bg-gradient-to-r from-emerald-600 to-green-600 text-white shadow-sm font-bold"
+                : "text-slate-300 hover:bg-white/5 hover:text-white"
+            }`}
+          >
+            <span className="flex items-center gap-2.5">
+              <MessageSquarePlus className="h-4 w-4 text-emerald-400" />
+              3. WhatsApp Gateway
+            </span>
+            <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] text-emerald-200">
+              Auto WA
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveNav("aruskas_kasbon")}
+            className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
+              activeNav === "aruskas_kasbon"
+                ? "bg-gradient-to-r from-amber-600 to-amber-700 text-white shadow-sm font-bold"
+                : "text-slate-300 hover:bg-white/5 hover:text-white"
+            }`}
+          >
+            <span className="flex items-center gap-2.5">
+              <Receipt className="h-4 w-4 text-amber-400" />
+              4. Arus Kas & Kasbon
+            </span>
+            <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] text-amber-200">
+              SAR/IDR
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveNav("employer_matching")}
+            className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
+              activeNav === "employer_matching"
+                ? "bg-gradient-to-r from-sky-600 to-blue-700 text-white shadow-sm font-bold"
+                : "text-slate-300 hover:bg-white/5 hover:text-white"
+            }`}
+          >
+            <span className="flex items-center gap-2.5">
+              <UserCheck className="h-4 w-4 text-sky-400" />
+              5. Wawancara Majikan
+            </span>
+            <span className="rounded bg-sky-500/20 px-1.5 py-0.5 text-[10px] text-sky-200">
+              Video Call
+            </span>
+          </button>
+
+          <div className="pt-3 pb-1 px-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-t border-slate-700/60 mt-2">
+            Modul Operasional Lainnya
+          </div>
 
           <button
             onClick={() => setActiveNav("keuangan")}
@@ -2565,6 +2774,11 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
             <div className="flex items-center gap-2">
               <h1 className="text-lg font-bold text-slate-900">
                 {activeNav === "beranda" && "Command Center Operasional P3MI"}
+                {activeNav === "saas_tenants" && "Modul 1: Manajemen Multi-Tenant P3MI & Kantor Cabang (SaaS)"}
+                {activeNav === "doc_print" && "Modul 2: Cetak Dokumen Otomatis (Surat Paspor, Rekom Desa, PK Resmi, CV Syarikah)"}
+                {activeNav === "whatsapp_gateway" && "Modul 3: Integrasi WhatsApp Gateway Otomatis (Notifikasi & Direct Chat)"}
+                {activeNav === "aruskas_kasbon" && "Modul 4: Modul Akuntansi & Arus Kas Bank / Kasbon (Buku Kas & Invoice Wakalah)"}
+                {activeNav === "employer_matching" && "Modul 5: Seleksi & Wawancara Majikan (Job Matching & Video Call Syarikah)"}
                 {activeNav === "cpmi" && "Manajemen Data CPMI & Satu Berkas Digital"}
                 {activeNav === "keuangan" &&
                   "Keuangan P3MI: Pembayaran Bertahap Fee Sponsor (DP1–DP3 & Pelunasan) & HPP"}
@@ -3076,6 +3290,85 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
           )}
 
           {/* =========================================================
+              MODUL 1: MANAJEMEN TENANT & CABANG (SAAS)
+             ========================================================= */}
+          {activeNav === "saas_tenants" && (
+            <TenantBranchModule
+              tenants={db.tenants || []}
+              branches={db.branches}
+              candidatesCount={db.candidates.length}
+              selectedTenantId={selectedTenantId}
+              onSelectTenant={(id) => setSelectedTenantId(id)}
+              isBranchViewOnly={isBranchViewOnly}
+              actorRole={loggedInStaff?.role || "ADMIN_PUSAT"}
+              actorName={loggedInStaff?.name || "Admin Pusat"}
+              onRefreshDb={fetchDb}
+            />
+          )}
+
+          {/* =========================================================
+              MODUL 2: CETAK DOKUMEN OTOMATIS (PDF GENERATOR)
+             ========================================================= */}
+          {activeNav === "doc_print" && (
+            <DocumentPrintModule
+              candidates={db.candidates}
+              activeTenant={activeTenant}
+              isBranchViewOnly={isBranchViewOnly}
+              preselectedCandidateId={selectedCandidate?.id}
+            />
+          )}
+
+          {/* =========================================================
+              MODUL 3: INTEGRASI WHATSAPP GATEWAY OTOMATIS
+             ========================================================= */}
+          {activeNav === "whatsapp_gateway" && (
+            <WhatsAppGatewayModule
+              whatsAppLogs={db.whatsAppLogs || []}
+              candidates={db.candidates}
+              sponsors={db.sponsors}
+              isBranchViewOnly={isBranchViewOnly}
+              actorRole={loggedInStaff?.role || "ADMIN_PUSAT"}
+              actorName={loggedInStaff?.name || "Admin Pusat"}
+              onRefreshDb={fetchDb}
+            />
+          )}
+
+          {/* =========================================================
+              MODUL 4: AKUNTANSI, ARUS KAS BANK & KASBON
+             ========================================================= */}
+          {activeNav === "aruskas_kasbon" && (
+            <CashAndAdvancesModule
+              cashJournals={db.cashJournals || []}
+              cashAdvances={db.cashAdvances || []}
+              syarikahInvoices={db.syarikahInvoices || []}
+              sponsors={db.sponsors}
+              staffAccounts={db.staffAccounts}
+              candidates={db.candidates}
+              branches={db.branches}
+              isBranchViewOnly={isBranchViewOnly}
+              actorRole={loggedInStaff?.role || "ADMIN_PUSAT"}
+              actorName={loggedInStaff?.name || "Admin Pusat"}
+              onRefreshDb={fetchDb}
+            />
+          )}
+
+          {/* =========================================================
+              MODUL 5: SELEKSI & WAWANCARA MAJIKAN (MATCHING)
+             ========================================================= */}
+          {activeNav === "employer_matching" && (
+            <EmployerMatchingModule
+              employerInterviews={db.employerInterviews || []}
+              candidates={db.candidates}
+              vacancies={db.vacancies || []}
+              foreignAgencies={db.foreignAgencies || []}
+              isBranchViewOnly={isBranchViewOnly}
+              actorRole={loggedInStaff?.role || "ADMIN_PUSAT"}
+              actorName={loggedInStaff?.name || "Admin Pusat"}
+              onRefreshDb={fetchDb}
+            />
+          )}
+
+          {/* =========================================================
               TAB 2: PERSON / DATA CPMI & SATU BERKAS DIGITAL PER ORANG
              ========================================================= */}
           {activeNav === "cpmi" && (
@@ -3549,6 +3842,39 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
 
                         <div className="flex flex-col items-end gap-2">
                           <div className="flex flex-wrap items-center gap-2">
+                            <button
+                              onClick={() => {
+                                setSelectedCandidateId(selectedCandidate.id);
+                                setActiveNav("doc_print");
+                              }}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-900 shadow-xs hover:bg-emerald-100"
+                            >
+                              <Printer className="h-3.5 w-3.5 text-emerald-700" />
+                              📄 Cetak Dokumen Resmi (Kanim/PK)
+                            </button>
+
+                            <button
+                              onClick={() => {
+                                setSelectedCandidateId(selectedCandidate.id);
+                                setActiveNav("whatsapp_gateway");
+                              }}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-600 bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-emerald-700"
+                            >
+                              <MessageSquarePlus className="h-3.5 w-3.5 text-white" />
+                              💬 Notifikasi WA
+                            </button>
+
+                            <button
+                              onClick={() => {
+                                setSelectedCandidateId(selectedCandidate.id);
+                                setActiveNav("employer_matching");
+                              }}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-sky-500 bg-sky-50 px-3 py-1.5 text-xs font-bold text-sky-900 shadow-xs hover:bg-sky-100"
+                            >
+                              <UserCheck className="h-3.5 w-3.5 text-sky-700" />
+                              🤝 Wawancara Majikan
+                            </button>
+
                             <button
                               onClick={() => openSyarikahBiodataModal(selectedCandidate)}
                               className="inline-flex items-center gap-1.5 rounded-lg border-2 border-indigo-500 bg-indigo-600 px-3 py-1.5 text-xs font-extrabold text-white shadow-sm hover:bg-indigo-700"

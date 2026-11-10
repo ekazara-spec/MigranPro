@@ -9,8 +9,11 @@ import {
   Candidate,
   CandidateFinance,
   CaseTicket,
+  CashAdvance,
+  CashJournal,
   CpmiDocument,
   DOC_TEMPLATE_CONFIG,
+  EmployerInterview,
   ForeignAgency,
   JobVacancy,
   JourneyStage,
@@ -22,10 +25,14 @@ import {
   SponsorFormSubmission,
   SponsorInstallment,
   StaffAccount,
+  SyarikahInvoice,
+  TenantCompany,
   TrainingRecord,
+  WhatsAppNotification,
 } from "./types";
 
 export interface DatabaseSchema {
+  tenants?: TenantCompany[];
   branches: Branch[];
   sponsors: Sponsor[];
   staffAccounts: StaffAccount[];
@@ -39,6 +46,11 @@ export interface DatabaseSchema {
   medicalClinics?: MedicalClinicPartner[];
   bpjsFinancingPartners?: BpjsFinancingPartner[];
   sponsorSubmissions?: SponsorFormSubmission[];
+  whatsAppLogs?: WhatsAppNotification[];
+  cashJournals?: CashJournal[];
+  cashAdvances?: CashAdvance[];
+  syarikahInvoices?: SyarikahInvoice[];
+  employerInterviews?: EmployerInterview[];
 }
 
 const IS_SERVERLESS = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
@@ -759,39 +771,114 @@ function createInitialVacancies(): JobVacancy[] {
   ];
 }
 
+function createInitialTenants(): TenantCompany[] {
+  return [
+    {
+      id: "tenant-panca",
+      code: "P3MI-PBAS",
+      name: "PT. PANCA BANYU AJISAKTI",
+      brandName: "Panca Banyu Ajisakti",
+      licenseNo: "SIP3MI NO. 502/MEN/2021",
+      logoUrl: "/logo-panca-banyu.png",
+      planTier: "ENTERPRISE",
+      planExpiresAt: "2028-12-31",
+      maxCandidates: 1000,
+      maxBranches: 20,
+      status: "ACTIVE",
+      address: "Jl. Kayu Manis No. 51, Kel. Balekambang, Kec. Kramat Jati, Jakarta Timur",
+      phone: "+62-21 2937373",
+      email: "pancabanyu@yahoo.com",
+      picName: "H. Bambang Wijaya, S.E. (Direktur Utama)",
+      isPrimary: true,
+      createdAt: "2021-06-15",
+    },
+    {
+      id: "tenant-alfath",
+      code: "P3MI-AFM",
+      name: "PT. AL-FATH MANPOWER INTERNASIONAL",
+      brandName: "Al-Fath Manpower",
+      licenseNo: "SIP3MI NO. 219/MEN/2022",
+      logoUrl: "/logo-panca-banyu.png",
+      planTier: "PRO",
+      planExpiresAt: "2027-08-31",
+      maxCandidates: 250,
+      maxBranches: 5,
+      status: "ACTIVE",
+      address: "Jl. Pemuda No. 88, Cirebon, Jawa Barat",
+      phone: "+62-231 489921",
+      email: "admin@alfath-manpower.id",
+      picName: "Hj. Siti Nurhaliza (Direktur)",
+      isPrimary: false,
+      createdAt: "2022-09-01",
+    },
+    {
+      id: "tenant-nusantara",
+      code: "P3MI-NGS",
+      name: "PT. NUSANTARA GLOBAL SERVICE",
+      brandName: "Nusantara Global",
+      licenseNo: "SIP3MI NO. 118/MEN/2020",
+      logoUrl: "/logo-panca-banyu.png",
+      planTier: "FREE_TRIAL",
+      planExpiresAt: "2026-12-31",
+      maxCandidates: 50,
+      maxBranches: 2,
+      status: "ACTIVE",
+      address: "Kawasan Industri Modern, Cilegon, Banten",
+      phone: "+62-254 771234",
+      email: "contact@nusantaraglobal.co.id",
+      picName: "Drs. Hendra Gunawan",
+      isPrimary: false,
+      createdAt: "2024-01-10",
+    },
+  ];
+}
+
 function createInitialSeed(): DatabaseSchema {
+  const tenants = createInitialTenants();
   const branches: Branch[] = [
     {
       id: "br-jkt",
+      tenantId: "tenant-panca",
       code: "JKT-HQ",
       name: "Kantor Pusat Jakarta",
       city: "Jakarta Timur",
       headName: "H. Bambang Wijaya, S.E.",
       phone: "021-87901122",
+      address: "Jl. Kayu Manis No. 51, Jakarta Timur",
+      status: "ACTIVE",
     },
     {
       id: "br-idm",
+      tenantId: "tenant-panca",
       code: "IDM-01",
       name: "Cabang Indramayu",
       city: "Indramayu, Jawa Barat",
       headName: "Hj. Siti Aminah",
       phone: "0234-274511",
+      address: "Jl. Mayor Dasuki No. 12, Jatibarang, Indramayu",
+      status: "ACTIVE",
     },
     {
       id: "br-clp",
+      tenantId: "tenant-panca",
       code: "CLP-02",
       name: "Cabang Cilacap",
       city: "Cilacap, Jawa Tengah",
       headName: "Hendro Prasetyo",
       phone: "0282-534901",
+      address: "Jl. Gatot Subroto No. 45, Cilacap",
+      status: "ACTIVE",
     },
     {
       id: "br-mlg",
+      tenantId: "tenant-panca",
       code: "MLG-03",
       name: "Cabang Malang",
       city: "Malang, Jawa Timur",
       headName: "Wahyu Setiawan",
       phone: "0341-491822",
+      address: "Jl. Panji No. 80, Kepanjen, Malang",
+      status: "ACTIVE",
     },
   ];
 
@@ -1649,6 +1736,7 @@ function createInitialSeed(): DatabaseSchema {
   ];
 
   const db: DatabaseSchema = {
+    tenants,
     branches,
     sponsors,
     staffAccounts: createInitialStaff(),
@@ -1661,6 +1749,11 @@ function createInitialSeed(): DatabaseSchema {
     foreignAgencies: createInitialForeignAgencies(),
     medicalClinics: createInitialMedicalClinics(),
     bpjsFinancingPartners: createInitialBpjsFinancing(),
+    whatsAppLogs: createInitialWhatsAppLogs(),
+    cashJournals: createInitialCashJournals(),
+    cashAdvances: createInitialCashAdvances(),
+    syarikahInvoices: createInitialSyarikahInvoices(),
+    employerInterviews: createInitialEmployerInterviews(),
   };
 
   syncExpirationsAndTasks(db);
@@ -1893,6 +1986,324 @@ export function createInitialBpjsFinancing(): BpjsFinancingPartner[] {
       picName: "Ust. Fauzan Hakim (BSI International Desk)",
       phone: "14040 / 021-30405555",
       status: "ACTIVE",
+    },
+  ];
+}
+
+// --- GENERATOR DATA AWAL MODUL 3, 4, 5 ---
+export function createInitialWhatsAppLogs(): WhatsAppNotification[] {
+  return [
+    {
+      id: "wa-001",
+      recipientPhone: "081223344551",
+      recipientName: "Siti Aminah",
+      recipientRole: "CPMI",
+      candidateId: "cpmi-001",
+      candidateName: "Siti Aminah",
+      messageType: "STAGE_UPDATE",
+      title: "Hasil Medical Check-Up FIT",
+      messageBody: "Yth. Sdri Siti Aminah, Selamat! Hasil Medical Check-Up Pra-Terbang Anda di Klinik Barokah Medika dinyatakan FIT. Berkas Anda kini diproses untuk penerbitan Paspor & Pengajuan Visa Kerja Arab Saudi (Zero Cost Syarikah). Tetap jaga kesehatan dan stand by.",
+      status: "SENT",
+      sentAt: relativeDate(-5) + " 10:15",
+    },
+    {
+      id: "wa-002",
+      recipientPhone: "081298765432",
+      recipientName: "H. Salimudin",
+      recipientRole: "SPONSOR",
+      candidateId: "cpmi-001",
+      candidateName: "Siti Aminah",
+      messageType: "COMMISSION_PAID",
+      title: "Pencairan DP1 Komisi Sponsor",
+      messageBody: "Yth. Bpk H. Salimudin (Sponsor), Dana Termin DP1 Komisi Sponsor atas nama CPMI Siti Aminah sebesar Rp 3.000.000 telah ditransfer ke rekening BRI Anda oleh Kasir Pusat PT. Panca Banyu Ajisakti. Kwitansi: KW-PAS/DP1/2026/0011. Terima kasih atas kerjasamanya.",
+      status: "SENT",
+      sentAt: relativeDate(-4) + " 14:30",
+    },
+    {
+      id: "wa-003",
+      recipientPhone: "081399887711",
+      recipientName: "Eka Rahmawati",
+      recipientRole: "CPMI",
+      candidateId: "cpmi-003",
+      candidateName: "Eka Rahmawati",
+      messageType: "EXPIRY_REMINDER",
+      title: "Pengingat Masa Berlaku Paspor H-30",
+      messageBody: "PENTING: Yth. Sdri Eka Rahmawati, paspor Anda tersisa < 30 hari masa berlaku aktif. Petugas Admin Pusat PT. Panca Banyu Ajisakti telah menyiapkan Surat Pengantar Perpanjangan Paspor ke Kantor Imigrasi. Harap segera koordinasi dengan cabang.",
+      status: "SENT",
+      sentAt: relativeDate(-2) + " 09:00",
+    },
+    {
+      id: "wa-004",
+      recipientPhone: "081288776655",
+      recipientName: "Nur Hayati",
+      recipientRole: "CPMI",
+      candidateId: "cpmi-002",
+      candidateName: "Nur Hayati",
+      messageType: "INTERVIEW_INVITE",
+      title: "Undangan Video Call Interview Syarikah",
+      messageBody: "Yth. Sdri Nur Hayati, Jadwal interview video call dengan perwakilan Syarikah SMASCO (Arab Saudi) telah dijadwalkan pada hari ini pukul 15:30 WIB (11:30 KSA Time). Petugas interpreter bahasa Arab kami akan mendampingi Anda di kantor.",
+      status: "SENT",
+      sentAt: relativeDate(0) + " 08:30",
+    },
+  ];
+}
+
+export function createInitialCashJournals(): CashJournal[] {
+  return [
+    {
+      id: "cj-001",
+      tenantId: "tenant-panca",
+      branchId: "br-jkt",
+      transactionDate: relativeDate(-12),
+      type: "MASUK",
+      category: "INVOICE_WAKALAH",
+      amount: 75000000,
+      recipientOrPayer: "Maharah Human Resources Co. (KSA)",
+      description: "Penerimaan Termin 1 Wakalah Dana Rekrutmen 5 CPMI Arab Saudi (Zero Cost)",
+      paymentMethod: "BANK_TRANSFER",
+      bankAccountName: "BSI Rek. 7192830192 a/n PT Panca Banyu Ajisakti",
+      referenceNumber: "SWIFT-BSIR/2026/02911",
+      createdBy: "Rina Kartika (Kasir Pusat)",
+      createdAt: relativeDate(-12) + " 11:20",
+    },
+    {
+      id: "cj-002",
+      tenantId: "tenant-panca",
+      branchId: "br-jkt",
+      transactionDate: relativeDate(-10),
+      type: "KELUAR",
+      category: "DP_SPONSOR",
+      amount: 3000000,
+      recipientOrPayer: "H. Salimudin (Sponsor Indramayu)",
+      description: "Pembayaran DP1 Komisi Sponsor CPMI Siti Aminah (Kwitansi KW-PAS/DP1/2026/0011)",
+      paymentMethod: "BANK_TRANSFER",
+      bankAccountName: "BRI Rek. 0129384729",
+      referenceNumber: "TRF-BRI/20260301-92",
+      candidateId: "cpmi-001",
+      createdBy: "Rina Kartika (Kasir Pusat)",
+      createdAt: relativeDate(-10) + " 14:05",
+    },
+    {
+      id: "cj-003",
+      tenantId: "tenant-panca",
+      branchId: "br-jkt",
+      transactionDate: relativeDate(-8),
+      type: "KELUAR",
+      category: "MEDICAL_PAYMENT",
+      amount: 3600000,
+      recipientOrPayer: "Klinik Barokah Medika (Mitra Gamca/Wafid)",
+      description: "Pelunasan Tagihan Medical Check-Up Pra-Terbang 4 CPMI (Siti Aminah, Nur Hayati, Eka, Marwah)",
+      paymentMethod: "BANK_TRANSFER",
+      bankAccountName: "Mandiri Rek. 158000492810",
+      referenceNumber: "INV-MED/2026/03-19",
+      createdBy: "Rina Kartika (Kasir Pusat)",
+      createdAt: relativeDate(-8) + " 09:45",
+    },
+    {
+      id: "cj-004",
+      tenantId: "tenant-panca",
+      branchId: "br-jkt",
+      transactionDate: relativeDate(-6),
+      type: "KELUAR",
+      category: "PASPOR_PAYMENT",
+      amount: 2800000,
+      recipientOrPayer: "PNBP Kantor Imigrasi Kelas I",
+      description: "Biaya PNBP Paspor RI 48 Halaman Elektronik x 4 CPMI ke Kanim",
+      paymentMethod: "BANK_TRANSFER",
+      bankAccountName: "Kas Negara Simponi DJA Kemenkeu",
+      referenceNumber: "MPN-G2/8920194819",
+      createdBy: "Rina Kartika (Kasir Pusat)",
+      createdAt: relativeDate(-6) + " 13:10",
+    },
+    {
+      id: "cj-005",
+      tenantId: "tenant-panca",
+      branchId: "br-jkt",
+      transactionDate: relativeDate(-4),
+      type: "KELUAR",
+      category: "KASBON_SPONSOR",
+      amount: 2500000,
+      recipientOrPayer: "H. Salimudin (Sponsor)",
+      description: "Kasbon Operasional Perekrutan Wilayah Pantura Indramayu (Dipelihara di Buku Kasbon)",
+      paymentMethod: "CASH",
+      referenceNumber: "BON-SPS/2026/012",
+      createdBy: "Rina Kartika (Kasir Pusat)",
+      createdAt: relativeDate(-4) + " 15:40",
+    },
+    {
+      id: "cj-006",
+      tenantId: "tenant-panca",
+      branchId: "br-jkt",
+      transactionDate: relativeDate(-2),
+      type: "MASUK",
+      category: "INVOICE_WAKALAH",
+      amount: 45000000,
+      recipientOrPayer: "SMASCO Recruitment (Riyadh, KSA)",
+      description: "Penerimaan DP Rekrutmen 3 Tenaga Perawat & Caregiver Domestik",
+      paymentMethod: "BANK_TRANSFER",
+      bankAccountName: "BSI Rek. 7192830192 a/n PT Panca Banyu Ajisakti",
+      referenceNumber: "SWIFT-BSIR/2026/03102",
+      createdBy: "Rina Kartika (Kasir Pusat)",
+      createdAt: relativeDate(-2) + " 16:15",
+    },
+  ];
+}
+
+export function createInitialCashAdvances(): CashAdvance[] {
+  return [
+    {
+      id: "ca-001",
+      tenantId: "tenant-panca",
+      borrowerId: "sp-001",
+      borrowerName: "H. Salimudin",
+      borrowerType: "SPONSOR",
+      amount: 2500000,
+      remainingAmount: 1000000,
+      reason: "Bantuan Transport & Operasional Rekrutmen CPMI Indramayu Barat",
+      dateGiven: relativeDate(-20),
+      status: "DISETUJUI",
+      approvedBy: "H. Bambang Wijaya (Direktur)",
+      deductions: [
+        {
+          id: "ded-01",
+          date: relativeDate(-4),
+          amount: 1500000,
+          note: "Dipotong otomatis dari pencairan DP1 Komisi CPMI Siti Aminah",
+        },
+      ],
+    },
+    {
+      id: "ca-002",
+      tenantId: "tenant-panca",
+      borrowerId: "staf-04",
+      borrowerName: "Ahmad Fauzi (Staf Lapangan)",
+      borrowerType: "STAF",
+      amount: 1000000,
+      remainingAmount: 500000,
+      reason: "Operasional Antar Jemput CPMI ke Kanim Imigrasi & Klinik Gamca",
+      dateGiven: relativeDate(-7),
+      status: "DISETUJUI",
+      approvedBy: "Rina Kartika (Admin Pusat)",
+      deductions: [
+        {
+          id: "ded-02",
+          date: relativeDate(-2),
+          amount: 500000,
+          note: "Setoran reimburse bon bensin & tol",
+        },
+      ],
+    },
+  ];
+}
+
+export function createInitialSyarikahInvoices(): SyarikahInvoice[] {
+  return [
+    {
+      id: "inv-001",
+      tenantId: "tenant-panca",
+      invoiceNumber: "INV-PBA/SAR/2026/03-01",
+      syarikahName: "Maharah Human Resources Co. (Riyadh, KSA)",
+      destinationCountry: "Arab Saudi",
+      candidateCount: 5,
+      candidateNames: ["Siti Aminah", "Marwah binti Hasan", "Sri Wahyuni", "Aisyah Putri", "Halimah"],
+      currency: "SAR",
+      totalAmount: 25000,
+      paidAmount: 15000,
+      dueDate: relativeDate(15),
+      issuedDate: relativeDate(-12),
+      status: "PARTIAL",
+      notes: "DP 15,000 SAR telah diterima via transfer BSI Swift. Pelunasan 10,000 SAR saat visa stamping dan tiket issued.",
+    },
+    {
+      id: "inv-002",
+      tenantId: "tenant-panca",
+      invoiceNumber: "INV-PBA/SAR/2026/03-02",
+      syarikahName: "SMASCO (Saudi Manpower Solutions Co.)",
+      destinationCountry: "Arab Saudi",
+      candidateCount: 3,
+      candidateNames: ["Nur Hayati", "Dewi Sartika", "Rani Andriani"],
+      currency: "SAR",
+      totalAmount: 18000,
+      paidAmount: 0,
+      dueDate: relativeDate(20),
+      issuedDate: relativeDate(-3),
+      status: "SENT",
+      notes: "Invoice recruitment fee & visa authorization termin 1 menunggu validasi finance SMASCO.",
+    },
+    {
+      id: "inv-003",
+      tenantId: "tenant-panca",
+      invoiceNumber: "INV-PBA/AED/2026/02-08",
+      syarikahName: "Al-Jazeera International Recruitment (Dubai, UEA)",
+      destinationCountry: "Uni Emirat Arab",
+      candidateCount: 4,
+      candidateNames: ["Eka Rahmawati", "Khadijah", "Fitriani", "Ratna Sari"],
+      currency: "SAR",
+      totalAmount: 22000,
+      paidAmount: 22000,
+      dueDate: relativeDate(-5),
+      issuedDate: relativeDate(-25),
+      status: "PAID",
+      notes: "Lunas 100%. Kandidat sudah proses e-Visa MoHRE UEA.",
+    },
+  ];
+}
+
+export function createInitialEmployerInterviews(): EmployerInterview[] {
+  return [
+    {
+      id: "int-001",
+      tenantId: "tenant-panca",
+      candidateId: "cpmi-001",
+      candidateName: "Siti Aminah",
+      syarikahName: "Maharah Human Resources Co. (KSA)",
+      jobSector: "Penata Laksana Rumah Tangga (PLRT / Housemaid)",
+      interviewDate: relativeDate(-3),
+      interviewTimeKsa: "11:00 KSA (15:00 WIB)",
+      interviewMethod: "ZOOM",
+      meetingLinkOrPhone: "https://zoom.us/j/89123049182",
+      interviewerName: "Sheikh Abdulrahman Al-Otaibi",
+      interpreterName: "Ust. Fauzan Hakim (P3MI Pusat)",
+      status: "PASSED",
+      agreedSalarySar: 1500,
+      notes: "Kandidat mampu percakapan dasar bahasa Arab, bersedia di Riyadh keluarga 4 orang, lolos seleksi majikan.",
+      createdAt: relativeDate(-5) + " 09:00",
+    },
+    {
+      id: "int-002",
+      tenantId: "tenant-panca",
+      candidateId: "cpmi-002",
+      candidateName: "Nur Hayati",
+      syarikahName: "SMASCO (Saudi Manpower Solutions Co.)",
+      jobSector: "Pengasuh Balita / Babysitter",
+      interviewDate: relativeDate(1),
+      interviewTimeKsa: "13:30 KSA (17:30 WIB)",
+      interviewMethod: "GOOGLE_MEET",
+      meetingLinkOrPhone: "https://meet.google.com/xyz-pqr-abc",
+      interviewerName: "Madam Noura Al-Zahrani",
+      interpreterName: "Ust. Fauzan Hakim (P3MI Pusat)",
+      status: "SCHEDULED",
+      agreedSalarySar: 1600,
+      notes: "Syarikah mencari pengasuh 2 anak usia 2 dan 4 tahun, kandidat berpengalaman eks-Saudi.",
+      createdAt: relativeDate(-2) + " 11:30",
+    },
+    {
+      id: "int-003",
+      tenantId: "tenant-panca",
+      candidateId: "cpmi-003",
+      candidateName: "Eka Rahmawati",
+      syarikahName: "Al-Jazeera International Recruitment (Dubai, UEA)",
+      jobSector: "Pendamping Lansia / Elderly Caregiver",
+      interviewDate: relativeDate(2),
+      interviewTimeKsa: "14:00 KSA (18:00 WIB)",
+      interviewMethod: "WHATSAPP_VIDEO",
+      meetingLinkOrPhone: "+971501234567",
+      interviewerName: "Mr. Tariq Mansoor",
+      interpreterName: "Ust. Fauzan Hakim (P3MI Pusat)",
+      status: "SCHEDULED",
+      agreedSalarySar: 1750,
+      notes: "Majikan lansia wanita 68 tahun di Abu Dhabi, memerlukan bantuan aktivitas harian dan obat.",
+      createdAt: relativeDate(-1) + " 13:00",
     },
   ];
 }
@@ -2530,6 +2941,14 @@ export function syncExpirationsAndTasks(db: DatabaseSchema): void {
     "Malaysia",
   ];
 
+  if (!db.tenants || db.tenants.length === 0) {
+    db.tenants = createInitialTenants();
+  }
+  for (const b of db.branches) {
+    if (!b.tenantId) b.tenantId = "tenant-panca";
+    if (!b.status) b.status = "ACTIVE";
+  }
+
   if (!db.staffAccounts || db.staffAccounts.length === 0) {
     db.staffAccounts = createInitialStaff();
   }
@@ -2542,6 +2961,21 @@ export function syncExpirationsAndTasks(db: DatabaseSchema): void {
   }
   if (!db.badilRecords) {
     db.badilRecords = createInitialBadilRecords();
+  }
+  if (!db.whatsAppLogs || db.whatsAppLogs.length === 0) {
+    db.whatsAppLogs = createInitialWhatsAppLogs();
+  }
+  if (!db.cashJournals || db.cashJournals.length === 0) {
+    db.cashJournals = createInitialCashJournals();
+  }
+  if (!db.cashAdvances || db.cashAdvances.length === 0) {
+    db.cashAdvances = createInitialCashAdvances();
+  }
+  if (!db.syarikahInvoices || db.syarikahInvoices.length === 0) {
+    db.syarikahInvoices = createInitialSyarikahInvoices();
+  }
+  if (!db.employerInterviews || db.employerInterviews.length === 0) {
+    db.employerInterviews = createInitialEmployerInterviews();
   }
   if (
     !db.foreignAgencies ||

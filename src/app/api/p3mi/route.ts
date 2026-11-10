@@ -20,11 +20,17 @@ import {
   CasePriority,
   CaseStatus,
   CaseTicket,
+  CashAdvance,
+  CashJournal,
+  CashJournalCategory,
+  CashTransactionType,
   CostCategory,
   DestinationCountry,
   DOC_TEMPLATE_CONFIG,
+  EmployerInterview,
   ForeignAgency,
   FundingScheme,
+  InterviewStatus,
   JobVacancy,
   JourneyStage,
   MedicalClinicPartner,
@@ -32,8 +38,13 @@ import {
   ProcessTrack,
   Sponsor,
   SponsorFormSubmission,
+  SponsorInstallment,
   StaffAccount,
+  SyarikahInvoice,
+  TenantCompany,
   UserRole,
+  WhatsAppMessageType,
+  WhatsAppNotification,
 } from "@/lib/types";
 
 function nowTimestamp(): string {
@@ -65,6 +76,48 @@ export async function POST(req: NextRequest) {
     if (action === "RESET_DEMO_DATA") {
       const fresh = resetDbToSeed();
       return NextResponse.json({ ok: true, db: fresh });
+    }
+
+    // Aturan Otorisasi: Administrasi eksekusi seluruh proses operasional hanya dilakukan oleh Admin Pusat & Direktur
+    // Cabang & Sponsor hanya sebatas View / Pantau (Read-Only)
+    const restrictedActionsForBranch = [
+      "CHANGE_STAGE",
+      "UPDATE_DOCUMENT",
+      "PAY_SPONSOR_INSTALLMENT",
+      "PROCESS_BADIL",
+      "CREATE_CANDIDATE",
+      "UPDATE_CANDIDATE",
+      "CREATE_TENANT",
+      "UPDATE_TENANT",
+      "CREATE_BRANCH",
+      "UPDATE_BRANCH",
+      "CREATE_FOREIGN_AGENCY",
+      "CREATE_SPONSOR",
+      "CREATE_MEDICAL_CLINIC",
+      "CREATE_BPJS_FINANCING",
+      "CREATE_STAFF",
+      "SEND_WHATSAPP_MESSAGE",
+      "CREATE_CASH_JOURNAL",
+      "CREATE_CASH_ADVANCE",
+      "REPAY_CASH_ADVANCE",
+      "CREATE_SYARIKAH_INVOICE",
+      "UPDATE_SYARIKAH_INVOICE",
+      "CREATE_EMPLOYER_INTERVIEW",
+      "UPDATE_EMPLOYER_INTERVIEW",
+    ];
+
+    if (
+      (actorRole === "KEPALA_CABANG" || actorRole === "PEREKRUT_PL") &&
+      restrictedActionsForBranch.includes(action)
+    ) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "Akses Ditolak: Administrasi eksekusi seluruh proses operasional hanya dapat dilakukan oleh Admin Pusat / Direktur. Akun Cabang hanya memiliki hak pantau (View-Only).",
+        },
+        { status: 403 }
+      );
     }
 
     // 1. AUTENTIKASI LOGIN MULTI-USER STAF
@@ -1689,14 +1742,17 @@ export async function POST(req: NextRequest) {
 
     // 18. MODUL MASTER DATA: TAMBAH KANTOR CABANG P3MI BARU
     if (action === "CREATE_BRANCH") {
-      const { code, name, city, headName, phone } = body.payload;
+      const { tenantId = "tenant-panca", code, name, city, headName, phone, address } = body.payload;
       const newBranch: Branch = {
         id: `br-${Date.now()}`,
+        tenantId,
         code: code || `CBG-0${db.branches.length + 1}`,
         name,
         city: city || "-",
         headName: headName || "-",
         phone: phone || "-",
+        address: address || "-",
+        status: "ACTIVE",
       };
       db.branches.push(newBranch);
 
@@ -1707,12 +1763,509 @@ export async function POST(req: NextRequest) {
         branchName,
         actionType: "MASTER_DATA_UPDATED",
         summary: `Menambahkan Kantor Cabang P3MI Baru: ${newBranch.name} (${newBranch.city})`,
-        details: `Kepala Cabang: ${newBranch.headName}`,
+        details: `Kepala Cabang: ${newBranch.headName} · Tenant ID: ${newBranch.tenantId}`,
         timestamp: nowTimestamp(),
       });
 
       writeDb(db);
       return NextResponse.json({ ok: true, branch: newBranch, db });
+    }
+
+    if (action === "UPDATE_BRANCH") {
+      const { branchId, updates } = body.payload;
+      const b = db.branches.find((x) => x.id === branchId);
+      if (!b) {
+        return NextResponse.json({ ok: false, error: "Cabang tidak ditemukan." }, { status: 404 });
+      }
+      Object.assign(b, updates);
+
+      db.auditLogs.unshift({
+        id: `aud-${Date.now()}`,
+        actorName,
+        actorRole: actorRole as UserRole,
+        branchName,
+        actionType: "MASTER_DATA_UPDATED",
+        summary: `Memperbarui Data Kantor Cabang: ${b.name}`,
+        details: `Kota: ${b.city} · Kepala: ${b.headName} · Status: ${b.status || "ACTIVE"}`,
+        timestamp: nowTimestamp(),
+      });
+
+      writeDb(db);
+      return NextResponse.json({ ok: true, branch: b, db });
+    }
+
+    // 19. MODUL 1 (SAAS): KELOLA PERUSAHAAN P3MI (TENANT) & LISENSI
+    if (action === "CREATE_TENANT") {
+      const {
+        code,
+        name,
+        brandName,
+        licenseNo,
+        logoUrl = "/logo-panca-banyu.png",
+        planTier = "PRO",
+        planExpiresAt = "2027-12-31",
+        maxCandidates = 500,
+        maxBranches = 10,
+        address = "-",
+        phone = "-",
+        email = "-",
+        picName = "-",
+      } = body.payload;
+
+      const newTenant: TenantCompany = {
+        id: `tenant-${Date.now()}`,
+        code: code || `P3MI-00${(db.tenants?.length || 0) + 1}`,
+        name,
+        brandName: brandName || name,
+        licenseNo: licenseNo || "SIP3MI Menaker RI",
+        logoUrl,
+        planTier,
+        planExpiresAt,
+        maxCandidates: Number(maxCandidates) || 500,
+        maxBranches: Number(maxBranches) || 10,
+        status: "ACTIVE",
+        address,
+        phone,
+        email,
+        picName,
+        createdAt: nowTimestamp().split(" ")[0],
+      };
+
+      if (!db.tenants) db.tenants = [];
+      db.tenants.push(newTenant);
+
+      db.auditLogs.unshift({
+        id: `aud-${Date.now()}`,
+        actorName,
+        actorRole: actorRole as UserRole,
+        branchName,
+        actionType: "MASTER_DATA_UPDATED",
+        summary: `Menambahkan Perusahaan P3MI Baru (Tenant SaaS): ${newTenant.name}`,
+        details: `SIP3MI: ${newTenant.licenseNo} · Paket: ${newTenant.planTier} (Max: ${newTenant.maxCandidates} CPMI, ${newTenant.maxBranches} Cabang)`,
+        timestamp: nowTimestamp(),
+      });
+
+      writeDb(db);
+      return NextResponse.json({ ok: true, tenant: newTenant, db });
+    }
+
+    if (action === "UPDATE_TENANT") {
+      const { tenantId, updates } = body.payload;
+      const t = db.tenants?.find((x) => x.id === tenantId);
+      if (!t) {
+        return NextResponse.json({ ok: false, error: "Tenant P3MI tidak ditemukan." }, { status: 404 });
+      }
+      Object.assign(t, updates);
+
+      db.auditLogs.unshift({
+        id: `aud-${Date.now()}`,
+        actorName,
+        actorRole: actorRole as UserRole,
+        branchName,
+        actionType: "MASTER_DATA_UPDATED",
+        summary: `Memperbarui Data Perusahaan P3MI (Tenant SaaS): ${t.name}`,
+        details: `Status: ${t.status} · Lisensi: ${t.licenseNo} · Paket: ${t.planTier}`,
+        timestamp: nowTimestamp(),
+      });
+
+      writeDb(db);
+      return NextResponse.json({ ok: true, tenant: t, db });
+    }
+
+    // --- MODUL 3: INTEGRASI WHATSAPP GATEWAY OTOMATIS ---
+    if (action === "SEND_WHATSAPP_MESSAGE") {
+      const {
+        recipientPhone,
+        recipientName,
+        recipientRole = "CPMI",
+        candidateId,
+        candidateName,
+        messageType = "GENERAL",
+        title,
+        messageBody,
+      } = body.payload;
+
+      if (!recipientPhone || !messageBody) {
+        return NextResponse.json({ ok: false, error: "Nomor WhatsApp & isi pesan wajib diisi." }, { status: 400 });
+      }
+
+      if (!db.whatsAppLogs) db.whatsAppLogs = [];
+      const newWaLog: WhatsAppNotification = {
+        id: `wa-${Date.now()}`,
+        recipientPhone,
+        recipientName,
+        recipientRole,
+        candidateId,
+        candidateName,
+        messageType,
+        title: title || "Notifikasi Operasional PT. Panca Banyu Ajisakti",
+        messageBody,
+        status: "SENT",
+        sentAt: nowTimestamp(),
+      };
+
+      db.whatsAppLogs.unshift(newWaLog);
+
+      db.auditLogs.unshift({
+        id: `aud-${Date.now()}`,
+        actorName,
+        actorRole: actorRole as UserRole,
+        branchName,
+        actionType: "MASTER_DATA_UPDATED",
+        summary: `Kirim Notifikasi WhatsApp Gateway ke ${recipientName} (${recipientPhone})`,
+        details: `Tipe: ${messageType} · Judul: ${title || "Notifikasi"}`,
+        timestamp: nowTimestamp(),
+      });
+
+      writeDb(db);
+      return NextResponse.json({ ok: true, whatsAppLog: newWaLog, db });
+    }
+
+    // --- MODUL 4: AKUNTANSI, ARUS KAS BANK & KASBON ---
+    if (action === "CREATE_CASH_JOURNAL") {
+      const {
+        tenantId = "tenant-panca",
+        branchId = "br-jkt",
+        transactionDate = nowTimestamp().split(" ")[0],
+        type,
+        category,
+        amount,
+        recipientOrPayer,
+        description,
+        paymentMethod = "BANK_TRANSFER",
+        bankAccountName,
+        referenceNumber,
+        candidateId,
+      } = body.payload;
+
+      if (!amount || amount <= 0 || !recipientOrPayer || !description) {
+        return NextResponse.json({ ok: false, error: "Nominal, pihak terkait, dan uraian transaksi wajib diisi." }, { status: 400 });
+      }
+
+      if (!db.cashJournals) db.cashJournals = [];
+      const newJournal: CashJournal = {
+        id: `cj-${Date.now()}`,
+        tenantId,
+        branchId,
+        transactionDate,
+        type: type as CashTransactionType,
+        category: category as CashJournalCategory,
+        amount: Number(amount),
+        recipientOrPayer,
+        description,
+        paymentMethod,
+        bankAccountName,
+        referenceNumber,
+        candidateId,
+        createdBy: actorName,
+        createdAt: nowTimestamp(),
+      };
+
+      db.cashJournals.unshift(newJournal);
+
+      db.auditLogs.unshift({
+        id: `aud-${Date.now()}`,
+        actorName,
+        actorRole: actorRole as UserRole,
+        branchName,
+        actionType: "FINANCE_PAYMENT",
+        summary: `Pencatatan Jurnal Arus Kas (${type}): Rp ${Number(amount).toLocaleString("id-ID")}`,
+        details: `${category} · ${recipientOrPayer} · Ket: ${description}`,
+        timestamp: nowTimestamp(),
+      });
+
+      writeDb(db);
+      return NextResponse.json({ ok: true, journal: newJournal, db });
+    }
+
+    if (action === "CREATE_CASH_ADVANCE") {
+      const {
+        tenantId = "tenant-panca",
+        borrowerId,
+        borrowerName,
+        borrowerType = "SPONSOR",
+        amount,
+        reason,
+        dateGiven = nowTimestamp().split(" ")[0],
+      } = body.payload;
+
+      if (!amount || amount <= 0 || !borrowerName) {
+        return NextResponse.json({ ok: false, error: "Data penerima kasbon dan jumlah wajib diisi." }, { status: 400 });
+      }
+
+      if (!db.cashAdvances) db.cashAdvances = [];
+      const newAdvance: CashAdvance = {
+        id: `ca-${Date.now()}`,
+        tenantId,
+        borrowerId,
+        borrowerName,
+        borrowerType,
+        amount: Number(amount),
+        remainingAmount: Number(amount),
+        reason: reason || "Kasbon operasional lapangan",
+        dateGiven,
+        status: "DISETUJUI",
+        approvedBy: actorName,
+        deductions: [],
+      };
+
+      db.cashAdvances.unshift(newAdvance);
+
+      db.auditLogs.unshift({
+        id: `aud-${Date.now()}`,
+        actorName,
+        actorRole: actorRole as UserRole,
+        branchName,
+        actionType: "FINANCE_PAYMENT",
+        summary: `Pengajuan Kasbon Disetujui: ${borrowerName} (${borrowerType}) Rp ${Number(amount).toLocaleString("id-ID")}`,
+        details: `Alasan: ${reason}`,
+        timestamp: nowTimestamp(),
+      });
+
+      writeDb(db);
+      return NextResponse.json({ ok: true, advance: newAdvance, db });
+    }
+
+    if (action === "REPAY_CASH_ADVANCE") {
+      const { advanceId, amount, note = "Potong komisi / Pengembalian tunai" } = body.payload;
+      const adv = db.cashAdvances?.find((a) => a.id === advanceId);
+      if (!adv) {
+        return NextResponse.json({ ok: false, error: "Data Kasbon tidak ditemukan." }, { status: 404 });
+      }
+
+      const repayAmt = Math.min(Number(amount), adv.remainingAmount);
+      adv.remainingAmount -= repayAmt;
+      adv.deductions.push({
+        id: `ded-${Date.now()}`,
+        date: nowTimestamp().split(" ")[0],
+        amount: repayAmt,
+        note,
+      });
+
+      if (adv.remainingAmount <= 0) {
+        adv.status = "LUNAS";
+        adv.remainingAmount = 0;
+      }
+
+      db.auditLogs.unshift({
+        id: `aud-${Date.now()}`,
+        actorName,
+        actorRole: actorRole as UserRole,
+        branchName,
+        actionType: "FINANCE_PAYMENT",
+        summary: `Pembayaran Kasbon ${adv.borrowerName}: Rp ${repayAmt.toLocaleString("id-ID")}`,
+        details: `Sisa Kasbon: Rp ${adv.remainingAmount.toLocaleString("id-ID")} (Status: ${adv.status})`,
+        timestamp: nowTimestamp(),
+      });
+
+      writeDb(db);
+      return NextResponse.json({ ok: true, advance: adv, db });
+    }
+
+    if (action === "CREATE_SYARIKAH_INVOICE") {
+      const {
+        tenantId = "tenant-panca",
+        invoiceNumber,
+        syarikahName,
+        destinationCountry = "Arab Saudi",
+        candidateCount,
+        candidateNames = [],
+        currency = "SAR",
+        totalAmount,
+        dueDate,
+        notes,
+      } = body.payload;
+
+      if (!invoiceNumber || !syarikahName || !totalAmount) {
+        return NextResponse.json({ ok: false, error: "Nomor invoice, nama syarikah, dan nominal wajib diisi." }, { status: 400 });
+      }
+
+      if (!db.syarikahInvoices) db.syarikahInvoices = [];
+      const newInvoice: SyarikahInvoice = {
+        id: `inv-${Date.now()}`,
+        tenantId,
+        invoiceNumber,
+        syarikahName,
+        destinationCountry,
+        candidateCount: Number(candidateCount) || candidateNames.length || 1,
+        candidateNames: Array.isArray(candidateNames) ? candidateNames : [candidateNames],
+        currency,
+        totalAmount: Number(totalAmount),
+        paidAmount: 0,
+        dueDate: dueDate || nowTimestamp().split(" ")[0],
+        issuedDate: nowTimestamp().split(" ")[0],
+        status: "SENT",
+        notes,
+      };
+
+      db.syarikahInvoices.unshift(newInvoice);
+
+      db.auditLogs.unshift({
+        id: `aud-${Date.now()}`,
+        actorName,
+        actorRole: actorRole as UserRole,
+        branchName,
+        actionType: "FINANCE_PAYMENT",
+        summary: `Terbitkan Tagihan Invoice Wakalah: ${invoiceNumber} (${syarikahName})`,
+        details: `Total: ${currency} ${Number(totalAmount).toLocaleString("id-ID")} (${newInvoice.candidateCount} CPMI)`,
+        timestamp: nowTimestamp(),
+      });
+
+      writeDb(db);
+      return NextResponse.json({ ok: true, invoice: newInvoice, db });
+    }
+
+    if (action === "UPDATE_SYARIKAH_INVOICE") {
+      const { invoiceId, paidAmountDelta = 0, status, notes } = body.payload;
+      const inv = db.syarikahInvoices?.find((i) => i.id === invoiceId);
+      if (!inv) {
+        return NextResponse.json({ ok: false, error: "Invoice tidak ditemukan." }, { status: 404 });
+      }
+
+      if (paidAmountDelta) {
+        inv.paidAmount = Math.min(inv.totalAmount, inv.paidAmount + Number(paidAmountDelta));
+      }
+      if (status) inv.status = status;
+      if (inv.paidAmount >= inv.totalAmount) inv.status = "PAID";
+      else if (inv.paidAmount > 0) inv.status = "PARTIAL";
+      if (notes) inv.notes = notes;
+
+      db.auditLogs.unshift({
+        id: `aud-${Date.now()}`,
+        actorName,
+        actorRole: actorRole as UserRole,
+        branchName,
+        actionType: "FINANCE_PAYMENT",
+        summary: `Update Status/Pembayaran Invoice Wakalah: ${inv.invoiceNumber}`,
+        details: `Status: ${inv.status} · Terbayar: ${inv.currency} ${inv.paidAmount.toLocaleString("id-ID")} / ${inv.totalAmount.toLocaleString("id-ID")}`,
+        timestamp: nowTimestamp(),
+      });
+
+      writeDb(db);
+      return NextResponse.json({ ok: true, invoice: inv, db });
+    }
+
+    // --- MODUL 5: SELEKSI & WAWANCARA MAJIKAN (MATCHING) ---
+    if (action === "CREATE_EMPLOYER_INTERVIEW") {
+      const {
+        tenantId = "tenant-panca",
+        candidateId,
+        candidateName,
+        syarikahName,
+        jobSector,
+        interviewDate,
+        interviewTimeKsa,
+        interviewMethod = "ZOOM",
+        meetingLinkOrPhone,
+        interviewerName,
+        interpreterName = "Ust. Fauzan Hakim (P3MI Pusat)",
+        notes,
+      } = body.payload;
+
+      if (!candidateName || !syarikahName || !interviewDate) {
+        return NextResponse.json({ ok: false, error: "Nama CPMI, nama syarikah, dan jadwal interview wajib diisi." }, { status: 400 });
+      }
+
+      if (!db.employerInterviews) db.employerInterviews = [];
+      const newInterview: EmployerInterview = {
+        id: `int-${Date.now()}`,
+        tenantId,
+        candidateId: candidateId || `cpmi-${Date.now()}`,
+        candidateName,
+        syarikahName,
+        jobSector: jobSector || "Penata Laksana Rumah Tangga (PLRT)",
+        interviewDate,
+        interviewTimeKsa: interviewTimeKsa || "11:00 KSA",
+        interviewMethod,
+        meetingLinkOrPhone: meetingLinkOrPhone || "https://meet.google.com/xyz",
+        interviewerName: interviewerName || "Perwakilan Syarikah KSA",
+        interpreterName,
+        status: "SCHEDULED",
+        notes,
+        createdAt: nowTimestamp(),
+      };
+
+      db.employerInterviews.unshift(newInterview);
+
+      // Otomatis buat notifikasi WhatsApp ke CPMI
+      const c = db.candidates.find((x) => x.id === candidateId || x.fullName === candidateName);
+      if (c && c.phone) {
+        if (!db.whatsAppLogs) db.whatsAppLogs = [];
+        db.whatsAppLogs.unshift({
+          id: `wa-${Date.now()}`,
+          recipientPhone: c.phone,
+          recipientName: c.fullName,
+          recipientRole: "CPMI",
+          candidateId: c.id,
+          candidateName: c.fullName,
+          messageType: "INTERVIEW_INVITE",
+          title: `Jadwal Wawancara Video Call Syarikah ${syarikahName}`,
+          messageBody: `Halo Sdri ${c.fullName}, Anda dijadwalkan wawancara video call (${interviewMethod}) dengan Syarikah ${syarikahName} untuk posisi ${newInterview.jobSector} pada tanggal ${interviewDate} pukul ${interviewTimeKsa}. Harap hadir di kantor P3MI tepat waktu.`,
+          status: "SENT",
+          sentAt: nowTimestamp(),
+        });
+      }
+
+      db.auditLogs.unshift({
+        id: `aud-${Date.now()}`,
+        actorName,
+        actorRole: actorRole as UserRole,
+        branchName,
+        actionType: "MASTER_DATA_UPDATED",
+        summary: `Jadwalkan Wawancara Video Call Majikan/Syarikah: ${candidateName} - ${syarikahName}`,
+        details: `Tanggal: ${interviewDate} (${interviewTimeKsa}) via ${interviewMethod}`,
+        timestamp: nowTimestamp(),
+      });
+
+      writeDb(db);
+      return NextResponse.json({ ok: true, interview: newInterview, db });
+    }
+
+    if (action === "UPDATE_EMPLOYER_INTERVIEW") {
+      const { interviewId, status, agreedSalarySar, notes } = body.payload;
+      const item = db.employerInterviews?.find((i) => i.id === interviewId);
+      if (!item) {
+        return NextResponse.json({ ok: false, error: "Jadwal interview tidak ditemukan." }, { status: 404 });
+      }
+
+      if (status) item.status = status;
+      if (agreedSalarySar) item.agreedSalarySar = Number(agreedSalarySar);
+      if (notes) item.notes = notes;
+
+      // Jika lolos seleksi majikan, kirim notifikasi WhatsApp kelulusan
+      if (status === "PASSED") {
+        const c = db.candidates.find((x) => x.id === item.candidateId);
+        if (c && c.phone) {
+          if (!db.whatsAppLogs) db.whatsAppLogs = [];
+          db.whatsAppLogs.unshift({
+            id: `wa-${Date.now()}`,
+            recipientPhone: c.phone,
+            recipientName: c.fullName,
+            recipientRole: "CPMI",
+            candidateId: c.id,
+            candidateName: c.fullName,
+            messageType: "STAGE_UPDATE",
+            title: `Selamat! Anda Lolos Wawancara Majikan ${item.syarikahName}`,
+            messageBody: `Yth. Sdri ${c.fullName}, Selamat! Hasil interview video call dengan ${item.syarikahName} dinyatakan LOLOS (Gaji disepakati: ${item.agreedSalarySar || 1500} SAR). Berkas Anda segera diajukan untuk penerbitan Visa Kerja Timur Tengah resmi (SPSK).`,
+            status: "SENT",
+            sentAt: nowTimestamp(),
+          });
+        }
+      }
+
+      db.auditLogs.unshift({
+        id: `aud-${Date.now()}`,
+        actorName,
+        actorRole: actorRole as UserRole,
+        branchName,
+        actionType: "MASTER_DATA_UPDATED",
+        summary: `Update Hasil Wawancara Majikan: ${item.candidateName} - Status: ${item.status}`,
+        details: `Gaji: ${item.agreedSalarySar || "-"} SAR · Catatan: ${item.notes || "-"}`,
+        timestamp: nowTimestamp(),
+      });
+
+      writeDb(db);
+      return NextResponse.json({ ok: true, interview: item, db });
     }
 
     return NextResponse.json(
