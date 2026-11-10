@@ -2452,284 +2452,335 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
           </select>
         </div>
 
-        {/* Menu Navigasi Utama */}
-        <nav className="flex-1 space-y-1 px-3 py-4 text-sm overflow-y-auto">
-          <button
-            onClick={() => setActiveNav("beranda")}
-            className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
-              activeNav === "beranda"
-                ? "bg-sky-500 text-white shadow-sm"
-                : "text-slate-300 hover:bg-white/5 hover:text-white"
-            }`}
-          >
-            <span className="flex items-center gap-2.5">
-              <LayoutDashboard className="h-4 w-4" />
-              Beranda
-            </span>
-          </button>
+        {/* Menu Navigasi Utama Terkelompok Berdasarkan Urutan Kerja */}
+        <nav className="flex-1 space-y-4 px-3 py-4 text-sm overflow-y-auto">
+          {/* GROUP 1: ADMINISTRATOR */}
+          <div className="space-y-1">
+            <div className="px-2 pb-1 text-[10px] font-extrabold uppercase tracking-wider text-sky-400 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <ShieldCheck className="h-3.5 w-3.5 text-sky-400" />
+                Administrator
+              </span>
+              <span className="rounded bg-sky-500/20 px-1.5 py-0.2 text-[9px] font-bold text-sky-300">Pusat</span>
+            </div>
 
-          <button
-            onClick={() => setActiveNav("cpmi")}
-            className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
-              activeNav === "cpmi"
-                ? "bg-sky-500 text-white shadow-sm"
-                : "text-slate-300 hover:bg-white/5 hover:text-white"
-            }`}
-          >
-            <span className="flex items-center gap-2.5">
-              <Users className="h-4 w-4" />
-              Person (Data CPMI)
-            </span>
-            <span className="rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-semibold">
-              {stats.totalCpmi}
-            </span>
-          </button>
+            <button
+              onClick={() => setActiveNav("saas_tenants")}
+              className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
+                activeNav === "saas_tenants"
+                  ? "bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-sm font-bold"
+                  : "text-slate-300 hover:bg-white/5 hover:text-white"
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <Building2 className="h-4 w-4 text-sky-400" />
+                Profil PT & Cabang
+              </span>
+              <span className="rounded bg-sky-500/20 px-1.5 py-0.5 text-[10px] text-sky-200">
+                PBA Pusat
+              </span>
+            </button>
 
-          {/* SEKSI 5 MODUL UTAMA OPERASIONAL P3MI */}
-          <div className="pt-3 pb-1 px-2 text-[10px] font-bold uppercase tracking-wider text-amber-400 flex items-center justify-between border-t border-slate-700/60 mt-2">
-            <span>5 Modul Terintegrasi</span>
-            <span className="rounded bg-amber-500/20 px-1 py-0.2 text-[9px] text-amber-300">P3MI</span>
+            <button
+              onClick={() => setActiveNav("cabang_audit")}
+              className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
+                activeNav === "cabang_audit"
+                  ? "bg-sky-500 text-white shadow-sm font-bold"
+                  : "text-slate-300 hover:bg-white/5 hover:text-white"
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <History className="h-4 w-4 text-sky-400" />
+                Staf, Sponsor & Audit
+              </span>
+              <span className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] text-slate-300">
+                RBAC
+              </span>
+            </button>
           </div>
 
-          <button
-            onClick={() => setActiveNav("saas_tenants")}
-            className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
-              activeNav === "saas_tenants"
-                ? "bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-sm font-bold"
-                : "text-slate-300 hover:bg-white/5 hover:text-white"
-            }`}
-          >
-            <span className="flex items-center gap-2.5">
-              <Building2 className="h-4 w-4 text-sky-400" />
-              1. Profil PT & Cabang
-            </span>
-            <span className="rounded bg-sky-500/20 px-1.5 py-0.5 text-[10px] text-sky-200">
-              PBA Pusat
-            </span>
-          </button>
+          {/* GROUP 2: SETTING / PENGATURAN */}
+          <div className="space-y-1 pt-2 border-t border-slate-700/60">
+            <div className="px-2 pb-1 text-[10px] font-extrabold uppercase tracking-wider text-amber-400 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <FolderKanban className="h-3.5 w-3.5 text-amber-400" />
+                Setting / Pengaturan
+              </span>
+              <span className="rounded bg-amber-500/20 px-1.5 py-0.2 text-[9px] font-bold text-amber-300">Config</span>
+            </div>
 
-          <button
-            onClick={() => setActiveNav("doc_print")}
-            className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
-              activeNav === "doc_print"
-                ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-sm font-bold"
-                : "text-slate-300 hover:bg-white/5 hover:text-white"
-            }`}
-          >
-            <span className="flex items-center gap-2.5">
-              <Printer className="h-4 w-4 text-emerald-400" />
-              2. Cetak Dokumen (PDF)
-            </span>
-            <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] text-emerald-200">
-              Kanim/PK
-            </span>
-          </button>
+            <button
+              onClick={() => setActiveNav("master_data")}
+              className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
+                activeNav === "master_data"
+                  ? "bg-amber-500 text-slate-950 font-bold shadow-sm"
+                  : "text-amber-300 hover:bg-white/5 hover:text-white"
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <FolderKanban className="h-4 w-4" />
+                Master Data & Mitra
+              </span>
+              <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-bold text-amber-200">
+                Syarikah/Mitra
+              </span>
+            </button>
 
-          <button
-            onClick={() => setActiveNav("whatsapp_gateway")}
-            className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
-              activeNav === "whatsapp_gateway"
-                ? "bg-gradient-to-r from-emerald-600 to-green-600 text-white shadow-sm font-bold"
-                : "text-slate-300 hover:bg-white/5 hover:text-white"
-            }`}
-          >
-            <span className="flex items-center gap-2.5">
-              <MessageSquarePlus className="h-4 w-4 text-emerald-400" />
-              3. WhatsApp Gateway
-            </span>
-            <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] text-emerald-200">
-              Auto WA
-            </span>
-          </button>
-
-          <button
-            onClick={() => setActiveNav("aruskas_kasbon")}
-            className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
-              activeNav === "aruskas_kasbon"
-                ? "bg-gradient-to-r from-amber-600 to-amber-700 text-white shadow-sm font-bold"
-                : "text-slate-300 hover:bg-white/5 hover:text-white"
-            }`}
-          >
-            <span className="flex items-center gap-2.5">
-              <Receipt className="h-4 w-4 text-amber-400" />
-              4. Arus Kas & Kasbon
-            </span>
-            <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] text-amber-200">
-              SAR/IDR
-            </span>
-          </button>
-
-          <button
-            onClick={() => setActiveNav("employer_matching")}
-            className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
-              activeNav === "employer_matching"
-                ? "bg-gradient-to-r from-sky-600 to-blue-700 text-white shadow-sm font-bold"
-                : "text-slate-300 hover:bg-white/5 hover:text-white"
-            }`}
-          >
-            <span className="flex items-center gap-2.5">
-              <UserCheck className="h-4 w-4 text-sky-400" />
-              5. Wawancara Majikan
-            </span>
-            <span className="rounded bg-sky-500/20 px-1.5 py-0.5 text-[10px] text-sky-200">
-              Video Call
-            </span>
-          </button>
-
-          <div className="pt-3 pb-1 px-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-t border-slate-700/60 mt-2">
-            Modul Operasional Lainnya
+            <button
+              onClick={() => setActiveNav("whatsapp_gateway")}
+              className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
+                activeNav === "whatsapp_gateway"
+                  ? "bg-gradient-to-r from-emerald-600 to-green-600 text-white shadow-sm font-bold"
+                  : "text-slate-300 hover:bg-white/5 hover:text-white"
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <MessageSquarePlus className="h-4 w-4 text-emerald-400" />
+                WhatsApp Gateway
+              </span>
+              <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] text-emerald-200">
+                Auto WA
+              </span>
+            </button>
           </div>
 
-          <button
-            onClick={() => setActiveNav("keuangan")}
-            className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
-              activeNav === "keuangan"
-                ? "bg-emerald-600 text-white shadow-sm"
-                : "text-emerald-300 hover:bg-white/5 hover:text-white"
-            }`}
-          >
-            <span className="flex items-center gap-2.5">
-              <Wallet className="h-4 w-4" />
-              Keuangan & Fee Sponsor
-            </span>
-            <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold text-emerald-200">
-              DP 1-3 & Lunas
-            </span>
-          </button>
-
-          <button
-            onClick={() => setActiveNav("pelatihan")}
-            className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
-              activeNav === "pelatihan"
-                ? "bg-sky-500 text-white shadow-sm"
-                : "text-slate-300 hover:bg-white/5 hover:text-white"
-            }`}
-          >
-            <span className="flex items-center gap-2.5">
-              <GraduationCap className="h-4 w-4" />
-              BLK-LN & Pelatihan
-            </span>
-            <span className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] text-slate-300">
-              Asrama
-            </span>
-          </button>
-
-          <button
-            onClick={() => setActiveNav("pengingat")}
-            className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
-              activeNav === "pengingat"
-                ? "bg-sky-500 text-white shadow-sm"
-                : "text-slate-300 hover:bg-white/5 hover:text-white"
-            }`}
-          >
-            <span className="flex items-center gap-2.5">
-              <Bell className="h-4 w-4" />
-              Pengingat Dokumen
-            </span>
-            {stats.criticalDocsCount > 0 && (
-              <span className="rounded-full bg-rose-500 px-2 py-0.5 text-[11px] font-bold text-white">
-                {stats.criticalDocsCount}
+          {/* GROUP 3: OPERASIONAL */}
+          <div className="space-y-1 pt-2 border-t border-slate-700/60">
+            <div className="px-2 pb-1 text-[10px] font-extrabold uppercase tracking-wider text-teal-400 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <Briefcase className="h-3.5 w-3.5 text-teal-400" />
+                Operasional
               </span>
-            )}
-          </button>
+              <span className="rounded bg-teal-500/20 px-1.5 py-0.2 text-[9px] font-bold text-teal-300">Alur PMI</span>
+            </div>
 
-          <button
-            onClick={() => setActiveNav("cases")}
-            className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
-              activeNav === "cases"
-                ? "bg-sky-500 text-white shadow-sm"
-                : "text-slate-300 hover:bg-white/5 hover:text-white"
-            }`}
-          >
-            <span className="flex items-center gap-2.5">
-              <LifeBuoy className="h-4 w-4" />
-              Case (Pengaduan PMI)
-            </span>
-            {stats.openCasesCount > 0 && (
-              <span className="rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-bold text-slate-950">
-                {stats.openCasesCount}
+            <button
+              onClick={() => setActiveNav("cpmi")}
+              className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
+                activeNav === "cpmi"
+                  ? "bg-sky-500 text-white shadow-sm font-bold"
+                  : "text-slate-300 hover:bg-white/5 hover:text-white"
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <Users className="h-4 w-4" />
+                Person (Data CPMI)
               </span>
-            )}
-          </button>
+              <span className="rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-semibold">
+                {stats.totalCpmi}
+              </span>
+            </button>
 
-          <button
-            onClick={() => setActiveNav("vacancy")}
-            className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
-              activeNav === "vacancy"
-                ? "bg-sky-500 text-white shadow-sm"
-                : "text-slate-300 hover:bg-white/5 hover:text-white"
-            }`}
-          >
-            <span className="flex items-center gap-2.5">
-              <Briefcase className="h-4 w-4" />
-              Vacancy (Lowongan)
-            </span>
-            <span className="rounded-full bg-white/10 px-2 py-0.5 text-[11px]">
-              {db.vacancies?.length || 0}
-            </span>
-          </button>
+            <button
+              onClick={() => setActiveNav("vacancy")}
+              className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
+                activeNav === "vacancy"
+                  ? "bg-sky-500 text-white shadow-sm font-bold"
+                  : "text-slate-300 hover:bg-white/5 hover:text-white"
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <Briefcase className="h-4 w-4" />
+                Job Order (Lowongan)
+              </span>
+              <span className="rounded-full bg-white/10 px-2 py-0.5 text-[11px]">
+                {db.vacancies?.length || 0}
+              </span>
+            </button>
 
-          <button
-            onClick={() => setActiveNav("portal_cpmi")}
-            className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
-              activeNav === "portal_cpmi"
-                ? "bg-teal-600 text-white shadow-sm"
-                : "text-teal-300 hover:bg-white/5 hover:text-white"
-            }`}
-          >
-            <span className="flex items-center gap-2.5">
-              <Smartphone className="h-4 w-4" />
-              Portal Mandiri CPMI
-            </span>
-            <span className="rounded bg-teal-500/20 px-1.5 py-0.5 text-[10px] text-teal-200">
-              Cek NIK
-            </span>
-          </button>
+            <button
+              onClick={() => setActiveNav("employer_matching")}
+              className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
+                activeNav === "employer_matching"
+                  ? "bg-gradient-to-r from-sky-600 to-blue-700 text-white shadow-sm font-bold"
+                  : "text-slate-300 hover:bg-white/5 hover:text-white"
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <UserCheck className="h-4 w-4 text-sky-400" />
+                Wawancara Majikan
+              </span>
+              <span className="rounded bg-sky-500/20 px-1.5 py-0.5 text-[10px] text-sky-200">
+                Video Call
+              </span>
+            </button>
 
-          <button
-            onClick={() => setActiveNav("medical_visa")}
-            className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
-              activeNav === "medical_visa"
-                ? "bg-sky-500 text-white shadow-sm"
-                : "text-slate-300 hover:bg-white/5 hover:text-white"
-            }`}
-          >
-            <span className="flex items-center gap-2.5">
-              <Stethoscope className="h-4 w-4" />
-              Medical, Visa & Terbang
-            </span>
-          </button>
+            <button
+              onClick={() => setActiveNav("pelatihan")}
+              className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
+                activeNav === "pelatihan"
+                  ? "bg-sky-500 text-white shadow-sm font-bold"
+                  : "text-slate-300 hover:bg-white/5 hover:text-white"
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <GraduationCap className="h-4 w-4" />
+                BLK-LN & Pelatihan
+              </span>
+              <span className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] text-slate-300">
+                Asrama
+              </span>
+            </button>
 
-          <button
-            onClick={() => setActiveNav("master_data")}
-            className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
-              activeNav === "master_data"
-                ? "bg-amber-500 text-slate-950 font-bold shadow-sm"
-                : "text-amber-300 hover:bg-white/5 hover:text-white"
-            }`}
-          >
-            <span className="flex items-center gap-2.5">
-              <FolderKanban className="h-4 w-4" />
-              Master Data & Mitra
-            </span>
-            <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-bold text-amber-200">
-              Agensi/Badil
-            </span>
-          </button>
+            <button
+              onClick={() => setActiveNav("medical_visa")}
+              className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
+                activeNav === "medical_visa"
+                  ? "bg-sky-500 text-white shadow-sm font-bold"
+                  : "text-slate-300 hover:bg-white/5 hover:text-white"
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <Stethoscope className="h-4 w-4" />
+                Medical, Visa & Terbang
+              </span>
+              <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] text-emerald-200">
+                Wafid/KSA
+              </span>
+            </button>
 
-          <button
-            onClick={() => setActiveNav("cabang_audit")}
-            className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
-              activeNav === "cabang_audit"
-                ? "bg-sky-500 text-white shadow-sm"
-                : "text-slate-300 hover:bg-white/5 hover:text-white"
-            }`}
-          >
-            <span className="flex items-center gap-2.5">
-              <History className="h-4 w-4" />
-              Staf, Sponsor & Audit
-            </span>
-          </button>
+            <button
+              onClick={() => setActiveNav("doc_print")}
+              className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
+                activeNav === "doc_print"
+                  ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-sm font-bold"
+                  : "text-slate-300 hover:bg-white/5 hover:text-white"
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <Printer className="h-4 w-4 text-emerald-400" />
+                Cetak Dokumen (PDF)
+              </span>
+              <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] text-emerald-200">
+                Kanim/PK/CV
+              </span>
+            </button>
+          </div>
+
+          {/* GROUP 4: FINANCE & ACCOUNTING */}
+          <div className="space-y-1 pt-2 border-t border-slate-700/60">
+            <div className="px-2 pb-1 text-[10px] font-extrabold uppercase tracking-wider text-emerald-400 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <Wallet className="h-3.5 w-3.5 text-emerald-400" />
+                Finance & Accounting
+              </span>
+              <span className="rounded bg-emerald-500/20 px-1.5 py-0.2 text-[9px] font-bold text-emerald-300">Keuangan</span>
+            </div>
+
+            <button
+              onClick={() => setActiveNav("keuangan")}
+              className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
+                activeNav === "keuangan"
+                  ? "bg-emerald-600 text-white shadow-sm font-bold"
+                  : "text-emerald-300 hover:bg-white/5 hover:text-white"
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <Wallet className="h-4 w-4" />
+                Keuangan & Fee Sponsor
+              </span>
+              <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold text-emerald-200">
+                DP 1-3 & Lunas
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveNav("aruskas_kasbon")}
+              className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
+                activeNav === "aruskas_kasbon"
+                  ? "bg-gradient-to-r from-amber-600 to-amber-700 text-white shadow-sm font-bold"
+                  : "text-slate-300 hover:bg-white/5 hover:text-white"
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <Receipt className="h-4 w-4 text-amber-400" />
+                Arus Kas & Kasbon Bank
+              </span>
+              <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] text-amber-200">
+                SAR/IDR
+              </span>
+            </button>
+          </div>
+
+          {/* GROUP 5: INFORMATION */}
+          <div className="space-y-1 pt-2 border-t border-slate-700/60 pb-2">
+            <div className="px-2 pb-1 text-[10px] font-extrabold uppercase tracking-wider text-indigo-400 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <LayoutDashboard className="h-3.5 w-3.5 text-indigo-400" />
+                Information
+              </span>
+              <span className="rounded bg-indigo-500/20 px-1.5 py-0.2 text-[9px] font-bold text-indigo-300">Pusat Info</span>
+            </div>
+
+            <button
+              onClick={() => setActiveNav("beranda")}
+              className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
+                activeNav === "beranda"
+                  ? "bg-sky-500 text-white shadow-sm font-bold"
+                  : "text-slate-300 hover:bg-white/5 hover:text-white"
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <LayoutDashboard className="h-4 w-4" />
+                Beranda (Dashboard)
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveNav("pengingat")}
+              className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
+                activeNav === "pengingat"
+                  ? "bg-sky-500 text-white shadow-sm font-bold"
+                  : "text-slate-300 hover:bg-white/5 hover:text-white"
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <Bell className="h-4 w-4" />
+                Pengingat Dokumen
+              </span>
+              {stats.criticalDocsCount > 0 && (
+                <span className="rounded-full bg-rose-500 px-2 py-0.5 text-[11px] font-bold text-white">
+                  {stats.criticalDocsCount}
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => setActiveNav("cases")}
+              className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
+                activeNav === "cases"
+                  ? "bg-sky-500 text-white shadow-sm font-bold"
+                  : "text-slate-300 hover:bg-white/5 hover:text-white"
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <LifeBuoy className="h-4 w-4" />
+                Case (Pengaduan PMI)
+              </span>
+              {stats.openCasesCount > 0 && (
+                <span className="rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-bold text-slate-950">
+                  {stats.openCasesCount}
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => setActiveNav("portal_cpmi")}
+              className={`flex w-full items-center justify-between rounded-lg px-3 py-2 font-medium transition ${
+                activeNav === "portal_cpmi"
+                  ? "bg-teal-600 text-white shadow-sm font-bold"
+                  : "text-teal-300 hover:bg-white/5 hover:text-white"
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <Smartphone className="h-4 w-4" />
+                Portal Mandiri CPMI
+              </span>
+              <span className="rounded bg-teal-500/20 px-1.5 py-0.5 text-[10px] text-teal-200">
+                Cek NIK
+              </span>
+            </button>
+          </div>
         </nav>
 
         {/* Info Superadmin yang Sedang Login di Bawah Sidebar */}
@@ -2889,19 +2940,24 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
           </div>
         </header>
 
-        {/* Navigasi Mobile */}
+        {/* Navigasi Mobile Terkelompok */}
         <div className="flex gap-1 overflow-x-auto border-b border-slate-200 bg-white px-4 py-2 lg:hidden">
           {[
-            { id: "beranda", label: "Beranda" },
-            { id: "cpmi", label: `Person (${stats.totalCpmi})` },
-            { id: "keuangan", label: "Keuangan (DP 1-3)" },
-            { id: "pelatihan", label: "BLK-LN & Asrama" },
-            { id: "pengingat", label: `Pengingat (${stats.criticalDocsCount})` },
-            { id: "cases", label: `Case (${stats.openCasesCount})` },
-            { id: "vacancy", label: `Vacancy (${db.vacancies?.length || 0})` },
-            { id: "portal_cpmi", label: "Portal CPMI" },
-            { id: "medical_visa", label: "Medical & Visa" },
-            { id: "cabang_audit", label: "Staf & Audit" },
+            { id: "beranda", label: "📊 Beranda" },
+            { id: "cpmi", label: `👥 CPMI (${stats.totalCpmi})` },
+            { id: "vacancy", label: `📋 Lowongan (${db.vacancies?.length || 0})` },
+            { id: "employer_matching", label: "🤝 Wawancara" },
+            { id: "pelatihan", label: "🎓 BLK-LN" },
+            { id: "medical_visa", label: "🩺 Medikal & Visa" },
+            { id: "doc_print", label: "🖨️ Cetak PDF" },
+            { id: "keuangan", label: "💰 Fee Sponsor" },
+            { id: "aruskas_kasbon", label: "💵 Arus Kas" },
+            { id: "pengingat", label: `🔔 Pengingat (${stats.criticalDocsCount})` },
+            { id: "cases", label: `⚠️ Kasus (${stats.openCasesCount})` },
+            { id: "whatsapp_gateway", label: "💬 WA Gateway" },
+            { id: "master_data", label: "⚙️ Master Data" },
+            { id: "saas_tenants", label: "🏢 Profil PT" },
+            { id: "cabang_audit", label: "🛡️ Staf & Audit" },
           ].map((tab) => (
             <button
               key={tab.id}
