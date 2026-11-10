@@ -3686,11 +3686,13 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                                 : tpl.docType === "IZIN_KELUARGA"
                                 ? "Izin Kel."
                                 : tpl.docType === "SERTIFIKAT_KOMPETENSI"
-                                ? "Sertifikat"
+                                ? "LSP/BNSP"
                                 : tpl.docType === "PERJANJIAN_PENEMPATAN"
-                                ? "PK / Kontrak"
+                                ? "PK Penempatan"
+                                : tpl.docType === "EKTKLN_OPP"
+                                ? "OPP/e-KPMI"
                                 : tpl.docType === "TIKET_EKTKLN"
-                                ? "Tiket/eKTKLN"
+                                ? "Tiket Pesawat"
                                 : tpl.docType}
                             </th>
                           ))}
@@ -4601,7 +4603,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                             (selectedCandidate.processTrack || "REKOM") === "NON_REKOM";
                           const isSkippedInNonRekom =
                             isNonRekom &&
-                            ["SERTIFIKAT_KOMPETENSI", "PERJANJIAN_PENEMPATAN"].includes(
+                            ["SERTIFIKAT_KOMPETENSI", "PERJANJIAN_PENEMPATAN", "EKTKLN_OPP"].includes(
                               doc.docType
                             );
                           const isDirectTicketInNonRekom =
@@ -12093,6 +12095,8 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                       ? "🏫 BLK-LN / LSP Penguji Kompetensi (Terhubung Master BLK)"
                       : editingDoc.doc.docType === "VISA"
                       ? "🌍 Kedutaan / Visa Center (Terhubung Master KBSA/VFS)"
+                      : editingDoc.doc.docType === "EKTKLN_OPP"
+                      ? "🏛️ Balai Pelayanan BP2MI / P4MI (Penyelenggara OPP & E-KPMI)"
                       : editingDoc.doc.docType === "TIKET_EKTKLN"
                       ? "✈️ Maskapai Penerbangan (Terhubung Master Airlines)"
                       : ["KTP", "KK", "AKTA_IJAZAH", "IZIN_KELUARGA"].includes(editingDoc.doc.docType)

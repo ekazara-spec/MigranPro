@@ -1605,7 +1605,8 @@ function createInitialSeed(): DatabaseSchema {
         SERTIFIKAT_KOMPETENSI: { status: "VERIFIED", docNumber: "BNSP-AE-2025-0012", verifiedBy: "Admin Pusat (Rina)" },
         PERJANJIAN_PENEMPATAN: { status: "VERIFIED", docNumber: "MOHRE-AE-2025-331", expiryDate: "2027-11-15", verifiedBy: "Admin Pusat (Rina)" },
         VISA: { status: "VERIFIED", docNumber: "AE-VISA-2025-881", expiryDate: "2027-11-15", verifiedBy: "Staf Dokumen (Dimas)" },
-        TIKET_EKTKLN: { status: "VERIFIED", docNumber: "EK359-EKTKLN-112", verifiedBy: "Admin Pusat (Rina)" },
+        EKTKLN_OPP: { status: "VERIFIED", docNumber: "EKPMI-BP2MI-2025-0812", verifiedBy: "Admin Pusat (Rina)" },
+        TIKET_EKTKLN: { status: "VERIFIED", docNumber: "EK359-CGK-DXB", issuedBy: "Emirates", verifiedBy: "Admin Pusat (Rina)" },
       }),
     },
     {
@@ -1867,7 +1868,8 @@ function createInitialSeed(): DatabaseSchema {
         SERTIFIKAT_KOMPETENSI: { status: "VERIFIED", docNumber: "BNSP-SPA-2026-119", verifiedBy: "Admin Pusat (Rina)" },
         PERJANJIAN_PENEMPATAN: { status: "VERIFIED", docNumber: "PK-KW-2026-771", expiryDate: "2028-10-14", verifiedBy: "Admin Pusat (Rina)" },
         VISA: { status: "VERIFIED", docNumber: "KW-EVISA-2026-9910", expiryDate: "2028-10-14", verifiedBy: "Staf Dokumen (Dimas)" },
-        TIKET_EKTKLN: { status: "VERIFIED", docNumber: "KU418-EKTKLN-991", verifiedBy: "Admin Pusat (Rina)" },
+        EKTKLN_OPP: { status: "VERIFIED", docNumber: "EKPMI-BP2MI-2026-9912", verifiedBy: "Admin Pusat (Rina)" },
+        TIKET_EKTKLN: { status: "VERIFIED", docNumber: "KU418-CGK-KWI", issuedBy: "Kuwait Airways", verifiedBy: "Admin Pusat (Rina)" },
       }),
     },
   ];
@@ -3836,13 +3838,16 @@ export function syncExpirationsAndTasks(db: DatabaseSchema): void {
       );
       cpmi.finance.fundingBankOrAgency = `100% Zero Cost — Dibiayai Langsung Syarikah / Majikan ${cpmi.destinationCountry} (Jalur Non-Rekom)`;
     }
-    // Sinkronkan judul dokumen ke-10 (Tiket) & dokumen Rekom/Non-Rekom sesuai jalur proses
+    // Sinkronkan judul dokumen ke-10 (OPP/E-KPMI) & ke-11 (Tiket) sesuai jalur proses
     for (const d of cpmi.documents) {
+      if (d.docType === "EKTKLN_OPP") {
+        d.title = "Tahap 7: Orientasi Pra-Pemberangkatan (OPP / PAP BP2MI) & E-KPMI (E-KTKLN)";
+      }
       if (d.docType === "TIKET_EKTKLN") {
         d.title =
           cpmi.processTrack === "NON_REKOM"
-            ? "Tiket Penerbangan & Boarding Keberangkatan (Jalur Non-Rekom — Langsung Tiket Tanpa BPJS-TK/KTKLN)"
-            : "Tiket Keberangkatan, BPJS-TK, PAP & E-KTKLN SISKOP2MI (Jalur Rekom)";
+            ? "Tahap 8: Tiket Penerbangan Langsung (Jalur Non-Rekom — Langsung Tiket & Terbang)"
+            : "Tahap 8: Tiket Penerbangan & Keberangkatan ke Negara Tujuan (Lapor Diri KBRI/KJRI)";
       }
     }
 
@@ -4053,13 +4058,15 @@ export function validateStageTransition(
   }
 
   if (targetIdx >= 4) {
-    const deployDocs = candidate.documents.filter((d) => d.requiredAtStage === "DEPLOYED");
+    const deployDocs = candidate.documents.filter((d) => {
+      if (d.requiredAtStage !== "DEPLOYED") return false;
+      if (isNonRekom && d.docType === "EKTKLN_OPP") return false; // Jalur Non-Rekom melewati OPP/E-KTKLN
+      return true;
+    });
     for (const d of deployDocs) {
       if (d.status !== "VERIFIED") {
         blockers.push(
-          isNonRekom
-            ? `Tiket Penerbangan Langsung (Jalur Non-Rekom — Tanpa BPJS-TK/KTKLN) belum VERIFIED.`
-            : `Berkas keberangkatan "${d.title}" (Tiket, BPJS-TK, PAP & E-KTKLN) belum VERIFIED.`
+          `Berkas "${d.title}" belum berstatus VERIFIED.`
         );
       }
     }

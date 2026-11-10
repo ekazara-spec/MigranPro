@@ -58,6 +58,7 @@ export type DocType =
   | "SERTIFIKAT_KOMPETENSI"
   | "PERJANJIAN_PENEMPATAN"
   | "VISA"
+  | "EKTKLN_OPP"
   | "TIKET_EKTKLN";
 
 export type DocStatus =
@@ -748,12 +749,20 @@ export const DOC_TEMPLATE_CONFIG: {
     description: "Visa kerja resmi Kedutaan Besar / Musaned KSA & Kepesertaan BPJS Ketenagakerjaan PMI",
   },
   {
-    docType: "TIKET_EKTKLN",
-    title: "Tahap 7 & 8: Orientasi Pra-Pemberangkatan (OPP / PAP BP2MI), E-KPMI & Tiket Penerbangan",
+    docType: "EKTKLN_OPP",
+    title: "Tahap 7: Orientasi Pra-Pemberangkatan (OPP / PAP BP2MI) & E-KPMI (E-KTKLN)",
     isSensitive: false,
     requiredAtStage: "DEPLOYED",
     hasExpiry: false,
-    description: "Pembekalan BP2MI (OPP/PAP), Perekaman Biometrik, Penerbitan E-KPMI/E-KTKLN, & Tiket Keberangkatan",
+    description: "Pembekalan Wajib OPP dari BP2MI, Perekaman Biometrik Sidik Jari & Penerbitan E-KPMI / E-KTKLN (Khusus Jalur Rekom)",
+  },
+  {
+    docType: "TIKET_EKTKLN",
+    title: "Tahap 8: Tiket Penerbangan & Keberangkatan ke Negara Tujuan (Lapor Diri KBRI/KJRI)",
+    isSensitive: false,
+    requiredAtStage: "DEPLOYED",
+    hasExpiry: false,
+    description: "Fasilitasi Tiket Penerbangan Maskapai Resmi, Boarding Bandara & Pelaporan Keberangkatan ke Perwakilan RI (KBRI/KJRI)",
   },
 ];
 
