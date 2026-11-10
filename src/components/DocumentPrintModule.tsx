@@ -24,6 +24,7 @@ interface DocumentPrintModuleProps {
   activeTenant: TenantCompany | null;
   isBranchViewOnly: boolean;
   preselectedCandidateId?: string;
+  onOpenSyarikahBiodata?: (candidate: Candidate) => void;
 }
 
 export type DocTemplateType =
@@ -38,6 +39,7 @@ export default function DocumentPrintModule({
   activeTenant,
   isBranchViewOnly,
   preselectedCandidateId,
+  onOpenSyarikahBiodata,
 }: DocumentPrintModuleProps) {
   const [selectedCandidateId, setSelectedCandidateId] = useState<string>(
     preselectedCandidateId || candidates[0]?.id || ""
@@ -520,74 +522,236 @@ export default function DocumentPrintModule({
               </div>
             )}
 
-            {/* KONTEN DOKUMEN: TEMPLATE 5 - BIODATA SYARIKAH TIMUR TENGAH (CV BILINGUAL) */}
+            {/* KONTEN DOKUMEN: TEMPLATE 5 - BIODATA SYARIKAH TIMUR TENGAH (IDENTIK CONTOH_PRINTOUT_BIODATA.PDF) */}
             {selectedDocType === "BIODATA_SYARIKAH" && (
-              <div className="mt-6 space-y-4 leading-relaxed text-slate-800 text-xs">
-                <div className="flex items-start justify-between border-b-2 border-slate-800 pb-3">
+              <div className="mt-4 space-y-4 leading-relaxed text-slate-900 text-xs">
+                {/* Banner Akses Modal Asli contoh_printout_biodata.pdf */}
+                <div className="rounded-xl border-2 border-indigo-500 bg-indigo-50 p-4 text-indigo-950 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md print:hidden">
                   <div>
-                    <h2 className="text-lg font-black uppercase text-slate-900">
-                      CURRICULUM VITAE / BIODATA CPMI
-                    </h2>
-                    <p className="text-xs font-bold text-slate-600">
-                      SAUDI MANPOWER RECRUITMENT PROGRAM (SPSK ZERO COST)
-                    </p>
-                    <p className="font-mono text-xs font-bold text-sky-800">
-                      REG. NO: {candidate.regNumber}
-                    </p>
-                  </div>
-
-                  {/* Foto Full Body / Paspor */}
-                  <div className="h-32 w-28 rounded-lg border-2 border-slate-400 bg-slate-100 flex flex-col items-center justify-center p-2 text-center text-[10px] text-slate-500">
-                    <Users className="h-8 w-8 text-slate-400 mb-1" />
-                    <span>FOTO FULL BODY 4R / PASPOR</span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Data Pribadi */}
-                  <div className="rounded-lg border border-slate-300 p-3 space-y-1.5">
-                    <h3 className="font-bold text-slate-900 border-b border-slate-200 pb-1 text-xs uppercase text-sky-900">
-                      1. Personal Information / البيانات الشخصية
+                    <span className="rounded bg-indigo-600 text-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">
+                      Format Resmi Sistem (contoh_printout_biodata.pdf)
+                    </span>
+                    <h3 className="font-extrabold text-sm text-indigo-950 mt-1">
+                      Printout Biodata Syarikah / CV Majikan Arab Saudi
                     </h3>
-                    <p><strong>Full Name:</strong> {candidate.fullName}</p>
-                    <p>
-                      <strong>Place & DOB:</strong> {candidate.birthPlace ? `${candidate.birthPlace}, ${candidate.birthDate || ""}` : (candidate.birthDate || "-")}
+                    <p className="text-xs text-indigo-800 mt-0.5">
+                      Sistem telah menyediakan formulir asli bilingual (Inggris & Arab) lengkap dengan penempatan pas foto, foto berdiri seluruh badan (Full-Body 3R/4R), rincian paspor, serta tabel keahlian kerja rumah tangga.
                     </p>
-                    <p><strong>Age:</strong> {candidate.registrationForm?.realAge || 26} Years Old</p>
-                    <p><strong>Religion:</strong> {candidate.registrationForm?.religion || "Islam"}</p>
-                    <p><strong>Marital Status:</strong> {candidate.maritalStatus || "Menikah"}</p>
-                    <p><strong>Height / Weight:</strong> {candidate.registrationForm?.heightCm || 158} cm / {candidate.registrationForm?.weightKg || 52} kg</p>
                   </div>
-
-                  {/* Pengalaman & Keahlian */}
-                  <div className="rounded-lg border border-slate-300 p-3 space-y-1.5">
-                    <h3 className="font-bold text-slate-900 border-b border-slate-200 pb-1 text-xs uppercase text-sky-900">
-                      2. Applied Position & Skills / الخبرات والمهارات
-                    </h3>
-                    <p><strong>Position:</strong> {candidate.jobSector}</p>
-                    <p><strong>Destination:</strong> {candidate.destinationCountry}</p>
-                    <p><strong>Arabic Language:</strong> {candidate.training?.targetLanguage === "Arab" ? "Mampu Berkomunikasi" : "Dasar Percakapan Sehari-hari"}</p>
-                    <p><strong>Cooking Arabic Food:</strong> [ √ ] Bisa (Kabsah, Mandi, Roti, Sambusa)</p>
-                    <p><strong>Babysitting / Elderly:</strong> [ √ ] Berpengalaman</p>
-                    <p><strong>Cleaning & Washing:</strong> [ √ ] Mahir & Rajin</p>
-                    <p><strong>Medical GAMCA / Wafid:</strong> <span className="font-bold text-emerald-700">FIT TO WORK</span></p>
-                  </div>
+                  {onOpenSyarikahBiodata && (
+                    <button
+                      type="button"
+                      onClick={() => onOpenSyarikahBiodata(candidate)}
+                      className="shrink-0 flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-black text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-700 transition cursor-pointer"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      Buka Format Asli & Editor Foto
+                    </button>
+                  )}
                 </div>
 
-                <div className="rounded-lg border border-slate-300 p-3 space-y-1">
-                  <h3 className="font-bold text-slate-900 text-xs uppercase text-sky-900">
-                    3. Overseas Work Experience / الخبرة العملية السابقة
-                  </h3>
-                  <p className="text-[11px] text-slate-700">
-                    {candidate.registrationForm?.overseasExperiences && candidate.registrationForm.overseasExperiences.length > 0
-                      ? candidate.registrationForm.overseasExperiences.map((exp) => `${exp.countryAndCity} (${exp.period}) - ${exp.remarks}`).join("; ")
-                      : "Pernah bekerja sebagai Pekerja Rumah Tangga (Housemaid) di Riyadh, Arab Saudi selama 2 tahun (2020-2022). Mampu mengoperasikan mesin cuci modern, vacuum cleaner, dan menjaga kebersihan rumah tangga secara mandiri."}
-                  </p>
-                </div>
+                {/* Lembar Format Resmi CV Syarikah (A4 Layout Identik contoh_printout_biodata.pdf) */}
+                <div className="rounded-lg border-2 border-slate-900 p-4 space-y-3 font-sans bg-white">
+                  {/* Header Aplikasi & Gaji SAR */}
+                  <div className="flex flex-col sm:flex-row justify-between items-start border-b-2 border-slate-900 pb-3 gap-3">
+                    <div>
+                      <h2 className="text-base font-black uppercase tracking-wide text-slate-900">
+                        APPLICATION FOR EMPLOYMENT / طلب استخدام
+                      </h2>
+                      <p className="text-xs font-bold text-indigo-900">
+                        SAUDI MANPOWER RECRUITMENT PROGRAM (SPSK ZERO COST)
+                      </p>
+                      <p className="font-mono text-xs font-bold text-slate-800 mt-0.5">
+                        REFERENCE NO. / الرقم المرجعي : {candidate.regNumber}
+                      </p>
+                    </div>
 
-                <div className="pt-4 flex justify-between items-center text-xs text-slate-500 border-t border-slate-300">
-                  <span>Verified by P3MI: {tenantName}</span>
-                  <span>SPSK Portal Kemnaker RI Certified</span>
+                    <div className="border border-slate-900 rounded p-2 bg-slate-50 text-[11px] space-y-0.5 min-w-[220px]">
+                      <div className="flex justify-between">
+                        <span className="font-bold">Post Applied For / الوظيفة:</span>
+                        <span className="font-bold text-indigo-900">HOUSEMAID</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="font-bold">Monthly Salary / الراتب:</span>
+                        <span className="font-bold text-emerald-800">SAR 1500</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="font-bold">Contract Period / مدة العقد:</span>
+                        <span className="font-bold">2 YEARS</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Body Grid: Kiri Tabel Data, Kanan 2 Foto Resmi (Pas Foto + Full Body) */}
+                  <div className="grid grid-cols-12 gap-4">
+                    {/* Kolom Kiri: Tabel Data (8 Kolom) */}
+                    <div className="col-span-8 space-y-3">
+                      {/* Tabel 1: Passport Details */}
+                      <div>
+                        <div className="bg-slate-900 text-white font-bold text-[10px] px-2 py-1 uppercase flex justify-between">
+                          <span>PASSPORT DETAILS</span>
+                          <span>بيانات جواز السفر</span>
+                        </div>
+                        <table className="w-full text-[10px] border border-slate-900 border-t-0">
+                          <tbody>
+                            <tr className="border-b border-slate-300">
+                              <td className="w-1/3 px-2 py-1 font-bold bg-slate-100">Number / الرقم</td>
+                              <td className="px-2 py-1 font-mono font-bold text-slate-900">
+                                {candidate.documents.find((d) => d.docType === "PASPOR")?.docNumber || "B 1234567"}
+                              </td>
+                            </tr>
+                            <tr className="border-b border-slate-300">
+                              <td className="px-2 py-1 font-bold bg-slate-100">Date of Issue / تاريخ الإصدار</td>
+                              <td className="px-2 py-1 font-mono">15-01-2025</td>
+                            </tr>
+                            <tr className="border-b border-slate-300">
+                              <td className="px-2 py-1 font-bold bg-slate-100">Date of Expiry / تاريخ الانتهاء</td>
+                              <td className="px-2 py-1 font-mono">
+                                {candidate.documents.find((d) => d.docType === "PASPOR")?.expiryDate || "15-01-2035"}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="px-2 py-1 font-bold bg-slate-100">Place of Issue / مكان الإصدار</td>
+                              <td className="px-2 py-1">KANIM CIREBON / JAKARTA</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Tabel 2: General Details */}
+                      <div>
+                        <div className="bg-slate-900 text-white font-bold text-[10px] px-2 py-1 uppercase flex justify-between">
+                          <span>GENERAL DETAILS</span>
+                          <span>البيانات العامة</span>
+                        </div>
+                        <table className="w-full text-[10px] border border-slate-900 border-t-0">
+                          <tbody>
+                            <tr className="border-b border-slate-300">
+                              <td className="w-1/3 px-2 py-1 font-bold bg-slate-100">Full Name / الاسم الكامل</td>
+                              <td className="px-2 py-1 font-bold text-slate-900">{candidate.fullName}</td>
+                            </tr>
+                            <tr className="border-b border-slate-300">
+                              <td className="px-2 py-1 font-bold bg-slate-100">Nationality / الجنسية</td>
+                              <td className="px-2 py-1 font-bold">INDONESIAN / إندونيسية</td>
+                            </tr>
+                            <tr className="border-b border-slate-300">
+                              <td className="px-2 py-1 font-bold bg-slate-100">Religion / الديانة</td>
+                              <td className="px-2 py-1">{candidate.registrationForm?.religion || "ISLAM / مسلم"}</td>
+                            </tr>
+                            <tr className="border-b border-slate-300">
+                              <td className="px-2 py-1 font-bold bg-slate-100">Date & Place of Birth / تاريخ ومكان الميلاد</td>
+                              <td className="px-2 py-1">
+                                {candidate.birthPlace ? `${candidate.birthPlace}, ${candidate.birthDate || ""}` : (candidate.birthDate || "-")}
+                              </td>
+                            </tr>
+                            <tr className="border-b border-slate-300">
+                              <td className="px-2 py-1 font-bold bg-slate-100">Age / العمر</td>
+                              <td className="px-2 py-1 font-bold">{candidate.registrationForm?.realAge || 26} Years Old / سنة</td>
+                            </tr>
+                            <tr className="border-b border-slate-300">
+                              <td className="px-2 py-1 font-bold bg-slate-100">Marital Status / الحالة الاجتماعية</td>
+                              <td className="px-2 py-1">{candidate.maritalStatus || "MARRIED / متزوجة"}</td>
+                            </tr>
+                            <tr className="border-b border-slate-300">
+                              <td className="px-2 py-1 font-bold bg-slate-100">Height & Weight / الطول والوزن</td>
+                              <td className="px-2 py-1 font-mono">
+                                {candidate.registrationForm?.heightCm || 158} cm / {candidate.registrationForm?.weightKg || 52} kg
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="px-2 py-1 font-bold bg-slate-100">Languages / اللغات</td>
+                              <td className="px-2 py-1">
+                                Arabic: {candidate.training?.targetLanguage === "Arab" ? "Fluent / جيدة" : "Basic / مقبولة"} · English: Fair
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Tabel 3: Previous Employment */}
+                      <div>
+                        <div className="bg-slate-900 text-white font-bold text-[10px] px-2 py-1 uppercase flex justify-between">
+                          <span>PREVIOUS EMPLOYMENT</span>
+                          <span>الخبرة العملية السابقة</span>
+                        </div>
+                        <div className="border border-slate-900 border-t-0 p-2 text-[10px] bg-slate-50">
+                          {candidate.registrationForm?.overseasExperiences && candidate.registrationForm.overseasExperiences.length > 0 ? (
+                            candidate.registrationForm.overseasExperiences.map((exp, idx) => (
+                              <p key={idx} className="font-semibold text-slate-900">
+                                • {exp.countryAndCity} ({exp.period}): {exp.remarks || "Domestic Helper"}
+                              </p>
+                            ))
+                          ) : (
+                            <p className="text-slate-800">
+                              • SAUDI ARABIA - RIYADH (2 YEARS): Housekeeping & Childcare (Ex-Saudi / خبرة سابقة بالسعودية)
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Tabel 4: Skills Matrix */}
+                      <div>
+                        <div className="bg-slate-900 text-white font-bold text-[10px] px-2 py-1 uppercase flex justify-between">
+                          <span>SKILLS & DUTIES</span>
+                          <span>المهارات والواجبات</span>
+                        </div>
+                        <div className="border border-slate-900 border-t-0 p-2 grid grid-cols-3 gap-2 text-[10px]">
+                          <div>[ √ ] Cleaning / نظافة</div>
+                          <div>[ √ ] Cooking / طبخ</div>
+                          <div>[ √ ] Washing / غسيل</div>
+                          <div>[ √ ] Ironing / كوي</div>
+                          <div>[ √ ] Babysitting / رعاية أطفال</div>
+                          <div>[ √ ] Elderly Care / رعاية مسنين</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Kolom Kanan: 2 Foto Berdampingan (4 Kolom) */}
+                    <div className="col-span-4 flex flex-col gap-3">
+                      {/* Pas Foto Wajah 4x6 */}
+                      <div className="border-2 border-slate-900 rounded p-1 flex flex-col items-center bg-slate-50">
+                        <span className="text-[9px] font-bold text-slate-700 uppercase mb-1">
+                          PASSPORT PHOTO / صورة شخصية
+                        </span>
+                        <div className="h-32 w-24 bg-slate-200 border border-slate-400 overflow-hidden flex items-center justify-center">
+                          {candidate.avatarUrl ? (
+                            <img src={candidate.avatarUrl} alt="Passport" className="h-full w-full object-cover" />
+                          ) : (
+                            <Users className="h-10 w-10 text-slate-400" />
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Foto Berdiri Seluruh Badan (Full-Body 3R/4R) */}
+                      <div className="border-2 border-slate-900 rounded p-1 flex flex-col items-center bg-slate-50 flex-1">
+                        <span className="text-[9px] font-bold text-slate-700 uppercase mb-1">
+                          FULL BODY PHOTO / صورة كاملة
+                        </span>
+                        <div className="h-64 w-full bg-slate-200 border border-slate-400 overflow-hidden flex items-center justify-center">
+                          {candidate.fullBodyPhotoUrl ? (
+                            <img src={candidate.fullBodyPhotoUrl} alt="Full Body" className="h-full w-full object-cover" />
+                          ) : (
+                            <div className="text-center p-2 text-slate-400 text-[10px]">
+                              <Users className="h-12 w-12 mx-auto mb-1 text-slate-400" />
+                              <span>FOTO BERDIRI FULL BODY 3R/4R</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer Pengesahan Legal P3MI */}
+                  <div className="pt-3 border-t-2 border-slate-900 flex justify-between items-center text-[10px] text-slate-700">
+                    <div>
+                      <p className="font-bold">P3MI PENYELENGGARA: {tenantName}</p>
+                      <p>{tenantLicense}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold">SPSK KEMNAKER RI CERTIFIED</p>
+                      <p>Kawasan Timur Tengah (Zero Cost Program)</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}

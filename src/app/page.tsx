@@ -3315,6 +3315,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
               activeTenant={activeTenant}
               isBranchViewOnly={isBranchViewOnly}
               preselectedCandidateId={selectedCandidate?.id}
+              onOpenSyarikahBiodata={(c) => openSyarikahBiodataModal(c)}
             />
           )}
 
