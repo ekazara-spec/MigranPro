@@ -2519,9 +2519,9 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="flex min-h-screen bg-slate-50 print:bg-white print:min-h-0 print:block">
       {/* SIDEBAR PASMIGRANPRO */}
-      <aside className="hidden w-64 shrink-0 flex-col bg-slate-900 text-white lg:flex">
+      <aside className="hidden w-64 shrink-0 flex-col bg-slate-900 text-white lg:flex print:hidden">
         <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
           <div className="flex items-center gap-2.5">
             <img
@@ -2986,9 +2986,9 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
       </aside>
 
       {/* MAIN AREA */}
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col print:block print:w-full print:p-0 print:m-0">
         {/* TOP HEADER */}
-        <header className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white/95 px-6 py-3.5 backdrop-blur">
+        <header className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white/95 px-6 py-3.5 backdrop-blur print:hidden">
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-lg font-bold text-slate-900">
@@ -3109,7 +3109,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
         </header>
 
         {/* Navigasi Mobile Terkelompok */}
-        <div className="flex gap-1 overflow-x-auto border-b border-slate-200 bg-white px-4 py-2 lg:hidden">
+        <div className="flex gap-1 overflow-x-auto border-b border-slate-200 bg-white px-4 py-2 lg:hidden print:hidden">
           {[
             { id: "beranda", label: "📊 Beranda" },
             { id: "cpmi", label: `👥 CPMI (${stats.totalCpmi})` },
@@ -3143,7 +3143,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
 
         {/* TOAST BANNER FEEDBACK */}
         {toast && (
-          <div className="mx-6 mt-4 rounded-xl border border-slate-200 bg-white p-4 shadow-md">
+          <div className="mx-6 mt-4 rounded-xl border border-slate-200 bg-white p-4 shadow-md print:hidden">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-3">
                 {toast.type === "success" && (
@@ -3180,7 +3180,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
         )}
 
         {/* CONTENT BODY */}
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-6 print:p-0 print:m-0 print:bg-white print:block print:w-full">
           {/* =========================================================
               TAB 1: BERANDA COMMAND CENTER (PERSIS PANEL MIGRANPRO)
              ========================================================= */}
