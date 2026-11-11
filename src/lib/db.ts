@@ -1,6 +1,7 @@
 import fs from "fs";
 import os from "os";
 import path from "path";
+import { createExcel2026Sponsors } from "./sponsor-seed-2026";
 import {
   AppRole,
   AuditLog,
@@ -40,6 +41,7 @@ import {
 
 export interface DatabaseSchema {
   isCleanProduction?: boolean;
+  sponsors2026ExcelImported?: boolean;
   tenants?: TenantCompany[];
   branches: Branch[];
   sponsors: Sponsor[];
@@ -3766,6 +3768,21 @@ export function syncExpirationsAndTasks(db: DatabaseSchema): void {
       db.tenants = createInitialTenants();
     }
   }
+  if (!db.sponsors2026ExcelImported) {
+    if (!db.sponsors) db.sponsors = [];
+    const existingNames = new Set(
+      db.sponsors.map((s) => s.name.trim().toLowerCase())
+    );
+    for (const sp of createExcel2026Sponsors()) {
+      const key = sp.name.trim().toLowerCase();
+      if (!existingNames.has(key)) {
+        db.sponsors.push(sp);
+        existingNames.add(key);
+      }
+    }
+    db.sponsors2026ExcelImported = true;
+  }
+
   for (const b of db.branches) {
     b.tenantId = "tenant-panca";
     if (!b.status) b.status = "ACTIVE";
