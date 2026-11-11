@@ -782,8 +782,8 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
   // State Fitur Badil (Pergantian Kandidat Timur Tengah / Umum)
   const [showBadilModal, setShowBadilModal] = useState(false);
   const [badilForm, setBadilForm] = useState({
-    originalCandidateId: "cpmi-10",
-    replacementCandidateId: "cpmi-4",
+    originalCandidateId: "cpmi-2",
+    replacementCandidateId: "cpmi-3",
     badilType: "PRA_TERBANG" as BadilType,
     reason: "UNFIT_WAFID_MEDICAL" as BadilReason,
     reasonNotes: "",
@@ -2837,26 +2837,6 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
               </button>
             </div>
 
-            <a
-              href="/flowchart-pasmigranpro.html"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-sky-300 bg-sky-50 px-3 py-2 text-xs font-bold text-sky-900 shadow-xs transition hover:bg-sky-100"
-            >
-              <FolderKanban className="h-3.5 w-3.5 text-sky-700" />
-              🗺️ Flowchart (PDF)
-            </a>
-
-            <a
-              href="/erd-dfd-pasmigranpro.html"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-purple-300 bg-purple-50 px-3 py-2 text-xs font-bold text-purple-900 shadow-xs transition hover:bg-purple-100"
-            >
-              <FolderKanban className="h-3.5 w-3.5 text-purple-700" />
-              🗄️ ERD & DFD (PDF)
-            </a>
-
             <button
               onClick={() => setShowBadilModal(true)}
               className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900 shadow-xs transition hover:bg-amber-100"
@@ -3945,7 +3925,9 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                                       cand.id !== selectedCandidate.id &&
                                       cand.specialStatus === "NORMAL" &&
                                       ["LEAD", "PROSPECT", "CPMI"].includes(cand.stage)
-                                  )?.id || "cpmi-4";
+                                  )?.id ||
+                                  db.candidates.find((cand) => cand.id !== selectedCandidate.id)?.id ||
+                                  "";
                                 setBadilForm((prev) => ({
                                   ...prev,
                                   originalCandidateId: selectedCandidate.id,
