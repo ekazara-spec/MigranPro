@@ -663,6 +663,9 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
   const [printingRegFormCandidate, setPrintingRegFormCandidate] = useState<Candidate | null>(
     null
   );
+  const [f4PrintVariantOverride, setF4PrintVariantOverride] = useState<
+    "AUTO" | "WITH_KOP" | "NO_KOP"
+  >("AUTO");
   const [printingSyarikahBiodataCandidate, setPrintingSyarikahBiodataCandidate] =
     useState<Candidate | null>(null);
   const [syarikahBiodataForm, setSyarikahBiodataForm] = useState({
@@ -4541,7 +4544,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                             </button>
 
                             <button
-                              onClick={() => setPrintingRegFormCandidate(selectedCandidate)}
+                              onClick={() => {
+                                setF4PrintVariantOverride("AUTO");
+                                setPrintingRegFormCandidate(selectedCandidate);
+                              }}
                               className="inline-flex items-center gap-1.5 rounded-lg border border-sky-300 bg-sky-50 px-3 py-1.5 text-xs font-bold text-sky-900 shadow-xs hover:bg-sky-100"
                             >
                               <Printer className="h-3.5 w-3.5 text-sky-700" />
@@ -9767,6 +9773,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                       maritalStatus: newForm.maritalStatus,
                       education: newForm.education,
                       destinationCountry: newForm.destinationCountry as DestinationCountry,
+                      processTrack: newForm.processTrack || regForm.processTrack || "REKOM",
                       jobSector: newForm.jobSector,
                       employerName: newForm.employerName,
                       agencyPartner: newForm.agencyPartner,
@@ -9783,6 +9790,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                       documents: [],
                       registrationForm: regForm,
                     };
+                    setF4PrintVariantOverride("AUTO");
                     setPrintingRegFormCandidate(tempCand);
                   }}
                   className="inline-flex items-center gap-1.5 rounded-xl border border-amber-400/50 bg-amber-500/20 px-3.5 py-2 text-xs font-bold text-amber-200 hover:bg-amber-500/30"
@@ -9975,8 +9983,131 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                         rel="noreferrer"
                         className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-800 shadow-2xs hover:bg-slate-50"
                       >
-                        🖨️ Cetak Blanko Kosong F4 (Untuk Interview)
+                        🖨️ Cetak Blanko Kosong F4 (Rekom · Kop PT)
                       </a>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setF4PrintVariantOverride("NO_KOP");
+                          setPrintingRegFormCandidate({
+                            id: "temp-blank-non-rekom",
+                            regNumber: "",
+                            nik: "",
+                            fullName: "",
+                            gender: "P",
+                            birthPlace: "",
+                            birthDate: "",
+                            phone: "",
+                            address: "",
+                            maritalStatus: "",
+                            education: "",
+                            destinationCountry: "Arab Saudi",
+                            processTrack: "NON_REKOM",
+                            jobSector: "",
+                            employerName: "",
+                            agencyPartner: "",
+                            stage: "LEAD",
+                            specialStatus: "NORMAL",
+                            placementFee: 0,
+                            costIncurred: 0,
+                            sponsorCommission: 0,
+                            commissionPaid: false,
+                            branchId: "br-idm",
+                            sponsorId: "sp-1",
+                            createdAt: "",
+                            updatedAt: "",
+                            documents: [],
+                            registrationForm: {
+                              nickname: "",
+                              processTrack: "NON_REKOM",
+                              realAge: undefined,
+                              heightCm: 0,
+                              weightKg: 0,
+                              religion: "",
+                              postalCode: "",
+                              graduationYear: "",
+                              ktpOrPassportNo: "",
+                              fatherName: "",
+                              fatherAge: 0,
+                              motherName: "",
+                              motherAge: 0,
+                              paternalGrandfatherName: "",
+                              spouseOrGuardianName: "",
+                              spouseAge: 0,
+                              spouseOccupation: "",
+                              childrenTotalCount: undefined,
+                              firstChildAge: "",
+                              lastChildAge: "",
+                              boysCountAndAges: "",
+                              girlsCountAndAges: "",
+                              childOrder: 0,
+                              siblingsCount: 0,
+                              emergencyContactName: "",
+                              emergencyContactRelation: "",
+                              emergencyContactPhone: "",
+                              workExperience1: "",
+                              workExperience2: "",
+                              overseasExperiences: [
+                                { no: 1, countryAndCity: "", duration: "", period: "", returnStatus: "NONE", remarks: "" },
+                                { no: 2, countryAndCity: "", duration: "", period: "", returnStatus: "NONE", remarks: "" },
+                                { no: 3, countryAndCity: "", duration: "", period: "", returnStatus: "NONE", remarks: "" },
+                                { no: 4, countryAndCity: "", duration: "", period: "", returnStatus: "NONE", remarks: "" },
+                              ],
+                              overseasExperienceNotes: "",
+                              arabicLevelF4: undefined,
+                              arabicNotesF4: "",
+                              englishLevelF4: undefined,
+                              englishNotesF4: "",
+                              willingCareBaby: false,
+                              willingCareBabyNotes: "",
+                              willingCareElderly: false,
+                              willingCareElderlyNotes: "",
+                              willingHousekeeping: false,
+                              willingHousekeepingNotes: "",
+                              arabicCookingSkills: [],
+                              desiredJobCleaner: false,
+                              desiredJobFactory: false,
+                              desiredJobNurse: false,
+                              desiredJobHospitality: false,
+                              desiredJobOther: false,
+                              desiredJobOtherText: "",
+                              docHandover: {
+                                ktp: "NONE",
+                                kk: "NONE",
+                                akteKelahiran: "NONE",
+                                izinKeluarga: "NONE",
+                                izinSuami: "NONE",
+                                sttbIjazah: "NONE",
+                                kartuBpjs: "NONE",
+                                skck: "NONE",
+                                paspor: "NONE",
+                                otherDoc8Name: "",
+                                otherDoc8Status: "NONE",
+                                otherDoc9Name: "",
+                                otherDoc9Status: "NONE",
+                              },
+                              languageSkills: {
+                                english: "NONE",
+                                mandarin: "NONE",
+                                arabic: "NONE",
+                                otherLanguageName: "",
+                                otherLanguageLevel: "NONE",
+                              },
+                              acceptanceDecision: "PENDING",
+                              accByName: "",
+                              candidateNotes: "",
+                              sponsorOfficerName: "",
+                              sponsorOfficerPhone: "",
+                              sponsorNotes: "",
+                              receivedByPtOfficer: "",
+                              formSignedDate: "",
+                            },
+                          });
+                        }}
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-300 bg-indigo-50 px-3 py-2 text-xs font-bold text-indigo-900 shadow-2xs hover:bg-indigo-100"
+                      >
+                        🖨️ Blanko Kosong F4 (Non-Rekom · Tanpa Kop)
+                      </button>
                       <button
                         type="button"
                         onClick={() => {
@@ -12480,7 +12611,127 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
           IDE 3: MODAL CETAK LEMBAR FISIK "FORMULIR PENDAFTARAN CPMI/CTKI"
           PT PANCA BANYU AJISAKTI (100% IDENTIK DENGAN FORMULIR BARU F4s.pdf)
          ========================================================= */}
-      {printingRegFormCandidate && (
+      {printingRegFormCandidate && (() => {
+        const cand = printingRegFormCandidate;
+        const rf: OfficialRegistrationForm = cand.registrationForm || regForm;
+        const isBlankTemplate = cand.id === "temp-blank-non-rekom";
+        const candidateIsNonRekom =
+          (cand.processTrack || rf.processTrack) === "NON_REKOM";
+        const isNonRekomF4 =
+          f4PrintVariantOverride === "NO_KOP"
+            ? true
+            : f4PrintVariantOverride === "WITH_KOP"
+            ? false
+            : candidateIsNonRekom;
+
+        const signedParts = rf.formSignedDate ? rf.formSignedDate.split("-") : [];
+        const signedYyyy = isBlankTemplate ? "" : signedParts[0] || "2026";
+        const signedMm = isBlankTemplate ? "" : signedParts[1] || "10";
+        const signedDd = isBlankTemplate ? "" : signedParts[2] || "16";
+
+        const bDateParts = cand.birthDate ? cand.birthDate.split("-") : [];
+        const bFormatted =
+          isBlankTemplate
+            ? ""
+            : cand.birthDate
+            ? `${bDateParts[2] || ""}-${bDateParts[1] || ""}-${bDateParts[0] || ""}`
+            : "";
+
+        const eduUpper = (cand.education || "").toUpperCase();
+        const isSd = !isBlankTemplate && eduUpper.includes("SD");
+        const isSmp =
+          !isBlankTemplate && (eduUpper.includes("SMP") || eduUpper.includes("MTS"));
+        const isSma =
+          !isBlankTemplate &&
+          (eduUpper.includes("SMA") ||
+            eduUpper.includes("SMK") ||
+            eduUpper.includes("MA") ||
+            (eduUpper !== "" &&
+              !isSd &&
+              !isSmp &&
+              !eduUpper.includes("D3") &&
+              !eduUpper.includes("S1")));
+        const isUniv =
+          !isBlankTemplate &&
+          (eduUpper.includes("D3") ||
+            eduUpper.includes("S1") ||
+            eduUpper.includes("DIPLOMA") ||
+            eduUpper.includes("UNIV"));
+
+        const marUpper = (cand.maritalStatus || "").toUpperCase();
+        const isBelumKawin = !isBlankTemplate && marUpper.includes("BELUM");
+        const isJanda =
+          !isBlankTemplate &&
+          (marUpper.includes("CERAI") || marUpper.includes("JANDA"));
+        const isKawin = !isBlankTemplate && marUpper !== "" && !isBelumKawin && !isJanda;
+
+        const expRows =
+          rf.overseasExperiences && rf.overseasExperiences.length > 0
+            ? rf.overseasExperiences
+            : [
+                {
+                  no: 1,
+                  countryAndCity: rf.workExperience1 || (isBlankTemplate ? "" : "-"),
+                  duration: isBlankTemplate ? "" : "2 Tahun",
+                  period: isBlankTemplate ? "" : "2022 - 2024",
+                  returnStatus: isBlankTemplate ? ("NONE" as const) : ("SELESAI" as const),
+                  remarks: isBlankTemplate ? "" : "Finish Kontrak",
+                },
+                {
+                  no: 2,
+                  countryAndCity: "",
+                  duration: "",
+                  period: "",
+                  returnStatus: "NONE" as const,
+                  remarks: "",
+                },
+                {
+                  no: 3,
+                  countryAndCity: "",
+                  duration: "",
+                  period: "",
+                  returnStatus: "NONE" as const,
+                  remarks: "",
+                },
+                {
+                  no: 4,
+                  countryAndCity: "",
+                  duration: "",
+                  period: "",
+                  returnStatus: "NONE" as const,
+                  remarks: "",
+                },
+              ];
+
+        const cookingSet = new Set(rf.arabicCookingSkills || []);
+
+        const renderDocStatus = (st?: DocHandoverType) => (
+          <span>
+            (
+            <span
+              className={
+                st === "COPY"
+                  ? "font-extrabold underline decoration-2 text-blue-900"
+                  : ""
+              }
+            >
+              copy
+            </span>{" "}
+            /{" "}
+            <span
+              className={
+                st === "ASLI"
+                  ? "font-extrabold underline decoration-2 text-blue-900"
+                  : ""
+              }
+            >
+              asli
+            </span>
+            )
+          </span>
+        );
+
+        return (
         <div
           className={`fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-3 sm:p-6 backdrop-blur-sm print:static print:inset-auto print:block print:bg-white print:p-0 print:m-0 ${
             printingSyarikahBiodataCandidate ? "print:hidden" : ""
@@ -12490,34 +12741,61 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
             {/* Toolbar Cetak */}
             <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900 px-6 py-3.5 text-white print:hidden">
               <div>
-                <span className="rounded bg-amber-500 px-2 py-0.5 text-[10px] font-extrabold uppercase text-slate-950">
-                  IDE 3 · CETAK LEMBAR FISIK IDENTIK 100% (FORMULIR BARU F4s.pdf)
-                </span>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span
+                    className={`rounded px-2 py-0.5 text-[10px] font-extrabold uppercase ${
+                      isNonRekomF4
+                        ? "bg-indigo-400 text-slate-950"
+                        : "bg-amber-500 text-slate-950"
+                    }`}
+                  >
+                    {isNonRekomF4
+                      ? "JALUR NON-REKOM · BLANKO TANPA KOP SURAT PT"
+                      : "IDE 3 · CETAK LEMBAR FISIK IDENTIK 100% (FORMULIR BARU F4s.pdf)"}
+                  </span>
+                </div>
                 <h3 className="mt-0.5 text-sm font-bold">
-                  Pratinjau Cetak F4: FORMULIR PENDAFTARAN CPMI/CTKI —{" "}
-                  {printingRegFormCandidate.fullName} ({printingRegFormCandidate.regNumber})
+                  Pratinjau Cetak F4:{" "}
+                  {isBlankTemplate
+                    ? "Blanko Kosong Non-Rekom (Tanpa Kop Surat)"
+                    : `FORMULIR PENDAFTARAN CPMI/CTKI — ${cand.fullName} (${cand.regNumber || "Draft"})`}
                 </h3>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => {
-                    const cand = printingRegFormCandidate;
-                    setPrintingRegFormCandidate(null);
-                    openSyarikahBiodataModal(cand);
-                  }}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-400 bg-indigo-600 px-3 py-2 text-xs font-extrabold text-white shadow-sm hover:bg-indigo-500"
+                  onClick={() =>
+                    setF4PrintVariantOverride(isNonRekomF4 ? "WITH_KOP" : "NO_KOP")
+                  }
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-xs font-bold text-white hover:bg-white/20"
                 >
-                  🌍 Buka Printout Biodata Syarikah (CV Majikan)
+                  {isNonRekomF4
+                    ? "🏢 Tampilkan Kop PT (Rekom)"
+                    : "📄 Tanpa Kop Surat (Non-Rekom)"}
                 </button>
-                <a
-                  href="/Formulir-Baru-F4s.pdf"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-xs font-bold text-white hover:bg-white/20"
-                >
-                  📄 Buka PDF Blanko Asli (F4s.pdf)
-                </a>
+                {!isBlankTemplate && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPrintingRegFormCandidate(null);
+                      setF4PrintVariantOverride("AUTO");
+                      openSyarikahBiodataModal(cand);
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-400 bg-indigo-600 px-3 py-2 text-xs font-extrabold text-white shadow-sm hover:bg-indigo-500"
+                  >
+                    🌍 Buka Printout Biodata Syarikah (CV Majikan)
+                  </button>
+                )}
+                {!isNonRekomF4 && (
+                  <a
+                    href="/Formulir-Baru-F4s.pdf"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-xs font-bold text-white hover:bg-white/20"
+                  >
+                    📄 Buka PDF Blanko Asli (F4s.pdf)
+                  </a>
+                )}
                 <button
                   type="button"
                   onClick={() => window.print()}
@@ -12528,7 +12806,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                 </button>
                 <button
                   type="button"
-                  onClick={() => setPrintingRegFormCandidate(null)}
+                  onClick={() => {
+                    setPrintingRegFormCandidate(null);
+                    setF4PrintVariantOverride("AUTO");
+                  }}
                   className="rounded-lg bg-white/10 p-1.5 text-slate-300 hover:bg-white/20 hover:text-white"
                 >
                   <X className="h-5 w-5" />
@@ -12536,141 +12817,15 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
               </div>
             </div>
 
-            {/* KERTAS FORMULIR BARU F4 PT PANCA BANYU AJISAKTI (100% IDENTIK DENGAN FORMULIR BARU F4s.pdf) */}
+            {/* KERTAS FORMULIR BARU F4 (OTOMATIS KOP PT UNTUK REKOM / TANPA KOP UNTUK NON-REKOM) */}
             <div className="flex-1 overflow-y-auto p-4 sm:p-8 print:overflow-visible print:p-0">
-              {(() => {
-                const cand = printingRegFormCandidate;
-                const rf: OfficialRegistrationForm = cand.registrationForm || regForm;
-                const signedParts = (rf.formSignedDate || "2026-10-16").split("-");
-                const signedYyyy = signedParts[0] || "2026";
-                const signedMm = signedParts[1] || "10";
-                const signedDd = signedParts[2] || "16";
-
-                const bDateParts = (cand.birthDate || "1998-08-14").split("-");
-                const bFormatted = `${bDateParts[2] || "14"}-${bDateParts[1] || "08"}-${
-                  bDateParts[0] || "1998"
-                }`;
-
-                const eduUpper = (cand.education || "").toUpperCase();
-                const isSd = eduUpper.includes("SD");
-                const isSmp = eduUpper.includes("SMP") || eduUpper.includes("MTS");
-                const isSma =
-                  eduUpper.includes("SMA") ||
-                  eduUpper.includes("SMK") ||
-                  eduUpper.includes("MA") ||
-                  (!isSd && !isSmp && !eduUpper.includes("D3") && !eduUpper.includes("S1"));
-                const isUniv =
-                  eduUpper.includes("D3") ||
-                  eduUpper.includes("S1") ||
-                  eduUpper.includes("DIPLOMA") ||
-                  eduUpper.includes("UNIV");
-
-                const marUpper = (cand.maritalStatus || "").toUpperCase();
-                const isBelumKawin = marUpper.includes("BELUM");
-                const isJanda = marUpper.includes("CERAI") || marUpper.includes("JANDA");
-                const isKawin = !isBelumKawin && !isJanda;
-
-                const expRows =
-                  rf.overseasExperiences && rf.overseasExperiences.length > 0
-                    ? rf.overseasExperiences
-                    : [
-                        {
-                          no: 1,
-                          countryAndCity: rf.workExperience1 || "-",
-                          duration: "2 Tahun",
-                          period: "2022 - 2024",
-                          returnStatus: "SELESAI" as const,
-                          remarks: "Finish Kontrak",
-                        },
-                        {
-                          no: 2,
-                          countryAndCity: "",
-                          duration: "",
-                          period: "",
-                          returnStatus: "NONE" as const,
-                          remarks: "",
-                        },
-                        {
-                          no: 3,
-                          countryAndCity: "",
-                          duration: "",
-                          period: "",
-                          returnStatus: "NONE" as const,
-                          remarks: "",
-                        },
-                        {
-                          no: 4,
-                          countryAndCity: "",
-                          duration: "",
-                          period: "",
-                          returnStatus: "NONE" as const,
-                          remarks: "",
-                        },
-                      ];
-
-                const cookingSet = new Set(rf.arabicCookingSkills || []);
-
-                const renderDocStatus = (st?: DocHandoverType) => (
-                  <span>
-                    (
-                    <span
-                      className={
-                        st === "COPY"
-                          ? "font-extrabold underline decoration-2 text-blue-900"
-                          : ""
-                      }
-                    >
-                      copy
-                    </span>{" "}
-                    /{" "}
-                    <span
-                      className={
-                        st === "ASLI"
-                          ? "font-extrabold underline decoration-2 text-blue-900"
-                          : ""
-                      }
-                    >
-                      asli
-                    </span>
-                    )
-                  </span>
-                );
-
-                return (
-                  <div className="f4-print-sheet mx-auto max-w-[850px] rounded-xs border border-slate-400 bg-white px-7 py-6 font-serif text-[11.5px] leading-[1.38] text-slate-950 shadow-2xl print:max-w-none print:rounded-none print:border-none print:shadow-none">
-                    {/* KOP SURAT FORMULIR BARU F4s.pdf: LOGO KIRI + NAMA PT TENGAH + KOTAK No. Reg. & Tgl KANAN */}
-                    <div className="grid grid-cols-12 items-center gap-2 border-b-2 border-slate-900 pb-2.5">
-                      {/* Logo Resmi PT Panca Banyu Ajisakti */}
-                      <div className="col-span-2 flex justify-start">
-                        <img
-                          src="/logo-panca-banyu.png"
-                          alt="Logo PT Panca Banyu Ajisakti"
-                          width={76}
-                          height={68}
-                          style={{ width: 76, height: 68 }}
-                          className="h-16 w-20 object-contain"
-                        />
-                      </div>
-
-                      {/* Teks Kop Tengah */}
-                      <div className="col-span-7 text-center font-sans">
-                        <h2 className="text-[21px] font-black tracking-wide text-slate-950 uppercase">
-                          PANCA BANYU AJISAKTI
-                        </h2>
-                        <p className="text-[11.5px] font-extrabold tracking-wider text-slate-900 uppercase">
-                          JASA TENAGA KERJA-INDONESIA MANPOWER SERVICE
-                        </p>
-                        <p className="mt-0.5 font-serif text-[11px] font-semibold text-slate-900">
-                          Jl. kayu manis No. 51 Kel. Bale Kambang Kec. Keramat Jati Jakarta Timur
-                        </p>
-                        <p className="font-serif text-[11px] font-semibold text-slate-900">
-                          Telp. +62-21 2937373 Fax +62-2129826026 Email pancabanyu@yahoo.com
-                        </p>
-                      </div>
-
-                      {/* Kotak No. Reg. & Tgl Kanan Atas */}
-                      <div className="col-span-3 flex flex-col items-end">
-                        <div className="min-h-[42px] w-full rounded-xl border-[1.5px] border-slate-900 px-2.5 py-1.5">
+              <div className="f4-print-sheet mx-auto max-w-[850px] rounded-xs border border-slate-400 bg-white px-7 py-6 font-serif text-[11.5px] leading-[1.38] text-slate-950 shadow-2xl print:max-w-none print:rounded-none print:border-none print:shadow-none">
+                {isNonRekomF4 ? (
+                  /* HEADER NON-REKOM: TANPA KOP SURAT PT (SESUAI CONTOH BLANKO NON-REKOM) */
+                  <div className="border-b-2 border-slate-900 pb-1.5">
+                    <div className="grid grid-cols-12 items-center gap-3">
+                      <div className="col-span-4">
+                        <div className="min-h-[42px] w-full max-w-[195px] rounded-xl border-[1.5px] border-slate-900 px-2.5 py-1.5">
                           <span className="block font-sans text-[10px] font-bold text-slate-900">
                             No. Reg.
                           </span>
@@ -12678,314 +12833,392 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                             {cand.regNumber || ""}
                           </strong>
                         </div>
-                        <div className="mt-1.5 w-full text-right text-[11px] font-semibold">
-                          Tgl{" "}
-                          <span className="border-b border-dotted border-slate-800 px-1 font-mono font-bold text-blue-950">
-                            {signedDd}
-                          </span>{" "}
-                          /{" "}
-                          <span className="border-b border-dotted border-slate-800 px-1 font-mono font-bold text-blue-950">
-                            {signedMm}
-                          </span>{" "}
-                          /{" "}
-                          <span className="border-b border-dotted border-slate-800 px-1.5 font-mono font-bold text-blue-950">
-                            {signedYyyy}
-                          </span>
-                        </div>
+                      </div>
+                      <div className="col-span-8 text-center font-sans">
+                        <h2 className="text-[20px] font-black tracking-wide text-blue-900 uppercase">
+                          FORMULIR PENDAFTARAN CTKI
+                        </h2>
                       </div>
                     </div>
-
-                    {/* JUDUL FORMULIR & PARAGRAF PERNYATAAN SESUAI FORMULIR BARU F4s.pdf */}
-                    <div className="mt-2 text-center">
-                      <h3 className="inline-block border-b-2 border-slate-950 font-sans text-[13px] font-black tracking-wide uppercase">
-                        FORMULIR PENDAFTARAN CPMI/CTKI
-                      </h3>
+                    <div className="mt-1.5 text-right text-[11px] font-semibold">
+                      Tgl{" "}
+                      <span className="inline-block min-w-[28px] border-b border-dotted border-slate-800 px-1 text-center font-mono font-bold text-blue-950">
+                        {signedDd}
+                      </span>{" "}
+                      /{" "}
+                      <span className="inline-block min-w-[28px] border-b border-dotted border-slate-800 px-1 text-center font-mono font-bold text-blue-950">
+                        {signedMm}
+                      </span>{" "}
+                      /{" "}
+                      <span className="inline-block min-w-[46px] border-b border-dotted border-slate-800 px-1.5 text-center font-mono font-bold text-blue-950">
+                        {signedYyyy}
+                      </span>
                     </div>
-                    <p className="mt-1.5 text-justify text-[11px] leading-snug text-slate-900">
-                      Saya yang mengisi Biodata ini bertanggung jawab dan tanpa unsur paksaan dari pihak manapun terhadap isinya serta bersedia menanggung kerugian pihak lain atau tuntutan hukum apabila dikemudian hari terbukti memalsukan atau berbohong. Data diri saya adalah sebagai berikut :
-                    </p>
+                  </div>
+                ) : (
+                  /* KOP SURAT FORMULIR BARU F4s.pdf: LOGO KIRI + NAMA PT TENGAH + KOTAK No. Reg. & Tgl KANAN */
+                  <div className="grid grid-cols-12 items-center gap-2 border-b-2 border-slate-900 pb-2.5">
+                    {/* Logo Resmi PT Panca Banyu Ajisakti */}
+                    <div className="col-span-2 flex justify-start">
+                      <img
+                        src="/logo-panca-banyu.png"
+                        alt="Logo PT Panca Banyu Ajisakti"
+                        width={76}
+                        height={68}
+                        style={{ width: 76, height: 68 }}
+                        className="h-16 w-20 object-contain"
+                      />
+                    </div>
 
-                    {/* POIN 1 S/D 14 SESUAI URUTAN FORMULIR BARU F4s.pdf */}
-                    <div className="mt-2.5 space-y-1 text-[11.5px]">
-                      {/* 1. Negara Tujuan */}
-                      <div className="flex items-baseline">
-                        <span className="w-6 shrink-0">1.</span>
-                        <span className="w-36 shrink-0">Negara Tujuan</span>
-                        <span className="mr-2">:</span>
-                        <div className="flex-1 border-b border-dotted border-slate-800 font-bold text-blue-950 uppercase">
-                          {cand.destinationCountry} ({cand.jobSector})
-                        </div>
-                      </div>
+                    {/* Teks Kop Tengah */}
+                    <div className="col-span-7 text-center font-sans">
+                      <h2 className="text-[21px] font-black tracking-wide text-slate-950 uppercase">
+                        PANCA BANYU AJISAKTI
+                      </h2>
+                      <p className="text-[11.5px] font-extrabold tracking-wider text-slate-900 uppercase">
+                        JASA TENAGA KERJA-INDONESIA MANPOWER SERVICE
+                      </p>
+                      <p className="mt-0.5 font-serif text-[11px] font-semibold text-slate-900">
+                        Jl. kayu manis No. 51 Kel. Bale Kambang Kec. Keramat Jati Jakarta Timur
+                      </p>
+                      <p className="font-serif text-[11px] font-semibold text-slate-900">
+                        Telp. +62-21 2937373 Fax +62-2129826026 Email pancabanyu@yahoo.com
+                      </p>
+                    </div>
 
-                      {/* 2. Nama Sponsor */}
-                      <div className="flex items-baseline">
-                        <span className="w-6 shrink-0">2.</span>
-                        <span className="w-36 shrink-0">Nama Sponsor</span>
-                        <span className="mr-2">:</span>
-                        <div className="flex-1 border-b border-dotted border-slate-800 font-bold text-blue-950">
-                          {rf.sponsorOfficerName}{" "}
-                          {rf.sponsorOfficerPhone ? `— Telp: ${rf.sponsorOfficerPhone}` : ""}
-                        </div>
-                      </div>
-
-                      {/* 3. Nama Lengkap ... Telp. ... */}
-                      <div className="flex items-baseline gap-2">
-                        <span className="w-6 shrink-0">3.</span>
-                        <span className="w-36 shrink-0">Nama Lengkap</span>
-                        <span className="mr-1">:</span>
-                        <div className="flex-1 border-b border-dotted border-slate-800 font-bold text-blue-950 uppercase">
-                          {cand.fullName}
-                        </div>
-                        <span className="shrink-0">Telp.</span>
-                        <div className="w-44 border-b border-dotted border-slate-800 font-mono font-bold text-blue-950">
-                          {cand.phone}
-                        </div>
-                      </div>
-
-                      {/* 4. Tempat Tgl Lahir ... Umur Asli ... */}
-                      <div className="flex items-baseline gap-2">
-                        <span className="w-6 shrink-0">4.</span>
-                        <span className="w-36 shrink-0">Tempat Tgl Lahir</span>
-                        <span className="mr-1">:</span>
-                        <div className="flex-1 border-b border-dotted border-slate-800 font-semibold text-blue-950">
-                          {cand.birthPlace || "Indramayu"}, {bFormatted}
-                        </div>
-                        <span className="shrink-0">Umur Asli</span>
-                        <div className="w-36 border-b border-dotted border-slate-800 text-center font-mono font-bold text-blue-950">
-                          {rf.realAge || 28} Tahun
-                        </div>
-                      </div>
-
-                      {/* 5. Agama */}
-                      <div className="flex items-baseline">
-                        <span className="w-6 shrink-0">5.</span>
-                        <span className="w-36 shrink-0">Agama</span>
-                        <span className="mr-2">:</span>
-                        <div className="flex-1 border-b border-dotted border-slate-800 font-semibold text-blue-950">
-                          {rf.religion || "Islam"}
-                        </div>
-                      </div>
-
-                      {/* 6. Pendidikan terakhir : A. SD  B. SMP  C. SMA  D. Diploma/Universitas */}
-                      <div className="flex items-baseline">
-                        <span className="w-6 shrink-0">6.</span>
-                        <span className="w-36 shrink-0">Pendidikan terakhir</span>
-                        <span className="mr-2">:</span>
-                        <div className="flex flex-1 flex-wrap items-center gap-8">
-                          <span
-                            className={
-                              isSd
-                                ? "rounded-full border-2 border-blue-900 px-2 py-0.2 font-bold text-blue-950"
-                                : ""
-                            }
-                          >
-                            A. SD
-                          </span>
-                          <span
-                            className={
-                              isSmp
-                                ? "rounded-full border-2 border-blue-900 px-2 py-0.2 font-bold text-blue-950"
-                                : ""
-                            }
-                          >
-                            B. SMP
-                          </span>
-                          <span
-                            className={
-                              isSma
-                                ? "rounded-full border-2 border-blue-900 px-2 py-0.2 font-bold text-blue-950"
-                                : ""
-                            }
-                          >
-                            C. SMA
-                          </span>
-                          <span
-                            className={
-                              isUniv
-                                ? "rounded-full border-2 border-blue-900 px-2 py-0.2 font-bold text-blue-950"
-                                : ""
-                            }
-                          >
-                            D. Diploma/Universitas
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* 7. Anak ke : ... dari ... bersaudara */}
-                      <div className="flex items-baseline">
-                        <span className="w-6 shrink-0">7.</span>
-                        <span className="w-36 shrink-0">Anak ke</span>
-                        <span className="mr-2">:</span>
-                        <div className="flex items-baseline gap-2">
-                          <span className="inline-block w-16 border-b border-dotted border-slate-800 text-center font-mono font-bold text-blue-950">
-                            {rf.childOrder || 1}
-                          </span>
-                          <span>dari</span>
-                          <span className="inline-block w-16 border-b border-dotted border-slate-800 text-center font-mono font-bold text-blue-950">
-                            {rf.siblingsCount || 3}
-                          </span>
-                          <span>bersaudara</span>
-                        </div>
-                      </div>
-
-                      {/* 8. Status : A. Belum Kawin  B. Kawin  C. Janda */}
-                      <div className="flex items-baseline">
-                        <span className="w-6 shrink-0">8.</span>
-                        <span className="w-36 shrink-0">Status</span>
-                        <span className="mr-2">:</span>
-                        <div className="flex flex-1 flex-wrap items-center gap-10">
-                          <span
-                            className={
-                              isBelumKawin
-                                ? "rounded-full border-2 border-blue-900 px-2.5 py-0.2 font-bold text-blue-950"
-                                : ""
-                            }
-                          >
-                            A. Belum Kawin
-                          </span>
-                          <span
-                            className={
-                              isKawin
-                                ? "rounded-full border-2 border-blue-900 px-2.5 py-0.2 font-bold text-blue-950"
-                                : ""
-                            }
-                          >
-                            B. Kawin
-                          </span>
-                          <span
-                            className={
-                              isJanda
-                                ? "rounded-full border-2 border-blue-900 px-2.5 py-0.2 font-bold text-blue-950"
-                                : ""
-                            }
-                          >
-                            C. Janda
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* 9. Jumlah Anak : ... Orang, Anak Pertama ... Tahun, Anak Terakhir ... Tahun */}
-                      <div className="flex items-baseline">
-                        <span className="w-6 shrink-0">9.</span>
-                        <span className="w-36 shrink-0">Jumlah Anak</span>
-                        <span className="mr-2">:</span>
-                        <div className="flex flex-1 flex-wrap items-baseline gap-1.5">
-                          <span className="inline-block w-14 border-b border-dotted border-slate-800 text-center font-mono font-bold text-blue-950">
-                            {rf.childrenTotalCount ?? 0}
-                          </span>
-                          <span>Orang, Anak Pertama</span>
-                          <span className="inline-block w-14 border-b border-dotted border-slate-800 text-center font-mono font-bold text-blue-950">
-                            {rf.firstChildAge || "-"}
-                          </span>
-                          <span>Tahun, Anak Terakhir</span>
-                          <span className="inline-block w-14 border-b border-dotted border-slate-800 text-center font-mono font-bold text-blue-950">
-                            {rf.lastChildAge || "-"}
-                          </span>
-                          <span>Tahun</span>
-                        </div>
-                      </div>
-
-                      {/* 10. Keadaan Fisik : Tinggi Badan ... cm  Berat Badan ... kg */}
-                      <div className="flex items-baseline">
-                        <span className="w-6 shrink-0">10.</span>
-                        <span className="w-36 shrink-0">Keadaan Fisik</span>
-                        <span className="mr-2">:</span>
-                        <div className="flex flex-1 items-baseline gap-2">
-                          <span>Tinggi Badan</span>
-                          <span className="inline-block w-24 border-b border-dotted border-slate-800 text-center font-mono font-bold text-blue-950">
-                            {rf.heightCm}
-                          </span>
-                          <span className="mr-6">cm</span>
-                          <span>Berat Badan</span>
-                          <span className="inline-block w-24 border-b border-dotted border-slate-800 text-center font-mono font-bold text-blue-950">
-                            {rf.weightKg}
-                          </span>
-                          <span>kg</span>
-                        </div>
-                      </div>
-
-                      {/* 11. Alamat Lengkap */}
-                      <div className="flex items-baseline">
-                        <span className="w-6 shrink-0">11.</span>
-                        <span className="w-36 shrink-0">Alamat Lengkap</span>
-                        <span className="mr-2">:</span>
-                        <div className="flex-1 border-b border-dotted border-slate-800 font-semibold text-blue-950">
-                          {cand.address}{" "}
-                          {cand.nik ? `(NIK: ${cand.nik})` : ""}
-                        </div>
-                      </div>
-
-                      {/* 12. Orang Tua : Bapak ... Umur ... th  Ibu ... Umur ... Th + Kakek dari Bapak ... */}
-                      <div className="space-y-1">
-                        <div className="flex items-baseline gap-1.5">
-                          <span className="w-6 shrink-0">12.</span>
-                          <span className="w-36 shrink-0">Orang Tua</span>
-                          <span className="mr-1">:</span>
-                          <span>Bapak</span>
-                          <span className="flex-1 border-b border-dotted border-slate-800 font-semibold text-blue-950">
-                            {rf.fatherName}
-                          </span>
-                          <span>Umur</span>
-                          <span className="w-10 border-b border-dotted border-slate-800 text-center font-mono font-bold text-blue-950">
-                            {rf.fatherAge}
-                          </span>
-                          <span className="mr-2">th</span>
-                          <span>Ibu</span>
-                          <span className="flex-1 border-b border-dotted border-slate-800 font-semibold text-blue-950">
-                            {rf.motherName}
-                          </span>
-                          <span>Umur</span>
-                          <span className="w-10 border-b border-dotted border-slate-800 text-center font-mono font-bold text-blue-950">
-                            {rf.motherAge}
-                          </span>
-                          <span>Th</span>
-                        </div>
-                        <div className="flex items-baseline pl-[176px]">
-                          <span className="mr-2 shrink-0">Kakek dari Bapak</span>
-                          <span className="flex-1 border-b border-dotted border-slate-800 font-semibold text-blue-950">
-                            {rf.paternalGrandfatherName || "H. Abdul Karim"}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* 13. Suami : ... Umur ... Th. Pekerjaan Suami ... */}
-                      <div className="flex items-baseline gap-1.5">
-                        <span className="w-6 shrink-0">13.</span>
-                        <span className="w-36 shrink-0">Suami</span>
-                        <span className="mr-1">:</span>
-                        <span className="flex-1 border-b border-dotted border-slate-800 font-semibold text-blue-950">
-                          {rf.spouseOrGuardianName}
+                    {/* Kotak No. Reg. & Tgl Kanan Atas */}
+                    <div className="col-span-3 flex flex-col items-end">
+                      <div className="min-h-[42px] w-full rounded-xl border-[1.5px] border-slate-900 px-2.5 py-1.5">
+                        <span className="block font-sans text-[10px] font-bold text-slate-900">
+                          No. Reg.
                         </span>
-                        <span>Umur</span>
-                        <span className="w-12 border-b border-dotted border-slate-800 text-center font-mono font-bold text-blue-950">
-                          {rf.spouseAge || "-"}
-                        </span>
-                        <span className="mr-2">Th.</span>
-                        <span>Pekerjaan Suami</span>
-                        <span className="w-48 border-b border-dotted border-slate-800 font-semibold text-blue-950">
-                          {rf.spouseOccupation || "-"}
-                        </span>
+                        <strong className="block min-h-[16px] text-center font-mono text-[12px] font-black text-rose-700">
+                          {cand.regNumber || ""}
+                        </strong>
                       </div>
-
-                      {/* 14. Keluarga Lain : nama ... hubungan ... no tlp ... */}
-                      <div className="flex items-baseline gap-1.5">
-                        <span className="w-6 shrink-0">14.</span>
-                        <span className="w-36 shrink-0">Keluarga Lain</span>
-                        <span className="mr-1">:</span>
-                        <span>nama</span>
-                        <span className="flex-1 border-b border-dotted border-slate-800 font-semibold text-blue-950">
-                          {rf.emergencyContactName}
-                        </span>
-                        <span>hubungan</span>
-                        <span className="w-28 border-b border-dotted border-slate-800 text-center font-semibold text-blue-950">
-                          {rf.emergencyContactRelation}
-                        </span>
-                        <span>no tlp</span>
-                        <span className="w-36 border-b border-dotted border-slate-800 font-mono font-bold text-blue-950">
-                          {rf.emergencyContactPhone}
+                      <div className="mt-1.5 w-full text-right text-[11px] font-semibold">
+                        Tgl{" "}
+                        <span className="inline-block min-w-[26px] border-b border-dotted border-slate-800 px-1 text-center font-mono font-bold text-blue-950">
+                          {signedDd}
+                        </span>{" "}
+                        /{" "}
+                        <span className="inline-block min-w-[26px] border-b border-dotted border-slate-800 px-1 text-center font-mono font-bold text-blue-950">
+                          {signedMm}
+                        </span>{" "}
+                        /{" "}
+                        <span className="inline-block min-w-[42px] border-b border-dotted border-slate-800 px-1.5 text-center font-mono font-bold text-blue-950">
+                          {signedYyyy}
                         </span>
                       </div>
                     </div>
+                  </div>
+                )}
+
+                {/* JUDUL FORMULIR & PARAGRAF PERNYATAAN */}
+                {isNonRekomF4 ? (
+                  <div className="mt-2 text-left">
+                    <h3 className="font-sans text-[12.5px] font-black tracking-wide uppercase">
+                      FORMULIR PENDAFTARAN CPMI/CTKI
+                    </h3>
+                  </div>
+                ) : (
+                  <div className="mt-2 text-center">
+                    <h3 className="inline-block border-b-2 border-slate-950 font-sans text-[13px] font-black tracking-wide uppercase">
+                      FORMULIR PENDAFTARAN CPMI/CTKI
+                    </h3>
+                  </div>
+                )}
+                <p className="mt-1.5 text-justify text-[11px] leading-snug text-slate-900">
+                  Saya yang mengisi Biodata ini bertanggung jawab dan tanpa unsur paksaan dari pihak manapun terhadap isinya serta bersedia menanggung kerugian pihak lain atau tuntutan hukum apabila dikemudian hari terbukti memalsukan atau berbohong. Data diri saya adalah sebagai berikut :
+                </p>
+
+                {/* POIN 1 S/D 14 SESUAI URUTAN FORMULIR BARU F4s.pdf */}
+                <div className="mt-2.5 space-y-1 text-[11.5px]">
+                  {/* 1. Negara Tujuan */}
+                  <div className="flex items-baseline">
+                    <span className="w-6 shrink-0">1.</span>
+                    <span className="w-36 shrink-0">Negara Tujuan</span>
+                    <span className="mr-2">:</span>
+                    <div className="min-h-[16px] flex-1 border-b border-dotted border-slate-800 font-bold text-blue-950 uppercase">
+                      {isBlankTemplate
+                        ? ""
+                        : `${cand.destinationCountry}${cand.jobSector ? ` (${cand.jobSector})` : ""}`}
+                    </div>
+                  </div>
+
+                  {/* 2. Nama Sponsor */}
+                  <div className="flex items-baseline">
+                    <span className="w-6 shrink-0">2.</span>
+                    <span className="w-36 shrink-0">Nama Sponsor</span>
+                    <span className="mr-2">:</span>
+                    <div className="min-h-[16px] flex-1 border-b border-dotted border-slate-800 font-bold text-blue-950">
+                      {isBlankTemplate ? "" : rf.sponsorOfficerName}{" "}
+                      {!isBlankTemplate && rf.sponsorOfficerPhone
+                        ? `— Telp: ${rf.sponsorOfficerPhone}`
+                        : ""}
+                    </div>
+                  </div>
+
+                  {/* 3. Nama Lengkap ... Telp. ... */}
+                  <div className="flex items-baseline gap-2">
+                    <span className="w-6 shrink-0">3.</span>
+                    <span className="w-36 shrink-0">Nama Lengkap</span>
+                    <span className="mr-1">:</span>
+                    <div className="min-h-[16px] flex-1 border-b border-dotted border-slate-800 font-bold text-blue-950 uppercase">
+                      {cand.fullName}
+                    </div>
+                    <span className="shrink-0">Telp.</span>
+                    <div className="min-h-[16px] w-44 border-b border-dotted border-slate-800 font-mono font-bold text-blue-950">
+                      {cand.phone}
+                    </div>
+                  </div>
+
+                  {/* 4. Tempat Tgl Lahir ... Umur Asli ... */}
+                  <div className="flex items-baseline gap-2">
+                    <span className="w-6 shrink-0">4.</span>
+                    <span className="w-36 shrink-0">Tempat Tgl Lahir</span>
+                    <span className="mr-1">:</span>
+                    <div className="min-h-[16px] flex-1 border-b border-dotted border-slate-800 font-semibold text-blue-950">
+                      {isBlankTemplate
+                        ? ""
+                        : `${cand.birthPlace || ""}${cand.birthPlace && bFormatted ? ", " : ""}${bFormatted}`}
+                    </div>
+                    <span className="shrink-0">Umur Asli</span>
+                    <div className="min-h-[16px] w-36 border-b border-dotted border-slate-800 text-center font-mono font-bold text-blue-950">
+                      {isBlankTemplate ? "         Tahun" : `${rf.realAge || 28} Tahun`}
+                    </div>
+                  </div>
+
+                  {/* 5. Agama */}
+                  <div className="flex items-baseline">
+                    <span className="w-6 shrink-0">5.</span>
+                    <span className="w-36 shrink-0">Agama</span>
+                    <span className="mr-2">:</span>
+                    <div className="min-h-[16px] flex-1 border-b border-dotted border-slate-800 font-semibold text-blue-950">
+                      {isBlankTemplate ? "" : rf.religion || "Islam"}
+                    </div>
+                  </div>
+
+                  {/* 6. Pendidikan terakhir : A. SD  B. SMP  C. SMA  D. Diploma/Universitas */}
+                  <div className="flex items-baseline">
+                    <span className="w-6 shrink-0">6.</span>
+                    <span className="w-36 shrink-0">Pendidikan terakhir</span>
+                    <span className="mr-2">:</span>
+                    <div className="flex flex-1 flex-wrap items-center gap-8">
+                      <span
+                        className={
+                          isSd
+                            ? "rounded-full border-2 border-blue-900 px-2 py-0.2 font-bold text-blue-950"
+                            : ""
+                        }
+                      >
+                        A. SD
+                      </span>
+                      <span
+                        className={
+                          isSmp
+                            ? "rounded-full border-2 border-blue-900 px-2 py-0.2 font-bold text-blue-950"
+                            : ""
+                        }
+                      >
+                        B. SMP
+                      </span>
+                      <span
+                        className={
+                          isSma
+                            ? "rounded-full border-2 border-blue-900 px-2 py-0.2 font-bold text-blue-950"
+                            : ""
+                        }
+                      >
+                        C. SMA
+                      </span>
+                      <span
+                        className={
+                          isUniv
+                            ? "rounded-full border-2 border-blue-900 px-2 py-0.2 font-bold text-blue-950"
+                            : ""
+                        }
+                      >
+                        D. Diploma/Universitas
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* 7. Anak ke : ... dari ... bersaudara */}
+                  <div className="flex items-baseline">
+                    <span className="w-6 shrink-0">7.</span>
+                    <span className="w-36 shrink-0">Anak ke</span>
+                    <span className="mr-2">:</span>
+                    <div className="flex items-baseline gap-2">
+                      <span className="inline-block min-h-[16px] w-16 border-b border-dotted border-slate-800 text-center font-mono font-bold text-blue-950">
+                        {isBlankTemplate ? "" : rf.childOrder || 1}
+                      </span>
+                      <span>dari</span>
+                      <span className="inline-block min-h-[16px] w-16 border-b border-dotted border-slate-800 text-center font-mono font-bold text-blue-950">
+                        {isBlankTemplate ? "" : rf.siblingsCount || 3}
+                      </span>
+                      <span>bersaudara</span>
+                    </div>
+                  </div>
+
+                  {/* 8. Status : A. Belum Kawin  B. Kawin  C. Janda */}
+                  <div className="flex items-baseline">
+                    <span className="w-6 shrink-0">8.</span>
+                    <span className="w-36 shrink-0">Status</span>
+                    <span className="mr-2">:</span>
+                    <div className="flex flex-1 flex-wrap items-center gap-10">
+                      <span
+                        className={
+                          isBelumKawin
+                            ? "rounded-full border-2 border-blue-900 px-2.5 py-0.2 font-bold text-blue-950"
+                            : ""
+                        }
+                      >
+                        A. Belum Kawin
+                      </span>
+                      <span
+                        className={
+                          isKawin
+                            ? "rounded-full border-2 border-blue-900 px-2.5 py-0.2 font-bold text-blue-950"
+                            : ""
+                        }
+                      >
+                        B. Kawin
+                      </span>
+                      <span
+                        className={
+                          isJanda
+                            ? "rounded-full border-2 border-blue-900 px-2.5 py-0.2 font-bold text-blue-950"
+                            : ""
+                        }
+                      >
+                        C. Janda
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* 9. Jumlah Anak : ... Orang, Anak Pertama ... Tahun, Anak Terakhir ... Tahun */}
+                  <div className="flex items-baseline">
+                    <span className="w-6 shrink-0">9.</span>
+                    <span className="w-36 shrink-0">Jumlah Anak</span>
+                    <span className="mr-2">:</span>
+                    <div className="flex flex-1 flex-wrap items-baseline gap-1.5">
+                      <span className="inline-block min-h-[16px] w-14 border-b border-dotted border-slate-800 text-center font-mono font-bold text-blue-950">
+                        {isBlankTemplate ? "" : (rf.childrenTotalCount ?? 0)}
+                      </span>
+                      <span>Orang, Anak Pertama</span>
+                      <span className="inline-block min-h-[16px] w-14 border-b border-dotted border-slate-800 text-center font-mono font-bold text-blue-950">
+                        {isBlankTemplate ? "" : rf.firstChildAge || "-"}
+                      </span>
+                      <span>Tahun, Anak Terakhir</span>
+                      <span className="inline-block min-h-[16px] w-14 border-b border-dotted border-slate-800 text-center font-mono font-bold text-blue-950">
+                        {isBlankTemplate ? "" : rf.lastChildAge || "-"}
+                      </span>
+                      <span>Tahun</span>
+                    </div>
+                  </div>
+
+                  {/* 10. Keadaan Fisik : Tinggi Badan ... cm  Berat Badan ... kg */}
+                  <div className="flex items-baseline">
+                    <span className="w-6 shrink-0">10.</span>
+                    <span className="w-36 shrink-0">Keadaan Fisik</span>
+                    <span className="mr-2">:</span>
+                    <div className="flex flex-1 items-baseline gap-2">
+                      <span>Tinggi Badan</span>
+                      <span className="inline-block min-h-[16px] w-24 border-b border-dotted border-slate-800 text-center font-mono font-bold text-blue-950">
+                        {isBlankTemplate ? "" : rf.heightCm || ""}
+                      </span>
+                      <span className="mr-6">cm</span>
+                      <span>Berat Badan</span>
+                      <span className="inline-block min-h-[16px] w-24 border-b border-dotted border-slate-800 text-center font-mono font-bold text-blue-950">
+                        {isBlankTemplate ? "" : rf.weightKg || ""}
+                      </span>
+                      <span>kg</span>
+                    </div>
+                  </div>
+
+                  {/* 11. Alamat Lengkap */}
+                  <div className="flex items-baseline">
+                    <span className="w-6 shrink-0">11.</span>
+                    <span className="w-36 shrink-0">Alamat Lengkap</span>
+                    <span className="mr-2">:</span>
+                    <div className="min-h-[16px] flex-1 border-b border-dotted border-slate-800 font-semibold text-blue-950">
+                      {cand.address}{" "}
+                      {cand.nik ? `(NIK: ${cand.nik})` : ""}
+                    </div>
+                  </div>
+
+                  {/* 12. Orang Tua : Bapak ... Umur ... th  Ibu ... Umur ... Th + Kakek dari Bapak ... */}
+                  <div className="space-y-1">
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="w-6 shrink-0">12.</span>
+                      <span className="w-36 shrink-0">Orang Tua</span>
+                      <span className="mr-1">:</span>
+                      <span>Bapak</span>
+                      <span className="min-h-[16px] flex-1 border-b border-dotted border-slate-800 font-semibold text-blue-950">
+                        {rf.fatherName}
+                      </span>
+                      <span>Umur</span>
+                      <span className="min-h-[16px] w-10 border-b border-dotted border-slate-800 text-center font-mono font-bold text-blue-950">
+                        {isBlankTemplate ? "" : rf.fatherAge || ""}
+                      </span>
+                      <span className="mr-2">th</span>
+                      <span>Ibu</span>
+                      <span className="min-h-[16px] flex-1 border-b border-dotted border-slate-800 font-semibold text-blue-950">
+                        {rf.motherName}
+                      </span>
+                      <span>Umur</span>
+                      <span className="min-h-[16px] w-10 border-b border-dotted border-slate-800 text-center font-mono font-bold text-blue-950">
+                        {isBlankTemplate ? "" : rf.motherAge || ""}
+                      </span>
+                      <span>Th</span>
+                    </div>
+                    <div className="flex items-baseline pl-[176px]">
+                      <span className="mr-2 shrink-0">Kakek dari Bapak</span>
+                      <span className="min-h-[16px] flex-1 border-b border-dotted border-slate-800 font-semibold text-blue-950">
+                        {isBlankTemplate ? "" : rf.paternalGrandfatherName || ""}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* 13. Suami : ... Umur ... Th. Pekerjaan Suami ... */}
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="w-6 shrink-0">13.</span>
+                    <span className="w-36 shrink-0">Suami</span>
+                    <span className="mr-1">:</span>
+                    <span className="min-h-[16px] flex-1 border-b border-dotted border-slate-800 font-semibold text-blue-950">
+                      {rf.spouseOrGuardianName}
+                    </span>
+                    <span>Umur</span>
+                    <span className="min-h-[16px] w-12 border-b border-dotted border-slate-800 text-center font-mono font-bold text-blue-950">
+                      {isBlankTemplate ? "" : rf.spouseAge || "-"}
+                    </span>
+                    <span className="mr-2">Th.</span>
+                    <span>Pekerjaan Suami</span>
+                    <span className="min-h-[16px] w-48 border-b border-dotted border-slate-800 font-semibold text-blue-950">
+                      {isBlankTemplate ? "" : rf.spouseOccupation || "-"}
+                    </span>
+                  </div>
+
+                  {/* 14. Keluarga Lain : nama ... hubungan ... no tlp ... */}
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="w-6 shrink-0">14.</span>
+                    <span className="w-36 shrink-0">Keluarga Lain</span>
+                    <span className="mr-1">:</span>
+                    <span>nama</span>
+                    <span className="min-h-[16px] flex-1 border-b border-dotted border-slate-800 font-semibold text-blue-950">
+                      {rf.emergencyContactName}
+                    </span>
+                    <span>hubungan</span>
+                    <span className="min-h-[16px] w-28 border-b border-dotted border-slate-800 text-center font-semibold text-blue-950">
+                      {rf.emergencyContactRelation}
+                    </span>
+                    <span>no tlp</span>
+                    <span className="min-h-[16px] w-36 border-b border-dotted border-slate-800 font-mono font-bold text-blue-950">
+                      {rf.emergencyContactPhone}
+                    </span>
+                  </div>
+                </div>
 
                     {/* 15. PENGALAMAN BEKERJA DILUAR NEGERI (Ex/Non) TABEL IDENTIK F4s.pdf */}
                     <div className="mt-2.5">
@@ -13047,8 +13280,8 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                       </table>
                       <div className="mt-1 flex items-baseline text-[11px]">
                         <span className="mr-2 shrink-0">Keterangan</span>
-                        <div className="flex-1 border-b border-dotted border-slate-800 text-blue-950">
-                          {rf.overseasExperienceNotes || "-"}
+                        <div className="min-h-[16px] flex-1 border-b border-dotted border-slate-800 text-blue-950">
+                          {isBlankTemplate ? "" : rf.overseasExperienceNotes || "-"}
                         </div>
                       </div>
                     </div>
@@ -13063,7 +13296,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                             (
                             <span
                               className={
-                                rf.arabicLevelF4 === "TIDAK_BISA"
+                                !isBlankTemplate && rf.arabicLevelF4 === "TIDAK_BISA"
                                   ? "font-extrabold underline decoration-2 text-blue-950"
                                   : ""
                               }
@@ -13073,7 +13306,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                             /{" "}
                             <span
                               className={
-                                rf.arabicLevelF4 === "SEDIKIT"
+                                !isBlankTemplate && rf.arabicLevelF4 === "SEDIKIT"
                                   ? "font-extrabold underline decoration-2 text-blue-950"
                                   : ""
                               }
@@ -13083,7 +13316,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                             /{" "}
                             <span
                               className={
-                                rf.arabicLevelF4 === "LANCAR"
+                                !isBlankTemplate && rf.arabicLevelF4 === "LANCAR"
                                   ? "font-extrabold underline decoration-2 text-blue-950"
                                   : ""
                               }
@@ -13093,8 +13326,8 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                             )
                           </span>
                           <span className="ml-2 shrink-0">Ket</span>
-                          <div className="flex-1 border-b border-dotted border-slate-800 text-blue-950">
-                            {rf.arabicNotesF4 || "-"}
+                          <div className="min-h-[16px] flex-1 border-b border-dotted border-slate-800 text-blue-950">
+                            {isBlankTemplate ? "" : rf.arabicNotesF4 || "-"}
                           </div>
                         </div>
 
@@ -13104,7 +13337,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                             (
                             <span
                               className={
-                                rf.englishLevelF4 === "TIDAK_BISA"
+                                !isBlankTemplate && rf.englishLevelF4 === "TIDAK_BISA"
                                   ? "font-extrabold underline decoration-2 text-blue-950"
                                   : ""
                               }
@@ -13114,7 +13347,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                             /{" "}
                             <span
                               className={
-                                rf.englishLevelF4 === "SEDIKIT"
+                                !isBlankTemplate && rf.englishLevelF4 === "SEDIKIT"
                                   ? "font-extrabold underline decoration-2 text-blue-950"
                                   : ""
                               }
@@ -13124,7 +13357,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                             /{" "}
                             <span
                               className={
-                                rf.englishLevelF4 === "LANCAR"
+                                !isBlankTemplate && rf.englishLevelF4 === "LANCAR"
                                   ? "font-extrabold underline decoration-2 text-blue-950"
                                   : ""
                               }
@@ -13134,8 +13367,8 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                             )
                           </span>
                           <span className="ml-2 shrink-0">Ket</span>
-                          <div className="flex-1 border-b border-dotted border-slate-800 text-blue-950">
-                            {rf.englishNotesF4 || "-"}
+                          <div className="min-h-[16px] flex-1 border-b border-dotted border-slate-800 text-blue-950">
+                            {isBlankTemplate ? "" : rf.englishNotesF4 || "-"}
                           </div>
                         </div>
                       </div>
@@ -13150,22 +13383,22 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                         <div className="flex items-baseline gap-2">
                           <span className="w-72 shrink-0">a. Merawat Anak Bayi / Anak Kecil</span>
                           <span className="font-mono font-bold text-blue-950">
-                            ( {rf.willingCareBaby ? "✓" : " "} )
+                            ( {!isBlankTemplate && rf.willingCareBaby ? "✓" : " "} )
                           </span>
                           <span className="ml-2 shrink-0">Ket</span>
-                          <div className="flex-1 border-b border-dotted border-slate-800 text-blue-950">
-                            {rf.willingCareBabyNotes || "-"}
+                          <div className="min-h-[16px] flex-1 border-b border-dotted border-slate-800 text-blue-950">
+                            {isBlankTemplate ? "" : rf.willingCareBabyNotes || "-"}
                           </div>
                         </div>
 
                         <div className="flex items-baseline gap-2">
                           <span className="w-72 shrink-0">b. Merawat Orang Tua Jompo</span>
                           <span className="font-mono font-bold text-blue-950">
-                            ( {rf.willingCareElderly ? "✓" : " "} )
+                            ( {!isBlankTemplate && rf.willingCareElderly ? "✓" : " "} )
                           </span>
                           <span className="ml-2 shrink-0">Ket</span>
-                          <div className="flex-1 border-b border-dotted border-slate-800 text-blue-950">
-                            {rf.willingCareElderlyNotes || "-"}
+                          <div className="min-h-[16px] flex-1 border-b border-dotted border-slate-800 text-blue-950">
+                            {isBlankTemplate ? "" : rf.willingCareElderlyNotes || "-"}
                           </div>
                         </div>
 
@@ -13174,11 +13407,11 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                             c. Bersih-bersih Rumah / Cuci Baju/Menyertrika dll.
                           </span>
                           <span className="font-mono font-bold text-blue-950">
-                            ( {rf.willingHousekeeping ? "✓" : " "} )
+                            ( {!isBlankTemplate && rf.willingHousekeeping ? "✓" : " "} )
                           </span>
                           <span className="ml-2 shrink-0">Ket</span>
-                          <div className="flex-1 border-b border-dotted border-slate-800 text-blue-950">
-                            {rf.willingHousekeepingNotes || "-"}
+                          <div className="min-h-[16px] flex-1 border-b border-dotted border-slate-800 text-blue-950">
+                            {isBlankTemplate ? "" : rf.willingHousekeepingNotes || "-"}
                           </div>
                         </div>
 
@@ -13195,7 +13428,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                             ].map((col, cIdx) => (
                               <div key={cIdx} className="space-y-0.5">
                                 {col.map((dish, dIdx) => {
-                                  const selected = cookingSet.has(dish);
+                                  const selected = !isBlankTemplate && cookingSet.has(dish);
                                   return (
                                     <div
                                       key={`${cIdx}-${dIdx}`}
@@ -13241,8 +13474,8 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                           </div>
                           <div className="flex items-baseline gap-1">
                             <span className="shrink-0">Dokumen Lain</span>
-                            <span className="flex-1 border-b border-dotted border-slate-800 text-[10px] font-semibold text-blue-950 truncate">
-                              {rf.docHandover.otherDoc8Name || "-"}
+                            <span className="min-h-[16px] flex-1 border-b border-dotted border-slate-800 text-[10px] font-semibold text-blue-950 truncate">
+                              {isBlankTemplate ? "" : rf.docHandover.otherDoc8Name || "-"}
                             </span>
                           </div>
                         </div>
@@ -13254,8 +13487,8 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                       <div className="col-span-7 space-y-2">
                         <div className="flex items-baseline gap-2">
                           <span className="font-semibold shrink-0">Catatan :</span>
-                          <div className="flex-1 border-b border-dotted border-slate-800 font-semibold text-blue-950">
-                            {rf.sponsorNotes || rf.candidateNotes || "-"}
+                          <div className="min-h-[16px] flex-1 border-b border-dotted border-slate-800 font-semibold text-blue-950">
+                            {isBlankTemplate ? "" : rf.sponsorNotes || rf.candidateNotes || "-"}
                           </div>
                         </div>
                         <div className="border-b border-dotted border-slate-800 h-4" />
@@ -13266,19 +13499,19 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                         <div className="flex items-center justify-between">
                           <span>Terima</span>
                           <span className="font-mono font-bold text-blue-950">
-                            ( {rf.acceptanceDecision === "TERIMA" ? "✓" : "   "} )
+                            ( {!isBlankTemplate && rf.acceptanceDecision === "TERIMA" ? "✓" : "   "} )
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span>Tidak diterima</span>
                           <span className="font-mono font-bold text-rose-700">
-                            ( {rf.acceptanceDecision === "TIDAK_DITERIMA" ? "✓" : "   "} )
+                            ( {!isBlankTemplate && rf.acceptanceDecision === "TIDAK_DITERIMA" ? "✓" : "   "} )
                           </span>
                         </div>
                         <div className="pt-1">
                           <span>ACC: </span>
                           <span className="font-bold text-blue-950">
-                            ( {rf.accByName || "..................................."} )
+                            ( {isBlankTemplate ? "..................................." : rf.accByName || "..................................."} )
                           </span>
                         </div>
                       </div>
@@ -13289,37 +13522,42 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                       <div>
                         <p className="font-semibold">Yang Mengisi Data</p>
                         <div className="h-12 flex items-center justify-center text-[9.5px] italic text-slate-400">
-                          Ttd. {rf.formSignedDate}
+                          {isBlankTemplate ? "" : `Ttd. ${rf.formSignedDate}`}
                         </div>
-                        <p className="font-bold text-blue-950">( {cand.fullName} )</p>
+                        <p className="font-bold text-blue-950">
+                          ( {isBlankTemplate ? "................................." : cand.fullName} )
+                        </p>
                         <p className="text-[10.5px]">calon PMI</p>
                       </div>
 
                       <div>
                         <p className="font-semibold">Mengetahui/Saksi</p>
                         <div className="h-12 flex items-center justify-center text-[9.5px] italic text-slate-400">
-                          Terverifikasi Sponsor
+                          {isBlankTemplate ? "" : "Terverifikasi Sponsor"}
                         </div>
-                        <p className="font-bold text-blue-950">( {rf.sponsorOfficerName} )</p>
+                        <p className="font-bold text-blue-950">
+                          ( {isBlankTemplate ? "................................." : rf.sponsorOfficerName} )
+                        </p>
                         <p className="text-[10.5px]">Petugas Lapangan/Rekrut</p>
                       </div>
 
                       <div>
                         <p className="font-semibold">Yang Menerima CPMI</p>
                         <div className="h-12 flex items-center justify-center text-[9.5px] italic text-teal-700 font-semibold">
-                          ✓ Diinput ke Sistem
+                          {isBlankTemplate ? "" : "✓ Diinput ke Sistem"}
                         </div>
-                        <p className="font-bold text-blue-950">( {rf.receivedByPtOfficer} )</p>
+                        <p className="font-bold text-blue-950">
+                          ( {isBlankTemplate ? "................................." : rf.receivedByPtOfficer} )
+                        </p>
                         <p className="text-[10.5px]">Petugas PT.</p>
                       </div>
                     </div>
                   </div>
-                );
-              })()}
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* =========================================================
           MODAL PRINTOUT BIODATA SYARIKAH / CV MAJIKAN TIMUR TENGAH
