@@ -18,6 +18,7 @@ import {
   History,
   KeyRound,
   LayoutDashboard,
+  LayoutGrid,
   LifeBuoy,
   Lock,
   LogOut,
@@ -35,6 +36,7 @@ import {
   Smartphone,
   Sparkles,
   Stethoscope,
+  Table,
   TrendingUp,
   UserCheck,
   UserPlus,
@@ -794,6 +796,12 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
     headName: "",
     phone: "",
   });
+
+  const [trainingViewMode, setTrainingViewMode] = useState<"matrix" | "cards">("matrix");
+  const [trainingSearch, setTrainingSearch] = useState("");
+  const [trainingStatusFilter, setTrainingStatusFilter] = useState<
+    "ALL" | "LULUS_KOMPETEN" | "BELUM_UJIAN" | "REMEDIAL"
+  >("ALL");
 
   async function fetchDb() {
     setLoading(true);
@@ -6516,119 +6524,365 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
           {/* =========================================================
               TAB 10: MODUL PELATIHAN BLK-LN, ASRAMA & UJI KOMPETENSI
              ========================================================= */}
-          {activeNav === "pelatihan" && (
-            <div className="space-y-6">
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-sky-600">
-                      Integrasi BLK-LN & Asrama Pelatihan P3MI
-                    </span>
-                    <h2 className="text-base font-bold text-slate-900">
-                      Pemantauan Kehadiran Asrama, Nilai Bahasa & Sertifikasi Kompetensi (BNSP / SSW)
-                    </h2>
-                    <p className="text-xs text-slate-500">
-                      Memastikan setiap CPMI lulus uji kompetensi bahasa & keterampilan sebelum pengajuan Visa Kerja dan PAP.
-                    </p>
-                  </div>
-                </div>
+          {activeNav === "pelatihan" && (() => {
+            const trainingAll = filteredCandidates.filter((c) => Boolean(c.training));
+            const trainingFiltered = trainingAll.filter((c) => {
+              const tr = c.training!;
+              const matchStatus =
+                trainingStatusFilter === "ALL" || tr.examStatus === trainingStatusFilter;
+              const q = trainingSearch.trim().toLowerCase();
+              const matchQuery =
+                !q ||
+                c.fullName.toLowerCase().includes(q) ||
+                c.regNumber.toLowerCase().includes(q) ||
+                tr.blkLocation.toLowerCase().includes(q) ||
+                tr.targetLanguage.toLowerCase().includes(q) ||
+                (tr.instructorNotes || "").toLowerCase().includes(q);
+              return matchStatus && matchQuery;
+            });
 
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  {filteredCandidates.map((c) => {
-                    const tr = c.training;
-                    if (!tr) return null;
-                    return (
-                      <div
-                        key={c.id}
-                        className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 text-xs space-y-3"
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-mono font-bold text-sky-700">
-                                {c.regNumber}
-                              </span>
-                              <h3 className="text-sm font-bold text-slate-900">{c.fullName}</h3>
-                            </div>
-                            <p className="text-slate-500 mt-0.5">
-                              {tr.blkLocation} · Masuk Asrama:{" "}
-                              <strong>{tr.dormitoryCheckIn || "Belum Masuk"}</strong>
-                            </p>
-                          </div>
-                          <span
-                            className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-                              tr.examStatus === "LULUS_KOMPETEN"
-                                ? "bg-emerald-600 text-white"
-                                : tr.examStatus === "REMEDIAL"
-                                ? "bg-rose-600 text-white"
-                                : "bg-amber-500 text-slate-950"
-                            }`}
-                          >
-                            {tr.examStatus}
+            const passedCount = trainingAll.filter(
+              (c) => c.training?.examStatus === "LULUS_KOMPETEN"
+            ).length;
+            const pendingCount = trainingAll.filter(
+              (c) => c.training?.examStatus === "BELUM_UJIAN"
+            ).length;
+            const remedialCount = trainingAll.filter(
+              (c) => c.training?.examStatus === "REMEDIAL"
+            ).length;
+
+            async function handlePassCompetency(c: Candidate) {
+              const tr = c.training;
+              if (!tr) return;
+              await callApi("UPDATE_TRAINING", {
+                candidateId: c.id,
+                attendancePct: 98,
+                languageScore: Math.max(tr.languageScore, 88),
+                skillScore: Math.max(tr.skillScore, 90),
+                examStatus: "LULUS_KOMPETEN",
+                instructorNotes:
+                  "Lulus ujian kompetensi bahasa & praktik kerja, siap proses Visa & PAP.",
+              });
+              setToast({
+                type: "success",
+                title: `${c.fullName} Dinyatakan LULUS KOMPETEN (BLK-LN)`,
+              });
+            }
+
+            return (
+              <div className="space-y-6">
+                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-200 pb-4">
+                    <div>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-sky-600">
+                        Integrasi BLK-LN & Asrama Pelatihan P3MI
+                      </span>
+                      <h2 className="text-base font-bold text-slate-900">
+                        Pemantauan Kehadiran Asrama, Nilai Bahasa & Sertifikasi Kompetensi (BNSP / SSW)
+                      </h2>
+                      <p className="text-xs text-slate-500">
+                        Memastikan setiap CPMI lulus uji kompetensi bahasa & keterampilan sebelum pengajuan Visa Kerja dan PAP.
+                      </p>
+                      <div className="flex flex-wrap items-center gap-2 mt-2 text-[11px] font-semibold">
+                        <span className="rounded-full bg-slate-100 border border-slate-200 px-2.5 py-0.5 text-slate-700">
+                          Total: {trainingAll.length} CPMI
+                        </span>
+                        <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-emerald-700">
+                          Lulus Kompeten: {passedCount}
+                        </span>
+                        <span className="rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-amber-800">
+                          Belum Ujian: {pendingCount}
+                        </span>
+                        {remedialCount > 0 && (
+                          <span className="rounded-full bg-rose-50 border border-rose-200 px-2.5 py-0.5 text-rose-700">
+                            Remedial: {remedialCount}
                           </span>
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-2 rounded-xl bg-white p-3 border border-slate-200/80">
-                          <div>
-                            <span className="text-[10px] text-slate-400 block">
-                              Presensi Asrama
-                            </span>
-                            <span className="text-base font-extrabold text-slate-900">
-                              {tr.attendancePct}%
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-[10px] text-slate-400 block">
-                              {tr.targetLanguage}
-                            </span>
-                            <span className="text-base font-extrabold text-sky-700">
-                              {tr.languageScore} / 100
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-[10px] text-slate-400 block">
-                              Praktik Kerja
-                            </span>
-                            <span className="text-base font-extrabold text-teal-700">
-                              {tr.skillScore} / 100
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-                          <span className="text-[11px] text-slate-600">
-                            Instruktur: <strong>{tr.instructorNotes}</strong>
-                          </span>
-                          <div className="flex items-center gap-1.5">
-                            <button
-                              onClick={async () => {
-                                await callApi("UPDATE_TRAINING", {
-                                  candidateId: c.id,
-                                  attendancePct: 98,
-                                  languageScore: Math.max(tr.languageScore, 88),
-                                  skillScore: Math.max(tr.skillScore, 90),
-                                  examStatus: "LULUS_KOMPETEN",
-                                  instructorNotes:
-                                    "Lulus ujian kompetensi bahasa & praktik kerja, siap proses Visa & PAP.",
-                                });
-                                setToast({
-                                  type: "success",
-                                  title: `${c.fullName} Dinyatakan LULUS KOMPETEN (BLK-LN)`,
-                                });
-                              }}
-                              className="rounded-lg bg-emerald-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-emerald-700"
-                            >
-                              Luluskan Uji Kompetensi
-                            </button>
-                          </div>
-                        </div>
+                        )}
                       </div>
-                    );
-                  })}
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      {/* Pencarian */}
+                      <div className="relative">
+                        <Search className="h-3.5 w-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="text"
+                          value={trainingSearch}
+                          onChange={(e) => setTrainingSearch(e.target.value)}
+                          placeholder="Cari nama / reg / BLK..."
+                          className="w-44 sm:w-52 rounded-lg border border-slate-200 bg-slate-50 pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:border-sky-500 focus:bg-white focus:outline-none"
+                        />
+                      </div>
+
+                      {/* Filter Status Ujian */}
+                      <select
+                        value={trainingStatusFilter}
+                        onChange={(e) =>
+                          setTrainingStatusFilter(
+                            e.target.value as
+                              | "ALL"
+                              | "LULUS_KOMPETEN"
+                              | "BELUM_UJIAN"
+                              | "REMEDIAL"
+                          )
+                        }
+                        className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs text-slate-700 focus:border-sky-500 focus:bg-white focus:outline-none cursor-pointer"
+                      >
+                        <option value="ALL">Semua Status</option>
+                        <option value="LULUS_KOMPETEN">LULUS KOMPETEN</option>
+                        <option value="BELUM_UJIAN">BELUM UJIAN</option>
+                        <option value="REMEDIAL">REMEDIAL</option>
+                      </select>
+
+                      {/* Toggle Matrix Baris & Kolom vs Kartu */}
+                      <div className="inline-flex rounded-lg border border-slate-200 bg-slate-100 p-0.5 text-xs">
+                        <button
+                          type="button"
+                          onClick={() => setTrainingViewMode("matrix")}
+                          className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 font-semibold transition cursor-pointer ${
+                            trainingViewMode === "matrix"
+                              ? "bg-sky-600 text-white shadow-sm"
+                              : "text-slate-600 hover:text-slate-900"
+                          }`}
+                        >
+                          <Table className="h-3.5 w-3.5" />
+                          Matrix Baris &amp; Kolom
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setTrainingViewMode("cards")}
+                          className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 font-semibold transition cursor-pointer ${
+                            trainingViewMode === "cards"
+                              ? "bg-sky-600 text-white shadow-sm"
+                              : "text-slate-600 hover:text-slate-900"
+                          }`}
+                        >
+                          <LayoutGrid className="h-3.5 w-3.5" />
+                          Kartu
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* TAMPILAN 1: MATRIX BARIS & KOLOM */}
+                  {trainingViewMode === "matrix" && (
+                    <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+                      <table className="w-full text-left text-xs text-slate-700">
+                        <thead className="bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                          <tr>
+                            <th className="py-3 px-3 text-center w-10">No</th>
+                            <th className="py-3 px-3 min-w-[180px]">No. Reg &amp; Nama CPMI</th>
+                            <th className="py-3 px-3 min-w-[190px]">BLK-LN &amp; Masuk Asrama</th>
+                            <th className="py-3 px-3 text-center min-w-[90px]">Presensi</th>
+                            <th className="py-3 px-3 min-w-[160px]">Nilai Bahasa</th>
+                            <th className="py-3 px-3 text-center min-w-[100px]">Praktik Kerja</th>
+                            <th className="py-3 px-3 text-center min-w-[125px]">Status Ujian</th>
+                            <th className="py-3 px-3 min-w-[200px]">Catatan Instruktur</th>
+                            <th className="py-3 px-3 text-right min-w-[155px]">Aksi</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {trainingFiltered.length === 0 ? (
+                            <tr>
+                              <td
+                                colSpan={9}
+                                className="py-8 text-center text-slate-400"
+                              >
+                                Tidak ada data pelatihan BLK-LN yang cocok dengan filter pencarian.
+                              </td>
+                            </tr>
+                          ) : (
+                            trainingFiltered.map((c, idx) => {
+                              const tr = c.training!;
+                              const isPassed = tr.examStatus === "LULUS_KOMPETEN";
+                              return (
+                                <tr
+                                  key={c.id}
+                                  className="hover:bg-slate-50/90 transition-colors align-top"
+                                >
+                                  <td className="py-3 px-3 text-center font-mono text-slate-400">
+                                    {idx + 1}
+                                  </td>
+                                  <td className="py-3 px-3">
+                                    <div className="font-mono text-[11px] font-bold text-sky-700">
+                                      {c.regNumber}
+                                    </div>
+                                    <div className="font-bold text-slate-900">
+                                      {c.fullName}
+                                    </div>
+                                    <span
+                                      className={`mt-1 inline-block rounded px-1.5 py-0.5 text-[9px] font-bold ${
+                                        (c.processTrack || "REKOM") === "NON_REKOM"
+                                          ? "bg-amber-100 text-amber-800"
+                                          : "bg-sky-100 text-sky-800"
+                                      }`}
+                                    >
+                                      {(c.processTrack || "REKOM") === "NON_REKOM"
+                                        ? "Non-Rekom"
+                                        : "Rekom"}
+                                    </span>
+                                  </td>
+                                  <td className="py-3 px-3">
+                                    <div className="font-medium text-slate-800">
+                                      {tr.blkLocation}
+                                    </div>
+                                    <div className="text-[11px] text-slate-500 mt-0.5">
+                                      Masuk: <strong>{tr.dormitoryCheckIn || "Belum Masuk"}</strong>
+                                    </div>
+                                  </td>
+                                  <td className="py-3 px-3 text-center">
+                                    <span className="font-extrabold text-slate-900">
+                                      {tr.attendancePct}%
+                                    </span>
+                                  </td>
+                                  <td className="py-3 px-3">
+                                    <div className="font-extrabold text-sky-700">
+                                      {tr.languageScore} / 100
+                                    </div>
+                                    <div className="text-[10px] text-slate-500 line-clamp-2">
+                                      {tr.targetLanguage}
+                                    </div>
+                                  </td>
+                                  <td className="py-3 px-3 text-center">
+                                    <span className="font-extrabold text-teal-700">
+                                      {tr.skillScore} / 100
+                                    </span>
+                                  </td>
+                                  <td className="py-3 px-3 text-center">
+                                    <span
+                                      className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                                        isPassed
+                                          ? "bg-emerald-600 text-white"
+                                          : tr.examStatus === "REMEDIAL"
+                                          ? "bg-rose-600 text-white"
+                                          : "bg-amber-500 text-slate-950"
+                                      }`}
+                                    >
+                                      {tr.examStatus}
+                                    </span>
+                                  </td>
+                                  <td className="py-3 px-3 text-[11px] text-slate-600 max-w-[240px]">
+                                    <p className="line-clamp-2">{tr.instructorNotes || "-"}</p>
+                                  </td>
+                                  <td className="py-3 px-3 text-right">
+                                    {isPassed ? (
+                                      <span className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700">
+                                        <CheckCircle2 className="h-3.5 w-3.5" />
+                                        Sudah Lulus
+                                      </span>
+                                    ) : (
+                                      <button
+                                        type="button"
+                                        onClick={() => handlePassCompetency(c)}
+                                        className="rounded-lg bg-emerald-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-emerald-700 transition cursor-pointer"
+                                      >
+                                        Luluskan Uji Kompetensi
+                                      </button>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {/* TAMPILAN 2: KARTU */}
+                  {trainingViewMode === "cards" && (
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      {trainingFiltered.length === 0 ? (
+                        <div className="col-span-full rounded-xl border border-slate-200 bg-slate-50 p-8 text-center text-xs text-slate-400">
+                          Tidak ada data pelatihan BLK-LN yang cocok dengan filter pencarian.
+                        </div>
+                      ) : (
+                        trainingFiltered.map((c) => {
+                          const tr = c.training!;
+                          return (
+                            <div
+                              key={c.id}
+                              className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 text-xs space-y-3"
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-mono font-bold text-sky-700">
+                                      {c.regNumber}
+                                    </span>
+                                    <h3 className="text-sm font-bold text-slate-900">
+                                      {c.fullName}
+                                    </h3>
+                                  </div>
+                                  <p className="text-slate-500 mt-0.5">
+                                    {tr.blkLocation} · Masuk Asrama:{" "}
+                                    <strong>{tr.dormitoryCheckIn || "Belum Masuk"}</strong>
+                                  </p>
+                                </div>
+                                <span
+                                  className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                                    tr.examStatus === "LULUS_KOMPETEN"
+                                      ? "bg-emerald-600 text-white"
+                                      : tr.examStatus === "REMEDIAL"
+                                      ? "bg-rose-600 text-white"
+                                      : "bg-amber-500 text-slate-950"
+                                  }`}
+                                >
+                                  {tr.examStatus}
+                                </span>
+                              </div>
+
+                              <div className="grid grid-cols-3 gap-2 rounded-xl bg-white p-3 border border-slate-200/80">
+                                <div>
+                                  <span className="text-[10px] text-slate-400 block">
+                                    Presensi Asrama
+                                  </span>
+                                  <span className="text-base font-extrabold text-slate-900">
+                                    {tr.attendancePct}%
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-[10px] text-slate-400 block">
+                                    {tr.targetLanguage}
+                                  </span>
+                                  <span className="text-base font-extrabold text-sky-700">
+                                    {tr.languageScore} / 100
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-[10px] text-slate-400 block">
+                                    Praktik Kerja
+                                  </span>
+                                  <span className="text-base font-extrabold text-teal-700">
+                                    {tr.skillScore} / 100
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                                <span className="text-[11px] text-slate-600">
+                                  Instruktur: <strong>{tr.instructorNotes}</strong>
+                                </span>
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => handlePassCompetency(c)}
+                                    className="rounded-lg bg-emerald-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-emerald-700 cursor-pointer"
+                                  >
+                                    Luluskan Uji Kompetensi
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* =========================================================
               MODUL MASTER DATA & DATABASE MITRA EKOSISTEM P3MI TERPADU
