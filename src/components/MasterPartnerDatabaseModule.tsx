@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { DatabaseSchema } from "@/lib/db";
+import { checkMasterEntityDeletionLinks } from "@/lib/master-delete-guard";
 import {
   BpjsFinancingPartner,
   DestinationCountry,
@@ -45,6 +46,11 @@ export function MasterPartnerDatabaseModule({
   const [activeTab, setActiveTab] = useState<MasterTab>("KANIM");
   const [searchQuery, setSearchQuery] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [securityNotification, setSecurityNotification] = useState<{
+    title: string;
+    message: string;
+    entityName: string;
+  } | null>(null);
 
   // Modal State
   const [modalType, setModalType] = useState<
@@ -170,6 +176,27 @@ export function MasterPartnerDatabaseModule({
         mouExpiryDate: "2028-12-31",
         status: "ACTIVE",
       });
+    } else if (activeTab === "SPONSOR") {
+      setFormData({
+        code: `PL-${new Date().getFullYear()}-${String(sponsors.length + 1).padStart(3, "0")}`,
+        name: "",
+        area: "",
+        branchId: db.branches?.[0]?.id || "br-idm",
+        phone: "",
+        bankAccount: "",
+        commissionPerCpmi: 4500000,
+      });
+    } else if (activeTab === "BPJS_KUR") {
+      setFormData({
+        code: `MITRA-0${bpjsPartners.length + 1}`,
+        name: "",
+        partnerType: "BPJS_KETENAGAKERJAAN",
+        programPackage: "",
+        premiumOrRateInfo: "",
+        picName: "",
+        phone: "",
+        status: "ACTIVE",
+      });
     }
     setModalType("ADD");
   };
@@ -194,6 +221,19 @@ export function MasterPartnerDatabaseModule({
       setIsSubmitting(false);
       return;
     }
+    if (activeTab === "BPJS_KUR") {
+      if (!isSuperAdminOrDirector) {
+        alert("Hanya Admin Pusat / Direktur yang dapat mengubah status Mitra BPJS/Bank.");
+        return;
+      }
+      setIsSubmitting(true);
+      await onTriggerApi("UPDATE_BPJS_FINANCING", {
+        id: item.id,
+        updates: { status: item.status === "ACTIVE" ? "INACTIVE" : "ACTIVE" },
+      });
+      setIsSubmitting(false);
+      return;
+    }
     if (!isSuperAdminOrDirector) {
       alert("Hanya Admin Pusat / Direktur yang memiliki izin mengubah status master data.");
       return;
@@ -207,37 +247,51 @@ export function MasterPartnerDatabaseModule({
   };
 
   const handleDeleteItem = async (item: any) => {
-    if (activeTab === "AGENCY") {
-      if (!canManageSyarikah) {
-        alert("Hanya Superadmin / Direktur Utama yang memiliki izin menghapus Master Syarikah.");
-        return;
-      }
-      const confirmDelete = window.confirm(
-        `Apakah Anda yakin ingin menghapus Syarikah "${item.name}" (${item.code})?`
-      );
-      if (!confirmDelete) return;
+    setSecurityNotification(null);
 
-      setIsSubmitting(true);
-      await onTriggerApi("DELETE_FOREIGN_AGENCY", { id: item.id });
-      setIsSubmitting(false);
+    if (activeTab === "AGENCY" && !canManageSyarikah) {
+      alert("Hanya Superadmin / Direktur Utama yang memiliki izin menghapus Master Syarikah.");
       return;
     }
-
-    if (!isSuperAdminOrDirector) {
+    if (activeTab !== "AGENCY" && !isSuperAdminOrDirector) {
       alert("Hanya Admin Pusat / Direktur yang memiliki izin menghapus master data.");
       return;
     }
+
+    // Keamanan Relasi Data: cegah penghapusan jika masih terhubung ke data CPMI/PMI atau modul operasional
+    const linkCheck = checkMasterEntityDeletionLinks(db, activeTab, item.id);
+    if (!linkCheck.canDelete) {
+      setSecurityNotification({
+        title: "Keamanan Data: Penghapusan Diblokir Otomatis",
+        message: linkCheck.reason,
+        entityName: linkCheck.entityLabel,
+      });
+      return;
+    }
+
+    const displayName = item.name || item.officeName || item.regencyCity || item.code || item.id;
     const confirmDelete = window.confirm(
-      `Apakah Anda yakin ingin menghapus data "${item.name || item.officeName || item.regencyCity}"?`
+      `Apakah Anda yakin ingin menghapus data "${displayName}"? Data ini tidak memiliki relasi aktif dengan CPMI/PMI.`
     );
     if (!confirmDelete) return;
 
     setIsSubmitting(true);
-    await onTriggerApi("DELETE_MASTER_ITEM", {
-      entityType: activeTab,
-      id: item.id,
-    });
-    setIsSubmitting(false);
+    try {
+      if (activeTab === "AGENCY") {
+        await onTriggerApi("DELETE_FOREIGN_AGENCY", { id: item.id });
+      } else if (activeTab === "SPONSOR") {
+        await onTriggerApi("DELETE_SPONSOR", { id: item.id });
+      } else if (activeTab === "BPJS_KUR") {
+        await onTriggerApi("DELETE_BPJS_FINANCING", { id: item.id });
+      } else {
+        await onTriggerApi("DELETE_MASTER_ITEM", {
+          entityType: activeTab,
+          id: item.id,
+        });
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleSaveModal = async (e: React.FormEvent) => {
@@ -272,17 +326,37 @@ export function MasterPartnerDatabaseModule({
 
     setIsSubmitting(true);
     try {
-      if (modalType === "ADD") {
-        await onTriggerApi("CREATE_MASTER_ITEM", {
-          entityType: activeTab,
-          data: formData,
-        });
-      } else if (modalType === "EDIT" && selectedEntity) {
-        await onTriggerApi("UPDATE_MASTER_ITEM", {
-          entityType: activeTab,
-          id: selectedEntity.id,
-          data: formData,
-        });
+      if (activeTab === "SPONSOR") {
+        if (modalType === "ADD") {
+          await onTriggerApi("CREATE_SPONSOR", formData);
+        } else if (modalType === "EDIT" && selectedEntity) {
+          await onTriggerApi("UPDATE_SPONSOR", {
+            id: selectedEntity.id,
+            updates: formData,
+          });
+        }
+      } else if (activeTab === "BPJS_KUR") {
+        if (modalType === "ADD") {
+          await onTriggerApi("CREATE_BPJS_FINANCING", formData);
+        } else if (modalType === "EDIT" && selectedEntity) {
+          await onTriggerApi("UPDATE_BPJS_FINANCING", {
+            id: selectedEntity.id,
+            updates: formData,
+          });
+        }
+      } else {
+        if (modalType === "ADD") {
+          await onTriggerApi("CREATE_MASTER_ITEM", {
+            entityType: activeTab,
+            data: formData,
+          });
+        } else if (modalType === "EDIT" && selectedEntity) {
+          await onTriggerApi("UPDATE_MASTER_ITEM", {
+            entityType: activeTab,
+            id: selectedEntity.id,
+            data: formData,
+          });
+        }
       }
       setModalType(null);
       setSelectedEntity(null);
@@ -340,6 +414,7 @@ export function MasterPartnerDatabaseModule({
               onClick={() => {
                 setActiveTab(t.id as MasterTab);
                 setSearchQuery("");
+                setSecurityNotification(null);
               }}
               className={`flex flex-col items-center justify-center rounded-xl p-2.5 text-center transition ${
                 activeTab === t.id
@@ -398,18 +473,51 @@ export function MasterPartnerDatabaseModule({
               )}
             </div>
 
-            {((isSuperAdminOrDirector && ["KANIM", "DISDUKCAPIL", "CLINIC", "AIRLINE", "BLK", "EMBASSY"].includes(activeTab)) ||
+            {((isSuperAdminOrDirector &&
+              ["KANIM", "DISDUKCAPIL", "CLINIC", "AIRLINE", "BLK", "EMBASSY", "SPONSOR", "BPJS_KUR"].includes(
+                activeTab
+              )) ||
               (activeTab === "AGENCY" && canManageSyarikah)) && (
               <button
                 onClick={handleOpenAddModal}
                 disabled={isSubmitting}
                 className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-sky-700 transition cursor-pointer"
               >
-                <span>{activeTab === "AGENCY" ? "➕ Tambah Syarikah Baru" : "➕ Tambah Data Baru"}</span>
+                <span>
+                  {activeTab === "AGENCY"
+                    ? "➕ Tambah Syarikah Baru"
+                    : activeTab === "SPONSOR"
+                    ? "➕ Tambah Sponsor (PL)"
+                    : activeTab === "BPJS_KUR"
+                    ? "➕ Tambah Mitra BPJS/Bank"
+                    : "➕ Tambah Data Baru"}
+                </span>
               </button>
             )}
           </div>
         </div>
+
+        {/* Notifikasi Keamanan Relasi Data CPMI/PMI */}
+        {securityNotification && (
+          <div className="mb-5 rounded-xl border border-rose-300 bg-rose-50 p-4 shadow-sm">
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-1 text-xs text-rose-900">
+                <p className="font-bold text-rose-800 flex items-center gap-1.5 text-sm">
+                  <span>🛡️</span>
+                  {securityNotification.title}
+                </p>
+                <p className="leading-relaxed font-medium">{securityNotification.message}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSecurityNotification(null)}
+                className="rounded-lg border border-rose-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-rose-700 hover:bg-rose-100 cursor-pointer shrink-0"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* 1. KANTOR IMIGRASI TAB */}
         {activeTab === "KANIM" && (
@@ -1050,6 +1158,7 @@ export function MasterPartnerDatabaseModule({
                   <th className="py-3 px-4 font-semibold">Nomor Telepon</th>
                   <th className="py-3 px-4 font-semibold">Nomor Rekening Bank Penampung Fee</th>
                   <th className="py-3 px-4 font-semibold">Standar Fee / CPMI</th>
+                  <th className="py-3 px-4 font-semibold text-right">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -1058,26 +1167,66 @@ export function MasterPartnerDatabaseModule({
                     const q = searchQuery.toLowerCase();
                     return (
                       s.name.toLowerCase().includes(q) ||
-                      s.area.toLowerCase().includes(q) ||
+                      (s.area || "").toLowerCase().includes(q) ||
                       s.code.toLowerCase().includes(q)
                     );
                   })
-                  .map((s: Sponsor) => (
-                    <tr key={s.id} className="hover:bg-slate-50/80 transition">
-                      <td className="py-3 px-4">
-                        <span className="font-mono text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                          {s.code}
-                        </span>
-                        <p className="font-bold text-slate-900 mt-1">{s.name}</p>
-                      </td>
-                      <td className="py-3 px-4 font-medium text-slate-800">{s.area}</td>
-                      <td className="py-3 px-4 text-sky-700 font-semibold">📞 {s.phone}</td>
-                      <td className="py-3 px-4 font-mono text-slate-700">{s.bankAccount}</td>
-                      <td className="py-3 px-4 font-bold text-emerald-700">
-                        Rp {s.commissionPerCpmi.toLocaleString("id-ID")}
-                      </td>
-                    </tr>
-                  ))}
+                  .map((s: Sponsor) => {
+                    const linkCheck = checkMasterEntityDeletionLinks(db, "SPONSOR", s.id);
+                    return (
+                      <tr key={s.id} className="hover:bg-slate-50/80 transition">
+                        <td className="py-3 px-4">
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span className="font-mono text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                              {s.code}
+                            </span>
+                            {!linkCheck.canDelete && (
+                              <span
+                                className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 border border-amber-200"
+                                title={linkCheck.reason}
+                              >
+                                🔒 {linkCheck.candidateCount > 0 ? `${linkCheck.candidateCount} CPMI` : "Terhubung"}
+                              </span>
+                            )}
+                          </div>
+                          <p className="font-bold text-slate-900 mt-1">{s.name}</p>
+                        </td>
+                        <td className="py-3 px-4 font-medium text-slate-800">{s.area || "-"}</td>
+                        <td className="py-3 px-4 text-sky-700 font-semibold">📞 {s.phone || "-"}</td>
+                        <td className="py-3 px-4 font-mono text-slate-700">{s.bankAccount || "-"}</td>
+                        <td className="py-3 px-4 font-bold text-emerald-700">
+                          Rp {(s.commissionPerCpmi || 0).toLocaleString("id-ID")}
+                        </td>
+                        <td className="py-3 px-4 text-right space-x-1 whitespace-nowrap">
+                          {isSuperAdminOrDirector ? (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEditModal(s)}
+                                className="rounded-lg bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700 hover:bg-sky-100 border border-sky-200 cursor-pointer"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteItem(s)}
+                                title={linkCheck.canDelete ? "Hapus Sponsor" : linkCheck.reason}
+                                className={`rounded-lg px-2.5 py-1 text-xs font-semibold border cursor-pointer ${
+                                  linkCheck.canDelete
+                                    ? "bg-rose-50 text-rose-700 hover:bg-rose-100 border-rose-200"
+                                    : "bg-slate-100 text-slate-500 hover:bg-amber-50 hover:text-amber-800 border-slate-200"
+                                }`}
+                              >
+                                {linkCheck.canDelete ? "Hapus" : "🔒 Hapus"}
+                              </button>
+                            </>
+                          ) : (
+                            <span className="text-[10px] text-slate-400">View Only</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
               </tbody>
             </table>
           </div>
@@ -1094,6 +1243,8 @@ export function MasterPartnerDatabaseModule({
                   <th className="py-3 px-4 font-semibold">Program / Paket Jaminan</th>
                   <th className="py-3 px-4 font-semibold">Skema Pembiayaan / Premi</th>
                   <th className="py-3 px-4 font-semibold">PIC & Kontak</th>
+                  <th className="py-3 px-4 font-semibold text-center">Status</th>
+                  <th className="py-3 px-4 font-semibold text-right">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -1106,27 +1257,81 @@ export function MasterPartnerDatabaseModule({
                       b.code.toLowerCase().includes(q)
                     );
                   })
-                  .map((b: BpjsFinancingPartner) => (
-                    <tr key={b.id} className="hover:bg-slate-50/80 transition">
-                      <td className="py-3 px-4">
-                        <span className="font-mono text-[10px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
-                          {b.code}
-                        </span>
-                        <p className="font-bold text-slate-900 mt-1">{b.name}</p>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="rounded bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">
-                          {b.partnerType}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-slate-700 max-w-xs">{b.programPackage}</td>
-                      <td className="py-3 px-4 font-medium text-emerald-700">{b.premiumOrRateInfo}</td>
-                      <td className="py-3 px-4">
-                        <p className="font-medium text-slate-800">{b.picName}</p>
-                        <p className="text-sky-700 text-[11px] mt-0.5">📞 {b.phone}</p>
-                      </td>
-                    </tr>
-                  ))}
+                  .map((b: BpjsFinancingPartner) => {
+                    const linkCheck = checkMasterEntityDeletionLinks(db, "BPJS_KUR", b.id);
+                    return (
+                      <tr key={b.id} className="hover:bg-slate-50/80 transition">
+                        <td className="py-3 px-4">
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span className="font-mono text-[10px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
+                              {b.code}
+                            </span>
+                            {!linkCheck.canDelete && (
+                              <span
+                                className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 border border-amber-200"
+                                title={linkCheck.reason}
+                              >
+                                🔒 {linkCheck.candidateCount > 0 ? `${linkCheck.candidateCount} CPMI` : "Terhubung"}
+                              </span>
+                            )}
+                          </div>
+                          <p className="font-bold text-slate-900 mt-1">{b.name}</p>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="rounded bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+                            {b.partnerType}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-slate-700 max-w-xs">{b.programPackage}</td>
+                        <td className="py-3 px-4 font-medium text-emerald-700">{b.premiumOrRateInfo}</td>
+                        <td className="py-3 px-4">
+                          <p className="font-medium text-slate-800">{b.picName}</p>
+                          <p className="text-sky-700 text-[11px] mt-0.5">📞 {b.phone}</p>
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleStatus(b)}
+                            disabled={!isSuperAdminOrDirector || isSubmitting}
+                            className={`rounded-full px-2.5 py-1 text-[10px] font-bold border transition ${
+                              b.status === "ACTIVE"
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100"
+                                : "bg-slate-100 text-slate-500 border-slate-300 hover:bg-slate-200"
+                            } ${isSuperAdminOrDirector ? "cursor-pointer" : "cursor-default"}`}
+                          >
+                            {b.status === "ACTIVE" ? "● AKTIF" : "○ NON-AKTIF"}
+                          </button>
+                        </td>
+                        <td className="py-3 px-4 text-right space-x-1 whitespace-nowrap">
+                          {isSuperAdminOrDirector ? (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEditModal(b)}
+                                className="rounded-lg bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700 hover:bg-sky-100 border border-sky-200 cursor-pointer"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteItem(b)}
+                                title={linkCheck.canDelete ? "Hapus Mitra BPJS/Bank" : linkCheck.reason}
+                                className={`rounded-lg px-2.5 py-1 text-xs font-semibold border cursor-pointer ${
+                                  linkCheck.canDelete
+                                    ? "bg-rose-50 text-rose-700 hover:bg-rose-100 border-rose-200"
+                                    : "bg-slate-100 text-slate-500 hover:bg-amber-50 hover:text-amber-800 border-slate-200"
+                                }`}
+                              >
+                                {linkCheck.canDelete ? "Hapus" : "🔒 Hapus"}
+                              </button>
+                            </>
+                          ) : (
+                            <span className="text-[10px] text-slate-400">View Only</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
               </tbody>
             </table>
           </div>
@@ -1856,6 +2061,178 @@ export function MasterPartnerDatabaseModule({
                       onChange={(e) => setFormData({ ...formData, defaultAgencyFeeIdr: Number(e.target.value) })}
                       className="w-full rounded-xl border border-slate-300 p-2 text-xs font-mono"
                     />
+                  </div>
+                </>
+              )}
+
+              {/* SPONSOR / PL FORM */}
+              {activeTab === "SPONSOR" && (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">Kode Sponsor (PL)</label>
+                      <input
+                        type="text"
+                        required
+                        value={formData.code || ""}
+                        onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                        className="w-full rounded-xl border border-slate-300 p-2 text-xs font-mono"
+                        placeholder="PL-2026-001"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">Wilayah Perekrutan (Area) *</label>
+                      <input
+                        type="text"
+                        required
+                        value={formData.area || ""}
+                        onChange={(e) => setFormData({ ...formData, area: e.target.value })}
+                        className="w-full rounded-xl border border-slate-300 p-2 text-xs"
+                        placeholder="Indramayu / Karawang / Cilacap"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Nama Lengkap Sponsor / PL *</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.name || ""}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full rounded-xl border border-slate-300 p-2 text-xs font-semibold"
+                      placeholder="H. Dedi Kusnadi"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">Nomor Telepon / WA</label>
+                      <input
+                        type="text"
+                        value={formData.phone || ""}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        className="w-full rounded-xl border border-slate-300 p-2 text-xs"
+                        placeholder="0812-xxxx-xxxx"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">Standar Fee / CPMI (Rp)</label>
+                      <input
+                        type="number"
+                        min={0}
+                        step={250000}
+                        required
+                        value={formData.commissionPerCpmi ?? 4500000}
+                        onChange={(e) => setFormData({ ...formData, commissionPerCpmi: Number(e.target.value) })}
+                        className="w-full rounded-xl border border-slate-300 p-2 text-xs font-mono"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Nomor Rekening Bank Penampung Fee</label>
+                    <input
+                      type="text"
+                      value={formData.bankAccount || ""}
+                      onChange={(e) => setFormData({ ...formData, bankAccount: e.target.value })}
+                      className="w-full rounded-xl border border-slate-300 p-2 text-xs font-mono"
+                      placeholder="BRI 4192-01-xxxx a.n. Nama Sponsor"
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* BPJS & BANK PENAMPUNG FORM */}
+              {activeTab === "BPJS_KUR" && (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">Kode Institusi</label>
+                      <input
+                        type="text"
+                        required
+                        value={formData.code || ""}
+                        onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                        className="w-full rounded-xl border border-slate-300 p-2 text-xs font-mono"
+                        placeholder="BPJS-TK-PMI"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">Kategori Kemitraan *</label>
+                      <select
+                        value={formData.partnerType || "BPJS_KETENAGAKERJAAN"}
+                        onChange={(e) => setFormData({ ...formData, partnerType: e.target.value })}
+                        className="w-full rounded-xl border border-slate-300 p-2 text-xs font-semibold"
+                      >
+                        <option value="BPJS_KETENAGAKERJAAN">BPJS_KETENAGAKERJAAN</option>
+                        <option value="ASURANSI_PMI">ASURANSI_PMI</option>
+                        <option value="BANK_KUR_PMI">BANK_KUR_PMI</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Nama Institusi BPJS / Asuransi / Bank *</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.name || ""}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full rounded-xl border border-slate-300 p-2 text-xs font-semibold"
+                      placeholder="BPJS Ketenagakerjaan — Perlindungan Jaminan Sosial PMI"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Program / Paket Jaminan *</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.programPackage || ""}
+                      onChange={(e) => setFormData({ ...formData, programPackage: e.target.value })}
+                      className="w-full rounded-xl border border-slate-300 p-2 text-xs"
+                      placeholder="Paket JKK + JKM (Pra, Masa 24 Bln & Purna)"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Skema Pembiayaan / Tarif Premi *</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.premiumOrRateInfo || ""}
+                      onChange={(e) => setFormData({ ...formData, premiumOrRateInfo: e.target.value })}
+                      className="w-full rounded-xl border border-slate-300 p-2 text-xs"
+                      placeholder="Rp 370.000 / CPMI (Zero Cost Syarikah)"
+                    />
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">Nama PIC</label>
+                      <input
+                        type="text"
+                        value={formData.picName || ""}
+                        onChange={(e) => setFormData({ ...formData, picName: e.target.value })}
+                        className="w-full rounded-xl border border-slate-300 p-2 text-xs"
+                        placeholder="Nama PIC Resmi"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">No. Telepon</label>
+                      <input
+                        type="text"
+                        value={formData.phone || ""}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        className="w-full rounded-xl border border-slate-300 p-2 text-xs"
+                        placeholder="021-xxxxxxx"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">Status</label>
+                      <select
+                        value={formData.status || "ACTIVE"}
+                        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                        className="w-full rounded-xl border border-slate-300 p-2 text-xs font-bold"
+                      >
+                        <option value="ACTIVE">ACTIVE</option>
+                        <option value="INACTIVE">INACTIVE</option>
+                      </select>
+                    </div>
                   </div>
                 </>
               )}

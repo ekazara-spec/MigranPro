@@ -7762,6 +7762,13 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   });
                   return true;
                 }
+                setToast({
+                  type: "error",
+                  title: data?.securityBlocked
+                    ? "Keamanan Data: Penghapusan Ditolak"
+                    : "Gagal Memproses Master Data",
+                  details: [data?.error || "Terjadi kesalahan saat memproses perubahan master data."],
+                });
                 return false;
               }}
             />

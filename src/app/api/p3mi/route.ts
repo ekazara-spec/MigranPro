@@ -23,6 +23,7 @@ import {
   applySponsorKasbonDeduction,
   mapCostCategoryToCashCategory,
 } from "@/lib/cashflow-sync-utils";
+import { checkMasterEntityDeletionLinks } from "@/lib/master-delete-guard";
 import {
   AppRole,
   BadilReason,
@@ -2626,20 +2627,23 @@ export async function POST(req: NextRequest) {
 
     // 15. MODUL MASTER DATA: TAMBAH SPONSOR / PEREKRUT LAPANGAN (PL)
     if (action === "CREATE_SPONSOR") {
-      const { name, phone, area, branchId, bankAccount, commissionPerCpmi } = body.payload;
+      const { code, name, phone, area, branchId, bankAccount, commissionPerCpmi } = body.payload || {};
+      if (!name?.trim()) {
+        return NextResponse.json({ ok: false, error: "Nama Sponsor (PL) wajib diisi." }, { status: 400 });
+      }
       const newSponsor: Sponsor = {
         id: `sp-${Date.now()}`,
-        code: `SP-0${db.sponsors.length + 1}`,
-        name,
+        code: (code && String(code).trim()) || `PL-${new Date().getFullYear()}-${String(db.sponsors.length + 1).padStart(3, "0")}`,
+        name: String(name).trim(),
         phone: phone || "-",
         area: area || "-",
-        branchId: branchId || "br-idm",
+        branchId: branchId || db.branches?.[0]?.id || "br-idm",
         bankAccount: bankAccount || "-",
-        commissionPerCpmi: Number(commissionPerCpmi) || 5000000,
+        commissionPerCpmi: Number(commissionPerCpmi) || 4500000,
         paidAmount: 0,
         payableAmount: 0,
       };
-      db.sponsors.push(newSponsor);
+      db.sponsors.unshift(newSponsor);
 
       db.auditLogs.unshift({
         id: `aud-${Date.now()}`,
@@ -2696,18 +2700,21 @@ export async function POST(req: NextRequest) {
 
     // 17. MODUL MASTER DATA: TAMBAH MITRA BPJS / ASURANSI / BANK KUR PMI
     if (action === "CREATE_BPJS_FINANCING") {
-      const { name, partnerType, programPackage, premiumOrRateInfo, picName, phone } =
-        body.payload;
+      const { code, name, partnerType, programPackage, premiumOrRateInfo, picName, phone, status } =
+        body.payload || {};
+      if (!name?.trim()) {
+        return NextResponse.json({ ok: false, error: "Nama institusi BPJS / Bank wajib diisi." }, { status: 400 });
+      }
       const newPartner: BpjsFinancingPartner = {
         id: `bpjs-${Date.now()}`,
-        code: `MITRA-0${(db.bpjsFinancingPartners?.length || 0) + 1}`,
-        name,
+        code: (code && String(code).trim()) || `MITRA-0${(db.bpjsFinancingPartners?.length || 0) + 1}`,
+        name: String(name).trim(),
         partnerType: partnerType || "BPJS_KETENAGAKERJAAN",
         programPackage: programPackage || "-",
         premiumOrRateInfo: premiumOrRateInfo || "-",
         picName: picName || "-",
         phone: phone || "-",
-        status: "ACTIVE",
+        status: status === "INACTIVE" ? "INACTIVE" : "ACTIVE",
       };
       if (!db.bpjsFinancingPartners) db.bpjsFinancingPartners = [];
       db.bpjsFinancingPartners.push(newPartner);
@@ -3647,6 +3654,25 @@ export async function POST(req: NextRequest) {
 
     if (action === "DELETE_MASTER_ITEM") {
       const { entityType, id } = body.payload;
+      const linkCheck = checkMasterEntityDeletionLinks(db, entityType, id);
+      if (!linkCheck.canDelete) {
+        db.auditLogs.unshift({
+          id: `aud-${Date.now()}`,
+          actorName,
+          actorRole: actorRole as UserRole,
+          branchName,
+          actionType: "MASTER_DATA_UPDATED",
+          summary: `Percobaan Hapus Master Data [${entityType}] Ditolak: ${linkCheck.entityLabel}`,
+          details: linkCheck.reason,
+          timestamp: nowTimestamp(),
+        });
+        writeDb(db);
+        return NextResponse.json(
+          { ok: false, securityBlocked: true, error: linkCheck.reason },
+          { status: 400 }
+        );
+      }
+
       let deletedName = "";
 
       if (entityType === "KANIM") {
@@ -3758,6 +3784,24 @@ export async function POST(req: NextRequest) {
       if (!target) {
         return NextResponse.json({ ok: false, error: "Syarikah / Agensi tidak ditemukan." }, { status: 404 });
       }
+      const linkCheck = checkMasterEntityDeletionLinks(db, "AGENCY", id);
+      if (!linkCheck.canDelete) {
+        db.auditLogs.unshift({
+          id: `aud-${Date.now()}`,
+          actorName: actorName || "Superadmin",
+          actorRole: actorRole as UserRole,
+          branchName: branchName || "Kantor Pusat Jakarta",
+          actionType: "MASTER_DATA_UPDATED",
+          summary: `Percobaan Hapus Syarikah Ditolak: ${target.name} (${target.code})`,
+          details: linkCheck.reason,
+          timestamp: nowTimestamp(),
+        });
+        writeDb(db);
+        return NextResponse.json(
+          { ok: false, securityBlocked: true, error: linkCheck.reason },
+          { status: 400 }
+        );
+      }
       db.foreignAgencies = (db.foreignAgencies || []).filter((x) => x.id !== id);
       db.auditLogs.unshift({
         id: `aud-${Date.now()}`,
@@ -3778,6 +3822,9 @@ export async function POST(req: NextRequest) {
       const sp = db.sponsors?.find((x) => x.id === id);
       if (!sp) return NextResponse.json({ ok: false, error: "Sponsor tidak ditemukan." }, { status: 404 });
       Object.assign(sp, updates);
+      if (updates?.commissionPerCpmi !== undefined) {
+        sp.commissionPerCpmi = Number(updates.commissionPerCpmi) || 0;
+      }
       db.auditLogs.unshift({
         id: `aud-${Date.now()}`,
         actorName: actorName || "Superadmin",
@@ -3808,12 +3855,24 @@ export async function POST(req: NextRequest) {
       if (!target) {
         return NextResponse.json({ ok: false, error: "Sponsor tidak ditemukan." }, { status: 404 });
       }
-      const linkedCandidates = (db.candidates || []).filter((c) => c.sponsorId === id);
-      if (linkedCandidates.length > 0) {
+      const linkCheck = checkMasterEntityDeletionLinks(db, "SPONSOR", id);
+      if (!linkCheck.canDelete) {
+        db.auditLogs.unshift({
+          id: `aud-${Date.now()}`,
+          actorName: actorName || "Superadmin",
+          actorRole: actorRole as UserRole,
+          branchName: branchName || "Kantor Pusat Jakarta",
+          actionType: "MASTER_DATA_UPDATED",
+          summary: `Percobaan Hapus Sponsor Ditolak: ${target.name} (${target.code})`,
+          details: linkCheck.reason,
+          timestamp: nowTimestamp(),
+        });
+        writeDb(db);
         return NextResponse.json(
           {
             ok: false,
-            error: `Sponsor '${target.name}' tidak dapat dihapus karena masih tertaut pada ${linkedCandidates.length} data CPMI. Ubah sponsor pada data CPMI terkait terlebih dahulu.`,
+            securityBlocked: true,
+            error: linkCheck.reason,
           },
           { status: 400 }
         );
@@ -3844,12 +3903,71 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === "UPDATE_BPJS_FINANCING") {
-      const { id, updates } = body.payload;
+      const { id, updates } = body.payload || {};
       const bp = db.bpjsFinancingPartners?.find((x) => x.id === id);
       if (!bp) return NextResponse.json({ ok: false, error: "Mitra BPJS/Bank tidak ditemukan." }, { status: 404 });
       Object.assign(bp, updates);
+      db.auditLogs.unshift({
+        id: `aud-${Date.now()}`,
+        actorName: actorName || "Superadmin",
+        actorRole: actorRole as UserRole,
+        branchName: branchName || "Kantor Pusat Jakarta",
+        actionType: "MASTER_DATA_UPDATED",
+        summary: `Memperbarui Mitra BPJS/Bank: ${bp.name} (${bp.code})`,
+        details: `Kategori: ${bp.partnerType} · Paket: ${bp.programPackage} · Status: ${bp.status}`,
+        timestamp: nowTimestamp(),
+      });
       writeDb(db);
-      return NextResponse.json({ ok: true, db });
+      return NextResponse.json({ ok: true, partner: bp, db });
+    }
+
+    if (action === "DELETE_BPJS_FINANCING") {
+      if (!actorCanManageStaff()) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error:
+              "Akses Ditolak: Hanya Superadmin atau role dengan hak akses kelola data yang dapat menghapus Mitra BPJS / Bank.",
+          },
+          { status: 403 }
+        );
+      }
+      const { id } = body.payload || {};
+      const target = db.bpjsFinancingPartners?.find((x) => x.id === id);
+      if (!target) {
+        return NextResponse.json({ ok: false, error: "Mitra BPJS/Bank tidak ditemukan." }, { status: 404 });
+      }
+      const linkCheck = checkMasterEntityDeletionLinks(db, "BPJS_KUR", id);
+      if (!linkCheck.canDelete) {
+        db.auditLogs.unshift({
+          id: `aud-${Date.now()}`,
+          actorName: actorName || "Superadmin",
+          actorRole: actorRole as UserRole,
+          branchName: branchName || "Kantor Pusat Jakarta",
+          actionType: "MASTER_DATA_UPDATED",
+          summary: `Percobaan Hapus Mitra BPJS/Bank Ditolak: ${target.name} (${target.code})`,
+          details: linkCheck.reason,
+          timestamp: nowTimestamp(),
+        });
+        writeDb(db);
+        return NextResponse.json(
+          { ok: false, securityBlocked: true, error: linkCheck.reason },
+          { status: 400 }
+        );
+      }
+      db.bpjsFinancingPartners = (db.bpjsFinancingPartners || []).filter((x) => x.id !== id);
+      db.auditLogs.unshift({
+        id: `aud-${Date.now()}`,
+        actorName: actorName || "Superadmin",
+        actorRole: actorRole as UserRole,
+        branchName: branchName || "Kantor Pusat Jakarta",
+        actionType: "MASTER_DATA_UPDATED",
+        summary: `Menghapus Mitra BPJS / Bank: ${target.name} (${target.code})`,
+        details: `Kategori: ${target.partnerType} · Paket: ${target.programPackage}`,
+        timestamp: nowTimestamp(),
+      });
+      writeDb(db);
+      return NextResponse.json({ ok: true, deletedId: id, db });
     }
 
     return NextResponse.json(
