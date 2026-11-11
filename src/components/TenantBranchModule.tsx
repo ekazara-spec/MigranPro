@@ -7,6 +7,7 @@ import {
   AlertTriangle,
   Plus,
   Edit3,
+  Trash2,
   CheckCircle2,
   Users,
   MapPin,
@@ -17,8 +18,18 @@ import {
   Layers,
   Sparkles,
   ExternalLink,
+  Table,
+  LayoutGrid,
+  Search,
 } from "lucide-react";
-import { Branch, TenantCompany, UserRole } from "@/lib/types";
+import {
+  Branch,
+  Candidate,
+  Sponsor,
+  StaffAccount,
+  TenantCompany,
+  UserRole,
+} from "@/lib/types";
 
 interface TenantBranchModuleProps {
   tenants: TenantCompany[];
@@ -27,8 +38,12 @@ interface TenantBranchModuleProps {
   selectedTenantId: string;
   onSelectTenant: (id: string) => void;
   isBranchViewOnly: boolean;
+  canManageBranches?: boolean;
   actorRole: UserRole;
   actorName: string;
+  candidates?: Candidate[];
+  staffAccounts?: StaffAccount[];
+  sponsors?: Sponsor[];
   onRefreshDb: () => void;
 }
 
@@ -39,10 +54,16 @@ export default function TenantBranchModule({
   selectedTenantId,
   onSelectTenant,
   isBranchViewOnly,
+  canManageBranches,
   actorRole,
   actorName,
+  candidates = [],
+  staffAccounts = [],
+  sponsors = [],
   onRefreshDb,
 }: TenantBranchModuleProps) {
+  const hasSuperadminPrivilege =
+    !isBranchViewOnly && (canManageBranches ?? actorRole === "DIREKTUR");
   const [showAddTenantModal, setShowAddTenantModal] = useState(false);
   const [editingTenant, setEditingTenant] = useState<TenantCompany | null>(null);
   const [tenantForm, setTenantForm] = useState({
@@ -73,11 +94,42 @@ export default function TenantBranchModule({
     status: "ACTIVE" as "ACTIVE" | "INACTIVE",
   });
 
+  const [branchViewMode, setBranchViewMode] = useState<"matrix" | "cards">("matrix");
+  const [branchSearch, setBranchSearch] = useState("");
+  const [branchStatusFilter, setBranchStatusFilter] = useState<"ALL" | "ACTIVE" | "INACTIVE">("ALL");
+  const [deletingBranch, setDeletingBranch] = useState<Branch | null>(null);
+  const [deletingBranchBusy, setDeletingBranchBusy] = useState(false);
+
   const [saving, setSaving] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const activeTenant = tenants.find((t) => t.id === selectedTenantId) || tenants[0] || null;
   const tenantBranches = activeTenant ? branches.filter((b) => !b.tenantId || b.tenantId === activeTenant.id) : branches;
+
+  const filteredBranches = tenantBranches.filter((b) => {
+    const statusVal = b.status || "ACTIVE";
+    const matchStatus = branchStatusFilter === "ALL" || statusVal === branchStatusFilter;
+    const q = branchSearch.trim().toLowerCase();
+    const matchSearch =
+      !q ||
+      b.code.toLowerCase().includes(q) ||
+      b.name.toLowerCase().includes(q) ||
+      b.city.toLowerCase().includes(q) ||
+      b.headName.toLowerCase().includes(q) ||
+      (b.address || "").toLowerCase().includes(q) ||
+      b.phone.toLowerCase().includes(q);
+    return matchStatus && matchSearch;
+  });
+
+  function getBranchStats(branchId: string) {
+    const isHq = branchId === "br-jkt";
+    const cpmiCount = candidates.filter((c) => c.branchId === branchId).length;
+    const staffCount = staffAccounts.filter((s) =>
+      isHq ? s.branchId === "ALL" || s.branchId === branchId : s.branchId === branchId
+    ).length;
+    const sponsorCount = sponsors.filter((sp) => sp.branchId === branchId).length;
+    return { cpmiCount, staffCount, sponsorCount };
+  }
 
   const candidateUsagePct = activeTenant
     ? Math.min(100, Math.round((candidatesCount / (activeTenant.maxCandidates || 1)) * 100))
@@ -88,8 +140,8 @@ export default function TenantBranchModule({
 
   async function handleSaveTenant(e: React.FormEvent) {
     e.preventDefault();
-    if (isBranchViewOnly) {
-      alert("Akses Ditolak: Administrasi eksekusi hanya dapat dilakukan oleh Admin Pusat / Direktur.");
+    if (!hasSuperadminPrivilege) {
+      alert("Akses Ditolak: Pengaturan Profil Perusahaan hanya dapat dilakukan oleh Superadmin / Role Berizin Kelola Admin.");
       return;
     }
 
@@ -132,8 +184,8 @@ export default function TenantBranchModule({
 
   async function handleSaveBranch(e: React.FormEvent) {
     e.preventDefault();
-    if (isBranchViewOnly) {
-      alert("Akses Ditolak: Administrasi eksekusi hanya dapat dilakukan oleh Admin Pusat / Direktur.");
+    if (!hasSuperadminPrivilege) {
+      alert("Akses Ditolak: Tambah & edit kantor cabang hanya dapat dilakukan oleh Superadmin / Role Berizin Kelola Admin.");
       return;
     }
 
@@ -174,6 +226,40 @@ export default function TenantBranchModule({
       });
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleConfirmDeleteBranch() {
+    if (!deletingBranch || !hasSuperadminPrivilege) return;
+    setDeletingBranchBusy(true);
+    setFeedbackMsg(null);
+    try {
+      const res = await fetch("/api/p3mi", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "DELETE_BRANCH",
+          actorName,
+          actorRole,
+          payload: { branchId: deletingBranch.id },
+        }),
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || "Gagal menghapus kantor cabang.");
+
+      setFeedbackMsg({
+        type: "success",
+        text: `Kantor Cabang "${deletingBranch.name}" (${deletingBranch.code}) berhasil dihapus.`,
+      });
+      setDeletingBranch(null);
+      onRefreshDb();
+    } catch (err: unknown) {
+      setFeedbackMsg({
+        type: "error",
+        text: err instanceof Error ? err.message : "Terjadi kesalahan saat menghapus cabang.",
+      });
+    } finally {
+      setDeletingBranchBusy(false);
     }
   }
 
@@ -277,7 +363,7 @@ export default function TenantBranchModule({
             SIP3MI Kemnaker RI Resmi
           </span>
 
-          {!isBranchViewOnly && activeTenant && (
+          {hasSuperadminPrivilege && activeTenant && (
             <button
               onClick={() => openEditTenant(activeTenant)}
               className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-sky-500/20 transition hover:brightness-110 cursor-pointer"
@@ -322,10 +408,10 @@ export default function TenantBranchModule({
                 </div>
               </div>
 
-              {!isBranchViewOnly && (
+              {hasSuperadminPrivilege && (
                 <button
                   onClick={() => openEditTenant(activeTenant)}
-                  className="flex items-center gap-1.5 rounded-lg border border-slate-600 bg-slate-700/60 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-700"
+                  className="flex items-center gap-1.5 rounded-lg border border-slate-600 bg-slate-700/60 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-700 cursor-pointer"
                 >
                   <Edit3 className="h-3.5 w-3.5" />
                   Edit Legalitas
@@ -421,101 +507,347 @@ export default function TenantBranchModule({
 
       {/* Daftar Kantor Cabang & BLK-LN Daerah di bawah Tenant Aktif */}
       <div className="rounded-2xl border border-slate-700/60 bg-slate-800/80 p-6 shadow-xl space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-700 pb-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-700 pb-4">
           <div>
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <Building2 className="h-5 w-5 text-sky-400" />
-              Jaringan Kantor Cabang & BLK-LN ({tenantBranches.length} Kantor)
-            </h3>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-sky-400" />
+                Jaringan Kantor Cabang &amp; BLK-LN ({filteredBranches.length} / {tenantBranches.length} Kantor)
+              </h3>
+              {hasSuperadminPrivilege ? (
+                <span className="rounded-full bg-emerald-500/15 border border-emerald-500/40 px-2.5 py-0.5 text-[10px] font-bold text-emerald-300">
+                  ✅ Akses Superadmin: Tambah, Edit &amp; Hapus Aktif
+                </span>
+              ) : (
+                <span className="rounded-full bg-amber-500/15 border border-amber-500/40 px-2.5 py-0.5 text-[10px] font-bold text-amber-300 flex items-center gap-1">
+                  <Lock className="h-3 w-3" />
+                  Edit &amp; Hapus Khusus Superadmin
+                </span>
+              )}
+            </div>
             <p className="text-xs text-slate-300 mt-0.5">
-              Kantor cabang berfungsi sebagai pos pemantauan daerah (View-Only). Seluruh validasi tahapan dilakukan terpusat.
+              Kantor cabang berfungsi sebagai pos pemantauan daerah (View-Only). Kelola struktur cabang dilakukan oleh Superadmin (Direktur Utama / Role Berizin Kelola Admin).
             </p>
           </div>
 
-          {!isBranchViewOnly && (
-            <button
-              onClick={() => {
-                setEditingBranch(null);
-                setBranchForm({
-                  code: `BR-${tenantBranches.length + 1}`,
-                  name: "",
-                  city: "",
-                  headName: "",
-                  phone: "",
-                  address: "",
-                  status: "ACTIVE",
-                });
-                setShowAddBranchModal(true);
-              }}
-              className="flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2 text-xs font-bold text-white hover:bg-sky-500 transition"
-            >
-              <Plus className="h-4 w-4" />
-              Tambah Kantor Cabang Baru
-            </button>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {tenantBranches.map((b) => (
-            <div
-              key={b.id}
-              className="rounded-xl border border-slate-700 bg-slate-900/70 p-4 transition hover:border-slate-600 space-y-3"
-            >
-              <div className="flex items-start justify-between">
-                <div>
-                  <span className="font-mono text-[10px] font-bold text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded">
-                    {b.code}
-                  </span>
-                  <h4 className="font-bold text-white mt-1">{b.name}</h4>
-                  <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
-                    <MapPin className="h-3 w-3" />
-                    {b.city}
-                  </p>
-                </div>
-                <span
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                    b.status === "ACTIVE"
-                      ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-                      : "bg-slate-700 text-slate-400"
-                  }`}
-                >
-                  {b.status || "ACTIVE"}
-                </span>
-              </div>
-
-              <div className="border-t border-slate-800 pt-2 text-xs text-slate-300 space-y-1">
-                <div>
-                  <span className="text-slate-400">Kepala Cabang:</span>{" "}
-                  <span className="font-semibold text-white">{b.headName}</span>
-                </div>
-                <div>
-                  <span className="text-slate-400">Kontak:</span> {b.phone}
-                </div>
-                {b.address && (
-                  <p className="text-[11px] text-slate-400 line-clamp-1">
-                    {b.address}
-                  </p>
-                )}
-              </div>
-
-              <div className="border-t border-slate-800 pt-2 flex items-center justify-between">
-                <span className="text-[10px] font-medium text-amber-300/80 flex items-center gap-1">
-                  <Lock className="h-3 w-3" />
-                  Akses View-Only
-                </span>
-                {!isBranchViewOnly && (
-                  <button
-                    onClick={() => openEditBranch(b)}
-                    className="text-xs font-semibold text-sky-400 hover:text-sky-300 flex items-center gap-1"
-                  >
-                    <Edit3 className="h-3 w-3" />
-                    Edit
-                  </button>
-                )}
-              </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Pencarian Cabang */}
+            <div className="relative">
+              <Search className="h-3.5 w-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={branchSearch}
+                onChange={(e) => setBranchSearch(e.target.value)}
+                placeholder="Cari kode / kota / kepala..."
+                className="w-48 sm:w-56 rounded-lg border border-slate-700 bg-slate-900 pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-400 focus:border-sky-500 focus:outline-none"
+              />
             </div>
-          ))}
+
+            {/* Filter Status */}
+            <select
+              value={branchStatusFilter}
+              onChange={(e) => setBranchStatusFilter(e.target.value as "ALL" | "ACTIVE" | "INACTIVE")}
+              className="rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs text-white focus:border-sky-500 focus:outline-none cursor-pointer"
+            >
+              <option value="ALL">Semua Status</option>
+              <option value="ACTIVE">ACTIVE</option>
+              <option value="INACTIVE">INACTIVE</option>
+            </select>
+
+            {/* Toggle Matrix Baris & Kolom vs Kartu */}
+            <div className="inline-flex rounded-lg border border-slate-700 bg-slate-950 p-0.5 text-xs">
+              <button
+                type="button"
+                onClick={() => setBranchViewMode("matrix")}
+                className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 font-semibold transition cursor-pointer ${
+                  branchViewMode === "matrix"
+                    ? "bg-sky-600 text-white shadow-sm"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                <Table className="h-3.5 w-3.5" />
+                Matrix Baris &amp; Kolom
+              </button>
+              <button
+                type="button"
+                onClick={() => setBranchViewMode("cards")}
+                className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 font-semibold transition cursor-pointer ${
+                  branchViewMode === "cards"
+                    ? "bg-sky-600 text-white shadow-sm"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                <LayoutGrid className="h-3.5 w-3.5" />
+                Kartu
+              </button>
+            </div>
+
+            {hasSuperadminPrivilege && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingBranch(null);
+                  setBranchForm({
+                    code: `CBG-0${tenantBranches.length + 1}`,
+                    name: "",
+                    city: "",
+                    headName: "",
+                    phone: "",
+                    address: "",
+                    status: "ACTIVE",
+                  });
+                  setShowAddBranchModal(true);
+                }}
+                className="flex items-center gap-1.5 rounded-lg bg-sky-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-sky-500 transition cursor-pointer"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Tambah Kantor Cabang Baru
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* TAMPILAN 1: MATRIX BARIS & KOLOM */}
+        {branchViewMode === "matrix" && (
+          <div className="overflow-x-auto rounded-2xl border border-slate-700 bg-slate-900 shadow-xl">
+            <table className="w-full text-left text-xs text-slate-200">
+              <thead className="bg-slate-950 text-[10px] font-bold uppercase tracking-wider text-slate-300 border-b border-slate-800">
+                <tr>
+                  <th className="py-3 px-3 text-center w-10">No</th>
+                  <th className="py-3 px-4 min-w-[190px]">Kode &amp; Nama Kantor</th>
+                  <th className="py-3 px-3 min-w-[210px]">Kota &amp; Alamat</th>
+                  <th className="py-3 px-3 min-w-[170px]">Kepala Cabang &amp; Kontak</th>
+                  <th className="py-3 px-3 text-center min-w-[160px]">Keterkaitan Data</th>
+                  <th className="py-3 px-3 text-center min-w-[130px]">Status &amp; Akses</th>
+                  {hasSuperadminPrivilege && (
+                    <th className="py-3 px-4 text-right min-w-[155px]">Aksi (Superadmin)</th>
+                  )}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/70">
+                {filteredBranches.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={hasSuperadminPrivilege ? 7 : 6}
+                      className="py-8 text-center text-slate-400"
+                    >
+                      Tidak ada kantor cabang yang cocok dengan filter pencarian.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredBranches.map((b, idx) => {
+                    const isHq = b.id === "br-jkt" || b.code === "JKT-HQ";
+                    const stats = getBranchStats(b.id);
+                    const isActive = (b.status || "ACTIVE") === "ACTIVE";
+
+                    return (
+                      <tr key={b.id} className="hover:bg-slate-800/45 transition-colors">
+                        <td className="py-3 px-3 text-center font-mono text-slate-400">
+                          {idx + 1}
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-mono text-[10px] font-bold text-sky-400 bg-sky-500/10 border border-sky-500/20 px-2 py-0.5 rounded">
+                              {b.code}
+                            </span>
+                            {isHq && (
+                              <span className="rounded bg-indigo-500/20 border border-indigo-500/40 px-1.5 py-0.5 text-[9px] font-bold uppercase text-indigo-300">
+                                Kantor Pusat
+                              </span>
+                            )}
+                          </div>
+                          <div className="font-bold text-white mt-1">{b.name}</div>
+                        </td>
+                        <td className="py-3 px-3">
+                          <div className="font-medium text-slate-200 flex items-center gap-1">
+                            <MapPin className="h-3 w-3 text-sky-400 shrink-0" />
+                            {b.city}
+                          </div>
+                          <div className="text-[11px] text-slate-400 mt-0.5 line-clamp-2">
+                            {b.address || "-"}
+                          </div>
+                        </td>
+                        <td className="py-3 px-3">
+                          <div className="font-semibold text-white">{b.headName}</div>
+                          <div className="font-mono text-[11px] text-slate-400 mt-0.5">
+                            {b.phone || "-"}
+                          </div>
+                        </td>
+                        <td className="py-3 px-3 text-center">
+                          <div className="flex flex-wrap items-center justify-center gap-1">
+                            <span className="rounded-full bg-sky-500/15 border border-sky-500/30 px-2 py-0.5 text-[10px] font-bold text-sky-300">
+                              {stats.cpmiCount} CPMI
+                            </span>
+                            <span className="rounded-full bg-indigo-500/15 border border-indigo-500/30 px-2 py-0.5 text-[10px] font-bold text-indigo-300">
+                              {stats.staffCount} Staf
+                            </span>
+                            <span className="rounded-full bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-[10px] font-bold text-amber-300">
+                              {stats.sponsorCount} PL
+                            </span>
+                          </div>
+                        </td>
+                        <td className="py-3 px-3 text-center">
+                          <div className="flex flex-col items-center gap-1">
+                            <span
+                              className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                                isActive
+                                  ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                                  : "bg-slate-700 text-slate-400 border border-slate-600"
+                              }`}
+                            >
+                              {b.status || "ACTIVE"}
+                            </span>
+                            <span className="text-[10px] text-amber-300/80 flex items-center gap-1">
+                              {isHq ? "Pusat Penuh" : "View-Only"}
+                            </span>
+                          </div>
+                        </td>
+                        {hasSuperadminPrivilege && (
+                          <td className="py-3 px-4">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => openEditBranch(b)}
+                                className="inline-flex items-center gap-1 rounded-lg border border-slate-600 bg-slate-800 px-2.5 py-1 text-[11px] font-semibold text-slate-200 hover:border-sky-400 hover:text-sky-300 transition cursor-pointer"
+                              >
+                                <Edit3 className="h-3 w-3" />
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                disabled={isHq}
+                                title={
+                                  isHq
+                                    ? "Kantor Pusat utama (JKT-HQ) tidak dapat dihapus"
+                                    : `Hapus ${b.name}`
+                                }
+                                onClick={() => setDeletingBranch(b)}
+                                className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition ${
+                                  isHq
+                                    ? "border-slate-700 bg-slate-800/40 text-slate-500 cursor-not-allowed opacity-50"
+                                    : "border-rose-500/30 bg-rose-500/10 text-rose-300 hover:bg-rose-500/25 cursor-pointer"
+                                }`}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                                Hapus
+                              </button>
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* TAMPILAN 2: KARTU (CARD GRID) */}
+        {branchViewMode === "cards" && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredBranches.length === 0 ? (
+              <div className="col-span-full rounded-xl border border-slate-700 bg-slate-900/60 p-8 text-center text-xs text-slate-400">
+                Tidak ada kantor cabang yang cocok dengan filter pencarian.
+              </div>
+            ) : (
+              filteredBranches.map((b) => {
+                const isHq = b.id === "br-jkt" || b.code === "JKT-HQ";
+                const stats = getBranchStats(b.id);
+                return (
+                  <div
+                    key={b.id}
+                    className="rounded-xl border border-slate-700 bg-slate-900/70 p-4 transition hover:border-slate-600 space-y-3"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-mono text-[10px] font-bold text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded">
+                            {b.code}
+                          </span>
+                          {isHq && (
+                            <span className="rounded bg-indigo-500/20 border border-indigo-500/40 px-1.5 py-0.5 text-[9px] font-bold uppercase text-indigo-300">
+                              Pusat
+                            </span>
+                          )}
+                        </div>
+                        <h4 className="font-bold text-white mt-1">{b.name}</h4>
+                        <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
+                          <MapPin className="h-3 w-3" />
+                          {b.city}
+                        </p>
+                      </div>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                          (b.status || "ACTIVE") === "ACTIVE"
+                            ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                            : "bg-slate-700 text-slate-400"
+                        }`}
+                      >
+                        {b.status || "ACTIVE"}
+                      </span>
+                    </div>
+
+                    <div className="border-t border-slate-800 pt-2 text-xs text-slate-300 space-y-1">
+                      <div>
+                        <span className="text-slate-400">Kepala Cabang:</span>{" "}
+                        <span className="font-semibold text-white">{b.headName}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400">Kontak:</span> {b.phone}
+                      </div>
+                      {b.address && (
+                        <p className="text-[11px] text-slate-400 line-clamp-1">
+                          {b.address}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-1.5 pt-1 text-[10px]">
+                        <span className="rounded bg-sky-500/15 px-1.5 py-0.5 text-sky-300 font-bold">
+                          {stats.cpmiCount} CPMI
+                        </span>
+                        <span className="rounded bg-indigo-500/15 px-1.5 py-0.5 text-indigo-300 font-bold">
+                          {stats.staffCount} Staf
+                        </span>
+                        <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-amber-300 font-bold">
+                          {stats.sponsorCount} PL
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-slate-800 pt-2 flex items-center justify-between gap-2">
+                      <span className="text-[10px] font-medium text-amber-300/80 flex items-center gap-1">
+                        <Lock className="h-3 w-3" />
+                        {isHq ? "Pusat Penuh" : "Akses View-Only"}
+                      </span>
+                      {hasSuperadminPrivilege && (
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => openEditBranch(b)}
+                            className="text-xs font-semibold text-sky-400 hover:text-sky-300 flex items-center gap-1 cursor-pointer"
+                          >
+                            <Edit3 className="h-3 w-3" />
+                            Edit
+                          </button>
+                          {!isHq && (
+                            <button
+                              type="button"
+                              onClick={() => setDeletingBranch(b)}
+                              className="text-xs font-semibold text-rose-400 hover:text-rose-300 flex items-center gap-1 cursor-pointer"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                              Hapus
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
       </div>
 
       {/* Modal Edit Profil Perusahaan PT. Panca Banyu Ajisakti */}
@@ -705,16 +1037,34 @@ export default function TenantBranchModule({
                   />
                 </div>
               </div>
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">Nama Kepala Cabang</label>
-                <input
-                  type="text"
-                  required
-                  value={branchForm.headName}
-                  onChange={(e) => setBranchForm({ ...branchForm, headName: e.target.value })}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white"
-                  placeholder="Hj. Siti Aminah"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">Nama Kepala Cabang</label>
+                  <input
+                    type="text"
+                    required
+                    value={branchForm.headName}
+                    onChange={(e) => setBranchForm({ ...branchForm, headName: e.target.value })}
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white"
+                    placeholder="Hj. Siti Aminah"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">Status Operasional</label>
+                  <select
+                    value={branchForm.status}
+                    onChange={(e) =>
+                      setBranchForm({
+                        ...branchForm,
+                        status: e.target.value as "ACTIVE" | "INACTIVE",
+                      })
+                    }
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white"
+                  >
+                    <option value="ACTIVE">ACTIVE (Aktif)</option>
+                    <option value="INACTIVE">INACTIVE (Nonaktif)</option>
+                  </select>
+                </div>
               </div>
               <div>
                 <label className="block text-slate-300 font-semibold mb-1">Alamat Lengkap</label>
@@ -731,19 +1081,76 @@ export default function TenantBranchModule({
                 <button
                   type="button"
                   onClick={() => setShowAddBranchModal(false)}
-                  className="rounded-lg border border-slate-600 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800"
+                  className="rounded-lg border border-slate-600 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800 cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="rounded-lg bg-sky-600 px-5 py-2 text-xs font-bold text-white hover:bg-sky-500 disabled:opacity-50"
+                  className="rounded-lg bg-sky-600 px-5 py-2 text-xs font-bold text-white hover:bg-sky-500 disabled:opacity-50 cursor-pointer"
                 >
                   {saving ? "Menyimpan..." : "Simpan Cabang"}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Konfirmasi Hapus Kantor Cabang (Khusus Superadmin) */}
+      {deletingBranch && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-rose-500/40 bg-slate-900 p-6 shadow-2xl space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-500/20 text-rose-400">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">
+                  Hapus Kantor Cabang?
+                </h3>
+                <p className="text-xs text-slate-300 mt-1">
+                  Anda akan menghapus kantor cabang{" "}
+                  <span className="font-bold text-white">{deletingBranch.name}</span>{" "}
+                  (<span className="font-mono text-sky-400">{deletingBranch.code}</span>) di{" "}
+                  <span className="font-semibold text-slate-200">{deletingBranch.city}</span>.
+                </p>
+              </div>
+            </div>
+
+            {(() => {
+              const stats = getBranchStats(deletingBranch.id);
+              const totalLinked = stats.cpmiCount + stats.staffCount + stats.sponsorCount;
+              if (totalLinked === 0) return null;
+              return (
+                <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-[11px] text-amber-200">
+                  <span className="font-bold">Catatan Relokasi Data:</span> Cabang ini memiliki{" "}
+                  <b>{stats.cpmiCount} CPMI</b>, <b>{stats.staffCount} Staf</b>, dan{" "}
+                  <b>{stats.sponsorCount} Sponsor PL</b>. Seluruh data terkait akan dialihkan otomatis ke Kantor Pusat Jakarta agar tidak hilang.
+                </div>
+              );
+            })()}
+
+            <div className="flex justify-end gap-3 pt-3 border-t border-slate-800">
+              <button
+                type="button"
+                disabled={deletingBranchBusy}
+                onClick={() => setDeletingBranch(null)}
+                className="rounded-lg border border-slate-600 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800 cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                disabled={deletingBranchBusy}
+                onClick={handleConfirmDeleteBranch}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-4 py-2 text-xs font-bold text-white hover:bg-rose-500 disabled:opacity-50 cursor-pointer"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                {deletingBranchBusy ? "Menghapus..." : "Ya, Hapus Cabang"}
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -979,6 +979,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
         "UPDATE_TENANT",
         "CREATE_BRANCH",
         "UPDATE_BRANCH",
+        "DELETE_BRANCH",
         "CREATE_FOREIGN_AGENCY",
         "CREATE_SPONSOR",
         "CREATE_MEDICAL_CLINIC",
@@ -3119,8 +3120,12 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
               selectedTenantId={selectedTenantId}
               onSelectTenant={(id) => setSelectedTenantId(id)}
               isBranchViewOnly={isBranchViewOnly}
-              actorRole={loggedInStaff?.role || "ADMIN_PUSAT"}
-              actorName={loggedInStaff?.name || "Admin Pusat"}
+              canManageBranches={perms.canManageStaff || currentRole === "DIREKTUR"}
+              actorRole={loggedInStaff?.role || "DIREKTUR"}
+              actorName={loggedInStaff?.name || "Superadmin Direktur"}
+              candidates={db.candidates || []}
+              staffAccounts={db.staffAccounts || []}
+              sponsors={db.sponsors || []}
               onRefreshDb={fetchDb}
             />
           )}

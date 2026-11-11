@@ -83,11 +83,20 @@ export async function POST(req: NextRequest) {
     } = body;
     const db = readDb();
 
-    // Helper Otorisasi Kelola Akun Staf & Maintenance (Hanya Superadmin / Role dengan canManageStaff)
+    // Helper Otorisasi Kelola Akun Staf, Cabang & Maintenance (Hanya Superadmin / Role dengan canManageStaff)
     function isSuperadminActor(): boolean {
       if (actorRole === "DIREKTUR") return true;
       const matchedActorRole = (db.roles || []).find((r) => r.code === actorRole);
-      return Boolean(matchedActorRole?.permissions?.canManageStaff);
+      if (matchedActorRole?.permissions?.canManageStaff) return true;
+      const matchedStaff = db.staffAccounts.find(
+        (s) => s.name === actorName && s.role === actorRole && s.active
+      );
+      if (matchedStaff?.secondaryRoles?.length) {
+        return matchedStaff.secondaryRoles.some((srCode) =>
+          Boolean((db.roles || []).find((r) => r.code === srCode)?.permissions?.canManageStaff)
+        );
+      }
+      return false;
     }
 
     if (action === "RESET_DEMO_DATA") {
@@ -262,6 +271,7 @@ export async function POST(req: NextRequest) {
       "UPDATE_TENANT",
       "CREATE_BRANCH",
       "UPDATE_BRANCH",
+      "DELETE_BRANCH",
       "CREATE_FOREIGN_AGENCY",
       "CREATE_SPONSOR",
       "CREATE_MEDICAL_CLINIC",
@@ -2294,9 +2304,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, partner: newPartner, db });
     }
 
-    // 18. MODUL MASTER DATA: TAMBAH KANTOR CABANG P3MI BARU
+    // 18. MODUL MASTER DATA: TAMBAH / UBAH / HAPUS KANTOR CABANG P3MI (HANYA SUPERADMIN / CAN_MANAGE_STAFF)
     if (action === "CREATE_BRANCH") {
-      const { tenantId = "tenant-panca", code, name, city, headName, phone, address } = body.payload;
+      if (!isSuperadminActor()) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error:
+              "Akses Ditolak: Hanya Direktur Utama (Superadmin) atau role dengan hak akses kelola admin yang dapat menambah kantor cabang.",
+          },
+          { status: 403 }
+        );
+      }
+      const { tenantId = "tenant-panca", code, name, city, headName, phone, address, status = "ACTIVE" } = body.payload;
       const newBranch: Branch = {
         id: `br-${Date.now()}`,
         tenantId,
@@ -2306,7 +2326,7 @@ export async function POST(req: NextRequest) {
         headName: headName || "-",
         phone: phone || "-",
         address: address || "-",
-        status: "ACTIVE",
+        status: status === "INACTIVE" ? "INACTIVE" : "ACTIVE",
       };
       db.branches.push(newBranch);
 
@@ -2317,7 +2337,7 @@ export async function POST(req: NextRequest) {
         branchName,
         actionType: "MASTER_DATA_UPDATED",
         summary: `Menambahkan Kantor Cabang P3MI Baru: ${newBranch.name} (${newBranch.city})`,
-        details: `Kepala Cabang: ${newBranch.headName} · Tenant ID: ${newBranch.tenantId}`,
+        details: `Kepala Cabang: ${newBranch.headName} · Kode: ${newBranch.code} · Status: ${newBranch.status}`,
         timestamp: nowTimestamp(),
       });
 
@@ -2326,6 +2346,16 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === "UPDATE_BRANCH") {
+      if (!isSuperadminActor()) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error:
+              "Akses Ditolak: Hanya Direktur Utama (Superadmin) atau role dengan hak akses kelola admin yang dapat mengubah kantor cabang.",
+          },
+          { status: 403 }
+        );
+      }
       const { branchId, updates } = body.payload;
       const b = db.branches.find((x) => x.id === branchId);
       if (!b) {
@@ -2346,6 +2376,88 @@ export async function POST(req: NextRequest) {
 
       writeDb(db);
       return NextResponse.json({ ok: true, branch: b, db });
+    }
+
+    if (action === "DELETE_BRANCH") {
+      if (!isSuperadminActor()) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error:
+              "Akses Ditolak: Hanya Direktur Utama (Superadmin) atau role dengan hak akses kelola admin yang dapat menghapus kantor cabang.",
+          },
+          { status: 403 }
+        );
+      }
+      const { branchId, id } = body.payload || {};
+      const targetId = branchId || id;
+      const target = db.branches.find((x) => x.id === targetId);
+      if (!target) {
+        return NextResponse.json({ ok: false, error: "Cabang tidak ditemukan." }, { status: 404 });
+      }
+      if (target.id === "br-jkt" || target.code === "JKT-HQ") {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: "Kantor Pusat Jakarta (JKT-HQ) tidak dapat dihapus karena merupakan kantor pusat utama.",
+          },
+          { status: 400 }
+        );
+      }
+      if (db.branches.length <= 1) {
+        return NextResponse.json(
+          { ok: false, error: "Sistem harus menyisakan minimal 1 kantor aktif." },
+          { status: 400 }
+        );
+      }
+
+      const fallbackBranch =
+        db.branches.find((x) => x.id === "br-jkt" || x.code === "JKT-HQ") ||
+        db.branches.find((x) => x.id !== target.id);
+      const fallbackBranchId = fallbackBranch?.id || "ALL";
+
+      let movedCandidates = 0;
+      for (const c of db.candidates || []) {
+        if (c.branchId === target.id) {
+          c.branchId = fallbackBranchId;
+          movedCandidates++;
+        }
+      }
+      let movedStaff = 0;
+      for (const s of db.staffAccounts || []) {
+        if (s.branchId === target.id) {
+          s.branchId = fallbackBranchId === "br-jkt" ? "ALL" : fallbackBranchId;
+          movedStaff++;
+        }
+      }
+      let movedSponsors = 0;
+      for (const sp of db.sponsors || []) {
+        if (sp.branchId === target.id) {
+          sp.branchId = fallbackBranchId;
+          movedSponsors++;
+        }
+      }
+      for (const j of db.cashJournals || []) {
+        if (j.branchId === target.id) {
+          j.branchId = fallbackBranchId;
+        }
+      }
+
+      db.branches = db.branches.filter((x) => x.id !== target.id);
+
+      db.auditLogs.unshift({
+        id: `aud-${Date.now()}`,
+        actorName,
+        actorRole: actorRole as UserRole,
+        branchName,
+        actionType: "MASTER_DATA_UPDATED",
+        summary: `Menghapus Kantor Cabang: ${target.name} (${target.code})`,
+        details: `Kota: ${target.city} · Relokasi data terkait -> ${fallbackBranch?.name || "Pusat"} (${movedCandidates} CPMI, ${movedStaff} Staf, ${movedSponsors} Sponsor PL)`,
+        timestamp: nowTimestamp(),
+      });
+
+      writeDb(db);
+      return NextResponse.json({ ok: true, deletedId: target.id, db });
     }
 
     // 19. MODUL 1 (SAAS): KELOLA PERUSAHAAN P3MI (TENANT) & LISENSI
@@ -2404,6 +2516,16 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === "UPDATE_TENANT") {
+      if (!isSuperadminActor()) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error:
+              "Akses Ditolak: Hanya Direktur Utama (Superadmin) atau role berizin kelola admin yang dapat mengubah profil perusahaan.",
+          },
+          { status: 403 }
+        );
+      }
       const { tenantId, updates } = body.payload;
       if (!db.tenants || db.tenants.length === 0) {
         db.tenants = createInitialTenants();
