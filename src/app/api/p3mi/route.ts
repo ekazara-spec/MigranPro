@@ -2141,8 +2141,18 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 14. MODUL MASTER DATA: TAMBAH AGENSI MITRA LUAR NEGERI / SYARIKAH
+    // 14. MODUL MASTER DATA: TAMBAH AGENSI MITRA LUAR NEGERI / SYARIKAH (HANYA SUPERADMIN / CAN_MANAGE_STAFF)
     if (action === "CREATE_FOREIGN_AGENCY") {
+      if (!isSuperadminActor()) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error:
+              "Akses Ditolak: Hanya Direktur Utama (Superadmin) atau role berizin kelola admin yang dapat menambah Master Data Syarikah.",
+          },
+          { status: 403 }
+        );
+      }
       const {
         code,
         name,
@@ -3209,12 +3219,85 @@ export async function POST(req: NextRequest) {
 
     // UPDATE / DELETE UNTUK SYARIKAH, KLINIK, SPONSOR, BPJS
     if (action === "UPDATE_FOREIGN_AGENCY") {
-      const { id, updates } = body.payload;
+      if (!isSuperadminActor()) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error:
+              "Akses Ditolak: Hanya Direktur Utama (Superadmin) atau role berizin kelola admin yang dapat mengubah Master Data Syarikah.",
+          },
+          { status: 403 }
+        );
+      }
+      const { id, updates } = body.payload || {};
       const agn = db.foreignAgencies?.find((x) => x.id === id);
-      if (!agn) return NextResponse.json({ ok: false, error: "Agensi tidak ditemukan." }, { status: 404 });
+      if (!agn) return NextResponse.json({ ok: false, error: "Agensi / Syarikah tidak ditemukan." }, { status: 404 });
       Object.assign(agn, updates);
+      if (updates?.defaultAgencyFeeIdr !== undefined) {
+        agn.defaultAgencyFeeIdr = Number(updates.defaultAgencyFeeIdr) || 0;
+      }
+      if (updates?.warrantyDays !== undefined) {
+        agn.warrantyDays = Number(updates.warrantyDays) || 90;
+      }
+      if (updates?.country) {
+        const middleEastCountries = [
+          "Arab Saudi",
+          "Uni Emirat Arab (UAE)",
+          "Kuwait",
+          "Oman",
+          "Yordania",
+          "Qatar",
+          "Bahrain",
+        ];
+        agn.region = middleEastCountries.includes(updates.country)
+          ? "TIMUR_TENGAH"
+          : "ASIA_PASIFIK";
+      }
+
+      db.auditLogs.unshift({
+        id: `aud-${Date.now()}`,
+        actorName: actorName || "Superadmin",
+        actorRole: actorRole as UserRole,
+        branchName: branchName || "Kantor Pusat Jakarta",
+        actionType: "MASTER_DATA_UPDATED",
+        summary: `Memperbarui Master Syarikah / Agensi Mitra: ${agn.name} (${agn.code})`,
+        details: `Negara: ${agn.country} · Status: ${agn.status} · Garansi Badil: ${agn.warrantyDays} Hari`,
+        timestamp: nowTimestamp(),
+      });
+
       writeDb(db);
-      return NextResponse.json({ ok: true, db });
+      return NextResponse.json({ ok: true, agency: agn, db });
+    }
+
+    if (action === "DELETE_FOREIGN_AGENCY") {
+      if (!isSuperadminActor()) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error:
+              "Akses Ditolak: Hanya Direktur Utama (Superadmin) atau role berizin kelola admin yang dapat menghapus Master Data Syarikah.",
+          },
+          { status: 403 }
+        );
+      }
+      const { id } = body.payload || {};
+      const target = db.foreignAgencies?.find((x) => x.id === id);
+      if (!target) {
+        return NextResponse.json({ ok: false, error: "Syarikah / Agensi tidak ditemukan." }, { status: 404 });
+      }
+      db.foreignAgencies = (db.foreignAgencies || []).filter((x) => x.id !== id);
+      db.auditLogs.unshift({
+        id: `aud-${Date.now()}`,
+        actorName: actorName || "Superadmin",
+        actorRole: actorRole as UserRole,
+        branchName: branchName || "Kantor Pusat Jakarta",
+        actionType: "MASTER_DATA_UPDATED",
+        summary: `Menghapus Master Syarikah / Agensi Mitra: ${target.name} (${target.code})`,
+        details: `Negara: ${target.country} · No. Lisensi/Wakalah: ${target.licenseOrWakalahNo}`,
+        timestamp: nowTimestamp(),
+      });
+      writeDb(db);
+      return NextResponse.json({ ok: true, deletedId: id, db });
     }
 
     if (action === "UPDATE_SPONSOR") {

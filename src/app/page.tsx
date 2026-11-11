@@ -3179,6 +3179,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
               staffAccounts={db.staffAccounts}
               candidates={db.candidates}
               branches={db.branches}
+              foreignAgencies={db.foreignAgencies || []}
               isBranchViewOnly={isBranchViewOnly}
               actorRole={loggedInStaff?.role || "ADMIN_PUSAT"}
               actorName={loggedInStaff?.name || "Admin Pusat"}
@@ -3922,10 +3923,64 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                           </strong>
                         </div>
                         <div className="rounded-xl bg-slate-50 p-3">
-                          <span className="text-slate-400 block">Majikan / Agensi Mitra</span>
-                          <strong className="text-slate-900 mt-0.5 block truncate">
-                            {selectedCandidate.employerName || "Belum ditentukan"}
-                          </strong>
+                          <span className="text-slate-400 block">Syarikah / Agensi Mitra</span>
+                          {!isBranchViewOnly ? (
+                            <select
+                              value={
+                                selectedCandidate.agencyPartner ||
+                                selectedCandidate.employerName ||
+                                ""
+                              }
+                              onChange={async (e) => {
+                                const val = e.target.value;
+                                await callApi("UPDATE_CANDIDATE", {
+                                  candidateId: selectedCandidate.id,
+                                  updates: {
+                                    agencyPartner: val,
+                                    employerName: val || selectedCandidate.employerName,
+                                  },
+                                });
+                                setToast({
+                                  type: "success",
+                                  title: `Syarikah Mitra ${selectedCandidate.fullName} Diperbarui`,
+                                  details: [val || "Belum ditentukan"],
+                                });
+                              }}
+                              className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-bold text-slate-900 focus:border-sky-500 focus:outline-none"
+                            >
+                              <option value="">-- Pilih dari Master Syarikah --</option>
+                              {(db.foreignAgencies || []).map((a) => (
+                                <option key={a.id} value={a.name}>
+                                  {a.name} ({a.country})
+                                  {a.status !== "ACTIVE" ? ` [${a.status}]` : ""}
+                                </option>
+                              ))}
+                              {(selectedCandidate.agencyPartner || selectedCandidate.employerName) &&
+                                !(db.foreignAgencies || []).some(
+                                  (a) =>
+                                    a.name ===
+                                    (selectedCandidate.agencyPartner ||
+                                      selectedCandidate.employerName)
+                                ) && (
+                                  <option
+                                    value={
+                                      selectedCandidate.agencyPartner ||
+                                      selectedCandidate.employerName ||
+                                      ""
+                                    }
+                                  >
+                                    {selectedCandidate.agencyPartner ||
+                                      selectedCandidate.employerName}
+                                  </option>
+                                )}
+                            </select>
+                          ) : (
+                            <strong className="text-slate-900 mt-0.5 block truncate">
+                              {selectedCandidate.agencyPartner ||
+                                selectedCandidate.employerName ||
+                                "Belum ditentukan"}
+                            </strong>
+                          )}
                         </div>
                         <div className="rounded-xl bg-slate-50 p-3">
                           <span className="text-slate-400 block">Penerbangan & Jadwal</span>
@@ -6260,10 +6315,9 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                               <div>
                                 <label className="block font-bold text-slate-700 mb-1">
-                                  Syarikah / Agensi Penanggung Biaya
+                                  Syarikah / Agensi Penanggung Biaya (Master Data)
                                 </label>
-                                <input
-                                  type="text"
+                                <select
                                   value={
                                     financeCandidate.finance.fundingBankOrAgency ||
                                     "100% Ditanggung Syarikah / Majikan (Zero Cost Timur Tengah)"
@@ -6274,9 +6328,31 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                                       fundingBankOrAgency: e.target.value,
                                     });
                                   }}
-                                  placeholder="Contoh: Syarikah SMASCO / ARCO / Tadbeer"
-                                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5"
-                                />
+                                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 font-semibold"
+                                >
+                                  <option value="100% Ditanggung Syarikah / Majikan (Zero Cost Timur Tengah)">
+                                    100% Ditanggung Syarikah / Majikan (Zero Cost Timur Tengah)
+                                  </option>
+                                  {(db.foreignAgencies || []).map((a) => (
+                                    <option key={a.id} value={a.name}>
+                                      {a.name} — {a.country} ({a.code})
+                                    </option>
+                                  ))}
+                                  {financeCandidate.finance?.fundingBankOrAgency &&
+                                    financeCandidate.finance?.fundingBankOrAgency !==
+                                      "100% Ditanggung Syarikah / Majikan (Zero Cost Timur Tengah)" &&
+                                    !(db.foreignAgencies || []).some(
+                                      (a) =>
+                                        a.name ===
+                                        financeCandidate.finance?.fundingBankOrAgency
+                                    ) && (
+                                      <option
+                                        value={financeCandidate.finance?.fundingBankOrAgency}
+                                      >
+                                        {financeCandidate.finance?.fundingBankOrAgency}
+                                      </option>
+                                    )}
+                                </select>
                               </div>
 
                               <div>
@@ -7482,18 +7558,41 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="font-bold text-slate-700 block mb-1">
-                    Agensi Mitra Luar Negeri *
+                    Syarikah / Agensi Mitra (Master Data) *
                   </label>
-                  <input
-                    type="text"
+                  <select
                     required
                     value={newVacancyForm.agencyPartner}
-                    onChange={(e) =>
-                      setNewVacancyForm({ ...newVacancyForm, agencyPartner: e.target.value })
-                    }
-                    placeholder="Nama agensi mitra"
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2"
-                  />
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const matched = (db.foreignAgencies || []).find(
+                        (a) => a.name === val
+                      );
+                      setNewVacancyForm({
+                        ...newVacancyForm,
+                        agencyPartner: val,
+                        destinationCountry:
+                          matched?.country || newVacancyForm.destinationCountry,
+                      });
+                    }}
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-semibold text-slate-900"
+                  >
+                    <option value="">-- Pilih Syarikah / Agensi Mitra --</option>
+                    {(db.foreignAgencies || []).map((a) => (
+                      <option key={a.id} value={a.name}>
+                        {a.name} — {a.country} ({a.code})
+                        {a.status !== "ACTIVE" ? ` [${a.status}]` : ""}
+                      </option>
+                    ))}
+                    {newVacancyForm.agencyPartner &&
+                      !(db.foreignAgencies || []).some(
+                        (a) => a.name === newVacancyForm.agencyPartner
+                      ) && (
+                        <option value={newVacancyForm.agencyPartner}>
+                          {newVacancyForm.agencyPartner}
+                        </option>
+                      )}
+                  </select>
                 </div>
                 <div>
                   <label className="font-bold text-slate-700 block mb-1">Gaji Kontrak *</label>
@@ -8754,6 +8853,36 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                           {db.sponsors.map((s) => (
                             <option key={s.id} value={s.id}>
                               {s.name} ({s.area})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 block mb-1">
+                          2b. Syarikah / Agensi Mitra (Master Data)
+                        </label>
+                        <select
+                          value={newForm.agencyPartner}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            const matched = (db.foreignAgencies || []).find(
+                              (a) => a.name === val
+                            );
+                            setNewForm({
+                              ...newForm,
+                              agencyPartner: val,
+                              employerName: val || newForm.employerName,
+                              destinationCountry:
+                                matched?.country || newForm.destinationCountry,
+                            });
+                          }}
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-semibold text-slate-900"
+                        >
+                          <option value="">-- Pilih Syarikah / Belum Ditentukan --</option>
+                          {(db.foreignAgencies || []).map((a) => (
+                            <option key={a.id} value={a.name}>
+                              {a.name} — {a.country} ({a.code})
                             </option>
                           ))}
                         </select>

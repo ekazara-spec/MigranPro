@@ -29,6 +29,7 @@ import {
   CashJournal,
   CashJournalCategory,
   CashTransactionType,
+  ForeignAgency,
   Sponsor,
   StaffAccount,
   SyarikahInvoice,
@@ -43,6 +44,7 @@ interface CashAndAdvancesModuleProps {
   staffAccounts: StaffAccount[];
   candidates: Candidate[];
   branches: Branch[];
+  foreignAgencies?: ForeignAgency[];
   isBranchViewOnly: boolean;
   actorRole: UserRole;
   actorName: string;
@@ -57,6 +59,7 @@ export default function CashAndAdvancesModule({
   staffAccounts,
   candidates,
   branches,
+  foreignAgencies = [],
   isBranchViewOnly,
   actorRole,
   actorName,
@@ -99,8 +102,9 @@ export default function CashAndAdvancesModule({
   const [showAddInvoiceModal, setShowAddInvoiceModal] = useState(false);
   const [invoiceForm, setInvoiceForm] = useState({
     invoiceNumber: `INV-PBA/SAR/2026/0${syarikahInvoices.length + 1}`,
-    syarikahName: "Maharah Human Resources Co. (KSA)",
-    destinationCountry: "Arab Saudi",
+    syarikahName:
+      foreignAgencies[0]?.name || "Al-Maharah Human Resources Co. (ARCO / SPSK)",
+    destinationCountry: (foreignAgencies[0]?.country || "Arab Saudi") as string,
     candidateCount: 3,
     currency: "SAR" as "SAR" | "USD" | "IDR",
     totalAmount: 15000,
@@ -1102,14 +1106,37 @@ export default function CashAndAdvancesModule({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Nama Syarikah</label>
-                  <input
-                    type="text"
+                  <label className="block text-slate-300 font-semibold mb-1">
+                    Nama Syarikah (Master Data)
+                  </label>
+                  <select
                     required
                     value={invoiceForm.syarikahName}
-                    onChange={(e) => setInvoiceForm({ ...invoiceForm, syarikahName: e.target.value })}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white"
-                  />
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const matched = foreignAgencies.find((a) => a.name === val);
+                      setInvoiceForm({
+                        ...invoiceForm,
+                        syarikahName: val,
+                        destinationCountry:
+                          matched?.country || invoiceForm.destinationCountry,
+                      });
+                    }}
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white font-semibold"
+                  >
+                    {foreignAgencies.map((a) => (
+                      <option key={a.id} value={a.name}>
+                        {a.name} — {a.country} ({a.code})
+                        {a.status !== "ACTIVE" ? ` [${a.status}]` : ""}
+                      </option>
+                    ))}
+                    {invoiceForm.syarikahName &&
+                      !foreignAgencies.some((a) => a.name === invoiceForm.syarikahName) && (
+                        <option value={invoiceForm.syarikahName}>
+                          {invoiceForm.syarikahName}
+                        </option>
+                      )}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-slate-300 font-semibold mb-1">Negara Tujuan</label>

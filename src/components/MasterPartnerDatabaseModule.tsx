@@ -75,6 +75,12 @@ export function MasterPartnerDatabaseModule({
     userRoleCodes.includes("STAF_DOKUMEN") ||
     hasRoleWriteAccess;
 
+  const canManageSyarikah =
+    !loggedInStaff ||
+    userRoleCodes.includes("DIREKTUR") ||
+    userRoleCodes.includes("DIREKTUR_UTAMA") ||
+    matchedRoles.some((r) => !r.isReadOnly && r.permissions?.canManageStaff);
+
   const immigrationOffices = db.masterImmigrationOffices || [];
   const disdukcapilList = db.masterDisdukcapil || [];
   const medicalClinics = db.masterMedicalClinics || [];
@@ -150,6 +156,20 @@ export function MasterPartnerDatabaseModule({
         email: "",
         appointmentUrl: "",
       });
+    } else if (activeTab === "AGENCY") {
+      setFormData({
+        code: `AGN-SA-00${agencies.length + 1}`,
+        name: "",
+        country: "Arab Saudi",
+        licenseOrWakalahNo: "",
+        scheme: "SPSK (Sistem Penempatan Satu Kanal) / Musaned",
+        picName: "",
+        phoneEmail: "",
+        defaultAgencyFeeIdr: 35000000,
+        warrantyDays: 90,
+        mouExpiryDate: "2028-12-31",
+        status: "ACTIVE",
+      });
     }
     setModalType("ADD");
   };
@@ -161,6 +181,19 @@ export function MasterPartnerDatabaseModule({
   };
 
   const handleToggleStatus = async (item: any) => {
+    if (activeTab === "AGENCY") {
+      if (!canManageSyarikah) {
+        alert("Hanya Superadmin / Direktur Utama yang dapat mengubah status Syarikah.");
+        return;
+      }
+      setIsSubmitting(true);
+      await onTriggerApi("UPDATE_FOREIGN_AGENCY", {
+        id: item.id,
+        updates: { status: item.status === "ACTIVE" ? "SUSPENDED" : "ACTIVE" },
+      });
+      setIsSubmitting(false);
+      return;
+    }
     if (!isSuperAdminOrDirector) {
       alert("Hanya Admin Pusat / Direktur yang memiliki izin mengubah status master data.");
       return;
@@ -174,6 +207,22 @@ export function MasterPartnerDatabaseModule({
   };
 
   const handleDeleteItem = async (item: any) => {
+    if (activeTab === "AGENCY") {
+      if (!canManageSyarikah) {
+        alert("Hanya Superadmin / Direktur Utama yang memiliki izin menghapus Master Syarikah.");
+        return;
+      }
+      const confirmDelete = window.confirm(
+        `Apakah Anda yakin ingin menghapus Syarikah "${item.name}" (${item.code})?`
+      );
+      if (!confirmDelete) return;
+
+      setIsSubmitting(true);
+      await onTriggerApi("DELETE_FOREIGN_AGENCY", { id: item.id });
+      setIsSubmitting(false);
+      return;
+    }
+
     if (!isSuperAdminOrDirector) {
       alert("Hanya Admin Pusat / Direktur yang memiliki izin menghapus master data.");
       return;
@@ -193,6 +242,29 @@ export function MasterPartnerDatabaseModule({
 
   const handleSaveModal = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (activeTab === "AGENCY") {
+      if (!canManageSyarikah) {
+        alert("Hanya Superadmin / Direktur Utama yang dapat menyimpan perubahan Master Syarikah.");
+        return;
+      }
+      setIsSubmitting(true);
+      try {
+        if (modalType === "ADD") {
+          await onTriggerApi("CREATE_FOREIGN_AGENCY", formData);
+        } else if (modalType === "EDIT" && selectedEntity) {
+          await onTriggerApi("UPDATE_FOREIGN_AGENCY", {
+            id: selectedEntity.id,
+            updates: formData,
+          });
+        }
+        setModalType(null);
+        setSelectedEntity(null);
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
+
     if (!isSuperAdminOrDirector) {
       alert("Hanya Admin Pusat / Direktur yang dapat menyimpan perubahan master data.");
       return;
@@ -326,13 +398,14 @@ export function MasterPartnerDatabaseModule({
               )}
             </div>
 
-            {isSuperAdminOrDirector && ["KANIM", "DISDUKCAPIL", "CLINIC", "AIRLINE", "BLK", "EMBASSY"].includes(activeTab) && (
+            {((isSuperAdminOrDirector && ["KANIM", "DISDUKCAPIL", "CLINIC", "AIRLINE", "BLK", "EMBASSY"].includes(activeTab)) ||
+              (activeTab === "AGENCY" && canManageSyarikah)) && (
               <button
                 onClick={handleOpenAddModal}
                 disabled={isSubmitting}
-                className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-sky-700 transition"
+                className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-sky-700 transition cursor-pointer"
               >
-                <span>➕ Tambah Data Baru</span>
+                <span>{activeTab === "AGENCY" ? "➕ Tambah Syarikah Baru" : "➕ Tambah Data Baru"}</span>
               </button>
             )}
           </div>
@@ -873,12 +946,13 @@ export function MasterPartnerDatabaseModule({
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-50 text-slate-700 border-b border-slate-200">
                 <tr>
-                  <th className="py-3 px-4 font-semibold">Kode & Nama Syarikah / Agensi</th>
-                  <th className="py-3 px-4 font-semibold">Negara & Skema</th>
+                  <th className="py-3 px-4 font-semibold">Kode &amp; Nama Syarikah / Agensi</th>
+                  <th className="py-3 px-4 font-semibold">Negara &amp; Skema</th>
                   <th className="py-3 px-4 font-semibold">No. Lisensi / Wakalah Musaned</th>
-                  <th className="py-3 px-4 font-semibold">PIC & Kontak</th>
+                  <th className="py-3 px-4 font-semibold">PIC &amp; Kontak</th>
                   <th className="py-3 px-4 font-semibold">Garansi Badil</th>
                   <th className="py-3 px-4 font-semibold text-center">Status</th>
+                  <th className="py-3 px-4 font-semibold text-right">Aksi (Superadmin)</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -888,7 +962,9 @@ export function MasterPartnerDatabaseModule({
                     return (
                       a.name.toLowerCase().includes(q) ||
                       a.country.toLowerCase().includes(q) ||
-                      a.code.toLowerCase().includes(q)
+                      a.code.toLowerCase().includes(q) ||
+                      (a.licenseOrWakalahNo || "").toLowerCase().includes(q) ||
+                      (a.picName || "").toLowerCase().includes(q)
                     );
                   })
                   .map((a: ForeignAgency) => (
@@ -898,6 +974,11 @@ export function MasterPartnerDatabaseModule({
                           {a.code}
                         </span>
                         <p className="font-bold text-slate-900 mt-1">{a.name}</p>
+                        {a.mouExpiryDate && (
+                          <p className="text-[10px] text-slate-500 mt-0.5">
+                            MOU s/d {a.mouExpiryDate}
+                          </p>
+                        )}
                       </td>
                       <td className="py-3 px-4">
                         <p className="font-bold text-slate-800">{a.country}</p>
@@ -916,9 +997,40 @@ export function MasterPartnerDatabaseModule({
                         </span>
                       </td>
                       <td className="py-3 px-4 text-center">
-                        <span className="rounded-full bg-emerald-50 text-emerald-700 border border-emerald-300 px-2.5 py-1 text-[10px] font-bold">
-                          ● AKTIF
-                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleToggleStatus(a)}
+                          disabled={!canManageSyarikah || isSubmitting}
+                          className={`rounded-full px-2.5 py-1 text-[10px] font-bold border transition ${
+                            a.status === "ACTIVE"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100"
+                              : "bg-slate-100 text-slate-500 border-slate-300 hover:bg-slate-200"
+                          } ${canManageSyarikah ? "cursor-pointer" : "cursor-default"}`}
+                        >
+                          {a.status === "ACTIVE" ? "● AKTIF" : `○ ${a.status || "NON-AKTIF"}`}
+                        </button>
+                      </td>
+                      <td className="py-3 px-4 text-right space-x-1 whitespace-nowrap">
+                        {canManageSyarikah ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEditModal(a)}
+                              className="rounded-lg bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700 hover:bg-sky-100 border border-sky-200 cursor-pointer"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteItem(a)}
+                              className="rounded-lg bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-100 border border-rose-200 cursor-pointer"
+                            >
+                              Hapus
+                            </button>
+                          </>
+                        ) : (
+                          <span className="text-[10px] text-slate-400">🔒 Khusus Superadmin</span>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -1603,6 +1715,146 @@ export function MasterPartnerDatabaseModule({
                       onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                       className="w-full rounded-xl border border-slate-300 p-2 text-xs"
                       placeholder="Alamat kantor perwakilan..."
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* AGENCY / SYARIKAH FORM */}
+              {activeTab === "AGENCY" && (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">Kode Syarikah / Agensi</label>
+                      <input
+                        type="text"
+                        required
+                        value={formData.code || ""}
+                        onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                        className="w-full rounded-xl border border-slate-300 p-2 text-xs font-mono"
+                        placeholder="AGN-SA-001"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">Negara Tujuan</label>
+                      <select
+                        value={formData.country || "Arab Saudi"}
+                        onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                        className="w-full rounded-xl border border-slate-300 p-2 text-xs font-semibold"
+                      >
+                        <option value="Arab Saudi">Arab Saudi</option>
+                        <option value="Uni Emirat Arab (UAE)">Uni Emirat Arab (UAE)</option>
+                        <option value="Kuwait">Kuwait</option>
+                        <option value="Oman">Oman</option>
+                        <option value="Yordania">Yordania</option>
+                        <option value="Qatar">Qatar</option>
+                        <option value="Bahrain">Bahrain</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Nama Syarikah / Agensi Mitra *</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.name || ""}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full rounded-xl border border-slate-300 p-2 text-xs font-semibold"
+                      placeholder="Al-Maharah Human Resources Co. (ARCO / SPSK)"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">Skema Penempatan</label>
+                      <input
+                        type="text"
+                        required
+                        value={formData.scheme || ""}
+                        onChange={(e) => setFormData({ ...formData, scheme: e.target.value })}
+                        className="w-full rounded-xl border border-slate-300 p-2 text-xs"
+                        placeholder="SPSK (Sistem Penempatan Satu Kanal) / Musaned"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">No. Lisensi / Wakalah Musaned</label>
+                      <input
+                        type="text"
+                        required
+                        value={formData.licenseOrWakalahNo || ""}
+                        onChange={(e) => setFormData({ ...formData, licenseOrWakalahNo: e.target.value })}
+                        className="w-full rounded-xl border border-slate-300 p-2 text-xs font-mono"
+                        placeholder="MUSANED-SPSK-SA-2026-8812"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">PIC &amp; Divisi Penanggung Jawab</label>
+                      <input
+                        type="text"
+                        required
+                        value={formData.picName || ""}
+                        onChange={(e) => setFormData({ ...formData, picName: e.target.value })}
+                        className="w-full rounded-xl border border-slate-300 p-2 text-xs"
+                        placeholder="Sheikh Khalid Al-Otaibi"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">Kontak (Telp &amp; Email)</label>
+                      <input
+                        type="text"
+                        required
+                        value={formData.phoneEmail || ""}
+                        onChange={(e) => setFormData({ ...formData, phoneEmail: e.target.value })}
+                        className="w-full rounded-xl border border-slate-300 p-2 text-xs"
+                        placeholder="+966-11-4509911 · email@syarikah.sa"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">Garansi Badil (Hari)</label>
+                      <input
+                        type="number"
+                        min={0}
+                        required
+                        value={formData.warrantyDays ?? 90}
+                        onChange={(e) => setFormData({ ...formData, warrantyDays: Number(e.target.value) })}
+                        className="w-full rounded-xl border border-slate-300 p-2 text-xs font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">Masa Berlaku MOU</label>
+                      <input
+                        type="date"
+                        required
+                        value={formData.mouExpiryDate || "2028-12-31"}
+                        onChange={(e) => setFormData({ ...formData, mouExpiryDate: e.target.value })}
+                        className="w-full rounded-xl border border-slate-300 p-2 text-xs font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">Status Kemitraan</label>
+                      <select
+                        value={formData.status || "ACTIVE"}
+                        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                        className="w-full rounded-xl border border-slate-300 p-2 text-xs font-bold"
+                      >
+                        <option value="ACTIVE">ACTIVE (Aktif)</option>
+                        <option value="SUSPENDED">SUSPENDED (Nonaktif)</option>
+                        <option value="EXPIRED_MOU">EXPIRED MOU</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Standar Fee Agensi / Wakalah (Rp)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      step={500000}
+                      value={formData.defaultAgencyFeeIdr ?? 35000000}
+                      onChange={(e) => setFormData({ ...formData, defaultAgencyFeeIdr: Number(e.target.value) })}
+                      className="w-full rounded-xl border border-slate-300 p-2 text-xs font-mono"
                     />
                   </div>
                 </>

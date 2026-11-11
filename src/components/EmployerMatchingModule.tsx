@@ -57,7 +57,8 @@ export default function EmployerMatchingModule({
   const [interviewForm, setInterviewForm] = useState({
     candidateId: candidates[0]?.id || "",
     candidateName: candidates[0]?.fullName || "",
-    syarikahName: "Maharah Human Resources Co. (KSA)",
+    syarikahName:
+      foreignAgencies[0]?.name || "Al-Maharah Human Resources Co. (ARCO / SPSK)",
     jobSector: "Penata Laksana Rumah Tangga (PLRT / Housemaid)",
     interviewDate: new Date(Date.now() + 86400000).toISOString().split("T")[0],
     interviewTimeKsa: "11:30 KSA (15:30 WIB)",
@@ -97,10 +98,17 @@ export default function EmployerMatchingModule({
   const failedCount = employerInterviews.filter((i) => i.status === "FAILED").length;
 
   function openScheduleForCandidate(cand: Candidate) {
+    const matchedCountryAgency = foreignAgencies.find(
+      (a) => a.status === "ACTIVE" && a.country === cand.destinationCountry
+    );
     setInterviewForm({
       candidateId: cand.id,
       candidateName: cand.fullName,
-      syarikahName: cand.agencyPartner || "Maharah Human Resources Co. (KSA)",
+      syarikahName:
+        cand.agencyPartner ||
+        matchedCountryAgency?.name ||
+        foreignAgencies[0]?.name ||
+        "Al-Maharah Human Resources Co. (ARCO / SPSK)",
       jobSector: cand.jobSector || "Penata Laksana Rumah Tangga (PLRT)",
       interviewDate: new Date(Date.now() + 86400000).toISOString().split("T")[0],
       interviewTimeKsa: "11:30 KSA (15:30 WIB)",
@@ -561,14 +569,36 @@ export default function EmployerMatchingModule({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Nama Syarikah Mitra</label>
-                  <input
-                    type="text"
+                  <label className="block text-slate-300 font-semibold mb-1">
+                    Nama Syarikah Mitra (Master Data)
+                  </label>
+                  <select
                     required
                     value={interviewForm.syarikahName}
-                    onChange={(e) => setInterviewForm({ ...interviewForm, syarikahName: e.target.value })}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white"
-                  />
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const matched = foreignAgencies.find((a) => a.name === val);
+                      setInterviewForm({
+                        ...interviewForm,
+                        syarikahName: val,
+                        interviewerName: matched?.picName || interviewForm.interviewerName,
+                      });
+                    }}
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white font-semibold"
+                  >
+                    {foreignAgencies.map((a) => (
+                      <option key={a.id} value={a.name}>
+                        {a.name} — {a.country} ({a.code})
+                        {a.status !== "ACTIVE" ? ` [${a.status}]` : ""}
+                      </option>
+                    ))}
+                    {interviewForm.syarikahName &&
+                      !foreignAgencies.some((a) => a.name === interviewForm.syarikahName) && (
+                        <option value={interviewForm.syarikahName}>
+                          {interviewForm.syarikahName}
+                        </option>
+                      )}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-slate-300 font-semibold mb-1">Posisi / Sektor</label>
