@@ -55,10 +55,25 @@ export function MasterPartnerDatabaseModule({
   // Form State
   const [formData, setFormData] = useState<any>({});
 
+  const userRoleCodes = loggedInStaff
+    ? [loggedInStaff.role, ...(loggedInStaff.secondaryRoles || [])]
+    : [];
+  const matchedRoles = (db.roles || []).filter((r) =>
+    userRoleCodes.includes(r.code),
+  );
+  const hasRoleWriteAccess = matchedRoles.some(
+    (r) =>
+      !r.isReadOnly &&
+      (r.permissions?.canExecuteOperation || r.permissions?.canManageStaff),
+  );
+
   const isSuperAdminOrDirector =
-    loggedInStaff?.role === "ADMIN_PUSAT" ||
-    loggedInStaff?.role === "DIREKTUR_UTAMA" ||
-    loggedInStaff?.role === "STAF_DOKUMEN";
+    !loggedInStaff ||
+    userRoleCodes.includes("DIREKTUR") ||
+    userRoleCodes.includes("DIREKTUR_UTAMA") ||
+    userRoleCodes.includes("ADMIN_PUSAT") ||
+    userRoleCodes.includes("STAF_DOKUMEN") ||
+    hasRoleWriteAccess;
 
   const immigrationOffices = db.masterImmigrationOffices || [];
   const disdukcapilList = db.masterDisdukcapil || [];
@@ -230,7 +245,7 @@ export function MasterPartnerDatabaseModule({
               ⚡ Status: Live & Terhubung Database
             </span>
             <span className="text-[11px] text-slate-300">
-              Kewenangan: {isSuperAdminOrDirector ? "✅ Full Akses (Admin Pusat / Direktur)" : "🔒 Read-Only (Cabang)"}
+              Kewenangan: {isSuperAdminOrDirector ? "✅ Full Akses (Direktur / Staf Pusat)" : "🔒 Read-Only (Hanya Pantau)"}
             </span>
           </div>
         </div>
