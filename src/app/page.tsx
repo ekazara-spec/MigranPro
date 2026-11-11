@@ -2758,7 +2758,16 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
       />
 
       {/* MAIN AREA */}
-      <div className="flex min-w-0 flex-1 flex-col print:block print:w-full print:p-0 print:m-0">
+      <div
+        className={`flex min-w-0 flex-1 flex-col print:block print:w-full print:p-0 print:m-0 ${
+          printingSyarikahBiodataCandidate ||
+          printingRegFormCandidate ||
+          receiptPreviewModal ||
+          viewingPhysicalDoc
+            ? "print:hidden"
+            : ""
+        }`}
+      >
         {/* TOP HEADER */}
         <header className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white/95 px-3 sm:px-6 py-3 backdrop-blur print:hidden">
           <div className="flex items-center gap-2.5 min-w-0">
@@ -7975,8 +7984,8 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
           MODAL KWITANSI RESMI PEMBAYARAN TERMIN FEE SPONSOR
          ========================================================= */}
       {receiptPreviewModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm print:static print:inset-auto print:block print:bg-white print:p-0">
+          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl print:max-w-none print:rounded-none print:shadow-none">
             <div className="flex items-center justify-between border-b border-slate-200 pb-4">
               <div className="flex items-center gap-3">
                 <img
@@ -10888,10 +10897,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
           PT PANCA BANYU AJISAKTI (100% IDENTIK DENGAN FORMULIR BARU F4s.pdf)
          ========================================================= */}
       {printingRegFormCandidate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-3 sm:p-6 backdrop-blur-sm">
-          <div className="flex max-h-[95vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-slate-200 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-3 sm:p-6 backdrop-blur-sm print:static print:inset-auto print:block print:bg-white print:p-0">
+          <div className="flex max-h-[95vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-slate-200 shadow-2xl print:block print:max-h-none print:max-w-none print:w-full print:overflow-visible print:rounded-none print:bg-white print:shadow-none">
             {/* Toolbar Cetak */}
-            <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900 px-6 py-3.5 text-white">
+            <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900 px-6 py-3.5 text-white print:hidden">
               <div>
                 <span className="rounded bg-amber-500 px-2 py-0.5 text-[10px] font-extrabold uppercase text-slate-950">
                   IDE 3 · CETAK LEMBAR FISIK IDENTIK 100% (FORMULIR BARU F4s.pdf)
@@ -10940,7 +10949,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
             </div>
 
             {/* KERTAS FORMULIR BARU F4 PT PANCA BANYU AJISAKTI (100% IDENTIK DENGAN FORMULIR BARU F4s.pdf) */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-8">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-8 print:overflow-visible print:p-0">
               {(() => {
                 const cand = printingRegFormCandidate;
                 const rf: OfficialRegistrationForm = cand.registrationForm || regForm;
@@ -11729,8 +11738,8 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
           (100% IDENTIK DENGAN CONTOH_PRINTOUT_BIODATA.PDF — BAHASA INGGRIS & ARAB)
          ========================================================= */}
       {printingSyarikahBiodataCandidate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 p-2 sm:p-5 backdrop-blur-sm print:static print:bg-white print:p-0">
-          <div className="flex max-h-[96vh] w-full max-w-7xl flex-col overflow-hidden rounded-2xl bg-slate-100 shadow-2xl print:max-h-none print:rounded-none print:bg-white print:shadow-none">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 p-2 sm:p-5 backdrop-blur-sm print:static print:inset-auto print:block print:bg-white print:p-0 print:m-0">
+          <div className="flex max-h-[96vh] w-full max-w-7xl flex-col overflow-hidden rounded-2xl bg-slate-100 shadow-2xl print:block print:max-h-none print:max-w-none print:w-full print:overflow-visible print:rounded-none print:bg-white print:shadow-none">
             {/* Toolbar Atas (Disembunyikan saat Print) */}
             <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900 px-5 py-3.5 text-white print:hidden">
               <div>
@@ -12432,9 +12441,9 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
               </div>
 
               {/* PANEL KANAN: KERTAS A4 PRINTOUT BIODATA SYARIKAH (100% IDENTIK DENGAN CONTOH_PRINTOUT_BIODATA.PDF) */}
-              <div className="flex items-start justify-center overflow-y-auto bg-slate-300/80 p-4 sm:p-6 lg:col-span-8 lg:max-h-[86vh] print:bg-white print:p-0">
+              <div className="flex items-start justify-center overflow-y-auto bg-slate-300/80 p-4 sm:p-6 lg:col-span-8 lg:max-h-[86vh] print:block print:w-full print:max-h-none print:overflow-visible print:bg-white print:p-0 print:m-0">
                 <div
-                  className="relative mx-auto w-full max-w-[760px] select-none overflow-hidden bg-white shadow-2xl print:max-w-none print:w-[210mm] print:shadow-none"
+                  className="relative mx-auto w-full max-w-[760px] select-none overflow-hidden bg-white shadow-2xl print:mx-0 print:max-w-none print:w-[210mm] print:shadow-none print-avoid-break"
                   style={{ aspectRatio: "594.96 / 828.32" }}
                 >
                   {/* 1. Template Asli A4 Bahasa Inggris & Arab dari contoh_printout_biodata.pdf */}
@@ -13308,10 +13317,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
           MODAL PRATINJAU FISIK / SCAN DOKUMEN DIGITAL (KTP, PASPOR, MEDICAL, VISA, DLL.)
          ========================================================= */}
       {viewingPhysicalDoc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-sm">
-          <div className="flex max-h-[94vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-sm print:static print:inset-auto print:block print:bg-white print:p-0">
+          <div className="flex max-h-[94vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl print:block print:max-h-none print:max-w-none print:overflow-visible print:rounded-none print:shadow-none">
             {/* Header Bar Viewer Fisik */}
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-slate-900 px-6 py-4 text-white">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-slate-900 px-6 py-4 text-white print:hidden">
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="rounded bg-teal-500/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-teal-300 border border-teal-400/30">
@@ -13362,7 +13371,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
             </div>
 
             {/* Navigasi Cepat 10 Berkas Milik Kandidat Ini */}
-            <div className="flex items-center gap-1.5 overflow-x-auto border-b border-slate-200 bg-slate-50 px-6 py-2.5">
+            <div className="flex items-center gap-1.5 overflow-x-auto border-b border-slate-200 bg-slate-50 px-6 py-2.5 print:hidden">
               <span className="mr-1 shrink-0 text-[11px] font-bold text-slate-500">
                 Pindah Berkas:
               </span>
