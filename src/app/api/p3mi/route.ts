@@ -319,6 +319,8 @@ export async function POST(req: NextRequest) {
       "UPDATE_VACANCY",
       "DELETE_VACANCY",
       "TOGGLE_VACANCY_PUBLISH",
+      "CREATE_SPONSOR_SUBMISSION",
+      "DELETE_SPONSOR_SUBMISSION",
     ];
 
     if (
@@ -1890,8 +1892,10 @@ export async function POST(req: NextRequest) {
       const {
         sponsorId,
         branchId,
-        sourceMethod = "FORM_DIGITAL_SPONSOR",
-        physicalFormImageUrl = "/form-pendaftaran-asli.jpg",
+        sourceMethod = "SCAN_FORM_FISIK",
+        interviewMethod = "VIDEO_CALL",
+        processTrack = "REKOM",
+        physicalFormImageUrl,
         fullName,
         nik,
         gender = "P",
@@ -1905,38 +1909,225 @@ export async function POST(req: NextRequest) {
         destinationCountry = "Arab Saudi",
         jobSector = "Housekeeping & Caregiver",
         registrationForm,
-      } = body.payload;
+      } = body.payload || {};
+
+      const cleanFullName = String(fullName || "").trim();
+      if (!cleanFullName) {
+        return NextResponse.json(
+          { ok: false, error: "Nama lengkap CPMI wajib diisi." },
+          { status: 400 }
+        );
+      }
+
+      const cleanNik = nik ? String(nik).trim() : "";
+      if (cleanNik) {
+        if (!/^\d{16}$/.test(cleanNik)) {
+          return NextResponse.json(
+            {
+              ok: false,
+              error: "NIK harus terdiri dari tepat 16 digit angka (atau kosongkan jika menyusul).",
+            },
+            { status: 400 }
+          );
+        }
+        const existingCandidate = db.candidates.find((c) => c.nik === cleanNik);
+        if (existingCandidate) {
+          return NextResponse.json(
+            {
+              ok: false,
+              duplicate: true,
+              error: `NIK ${cleanNik} sudah terdaftar di database CPMI atas nama ${existingCandidate.fullName} (${existingCandidate.regNumber}).`,
+            },
+            { status: 409 }
+          );
+        }
+        const existingPendingSub = (db.sponsorSubmissions || []).find(
+          (s) => s.status === "MENUNGGU_DATA_ENTRY" && s.nik === cleanNik
+        );
+        if (existingPendingSub) {
+          return NextResponse.json(
+            {
+              ok: false,
+              duplicate: true,
+              error: `NIK ${cleanNik} sudah ada di dalam antrean (${existingPendingSub.submissionCode} · ${existingPendingSub.fullName}).`,
+            },
+            { status: 409 }
+          );
+        }
+      }
 
       const spObj = db.sponsors.find((s) => s.id === sponsorId) || db.sponsors[0];
       if (!db.sponsorSubmissions) db.sponsorSubmissions = [];
+
+      const maxSeq = db.sponsorSubmissions.reduce((max, s) => {
+        const m = s.submissionCode?.match(/\/(\d+)$/);
+        const n = m ? Number(m[1]) : 0;
+        return n > max ? n : max;
+      }, 0);
+      const nextCode = `FORM-F4/2026/${String(maxSeq + 1).padStart(4, "0")}`;
+
+      const rawReg = (registrationForm || {}) as Partial<OfficialRegistrationForm>;
+      const resolvedTrack = (processTrack || rawReg.processTrack || "REKOM") as "REKOM" | "NON_REKOM";
+      const resolvedNickname =
+        String(rawReg.nickname || "").trim() || cleanFullName.split(/\s+/)[0] || cleanFullName;
+
+      const normalizedRegForm: OfficialRegistrationForm = {
+        nickname: resolvedNickname,
+        realAge: rawReg.realAge ? Number(rawReg.realAge) : undefined,
+        heightCm: Number(rawReg.heightCm || 0),
+        weightKg: Number(rawReg.weightKg || 0),
+        religion: String(rawReg.religion || "Islam"),
+        postalCode: String(rawReg.postalCode || ""),
+        graduationYear: String(rawReg.graduationYear || ""),
+        ktpOrPassportNo: cleanNik || String(rawReg.ktpOrPassportNo || ""),
+        fatherName: String(rawReg.fatherName || "").trim(),
+        fatherAge: Number(rawReg.fatherAge || 0),
+        motherName: String(rawReg.motherName || "").trim(),
+        motherAge: Number(rawReg.motherAge || 0),
+        paternalGrandfatherName: String(rawReg.paternalGrandfatherName || "").trim(),
+        spouseOrGuardianName: String(rawReg.spouseOrGuardianName || "").trim(),
+        spouseAge: Number(rawReg.spouseAge || 0),
+        spouseOccupation: String(rawReg.spouseOccupation || ""),
+        childrenTotalCount: Number(rawReg.childrenTotalCount || 0),
+        firstChildAge: String(rawReg.firstChildAge || "-"),
+        lastChildAge: String(rawReg.lastChildAge || "-"),
+        boysCountAndAges: String(rawReg.boysCountAndAges || "-"),
+        girlsCountAndAges: String(rawReg.girlsCountAndAges || "-"),
+        childOrder: Number(rawReg.childOrder || 1),
+        siblingsCount: Number(rawReg.siblingsCount || 1),
+        emergencyContactName: String(rawReg.emergencyContactName || "").trim(),
+        emergencyContactRelation: String(rawReg.emergencyContactRelation || "Suami / Orang Tua"),
+        emergencyContactPhone: String(rawReg.emergencyContactPhone || "").trim(),
+        workExperience1: String(rawReg.workExperience1 || ""),
+        workExperience2: String(rawReg.workExperience2 || ""),
+        overseasExperiences: rawReg.overseasExperiences || [
+          { no: 1, countryAndCity: "", duration: "", period: "", returnStatus: "NONE", remarks: "" },
+          { no: 2, countryAndCity: "", duration: "", period: "", returnStatus: "NONE", remarks: "" },
+          { no: 3, countryAndCity: "", duration: "", period: "", returnStatus: "NONE", remarks: "" },
+          { no: 4, countryAndCity: "", duration: "", period: "", returnStatus: "NONE", remarks: "" },
+        ],
+        overseasExperienceNotes: String(rawReg.overseasExperienceNotes || ""),
+        arabicLevelF4: rawReg.arabicLevelF4 || "TIDAK_BISA",
+        arabicNotesF4: String(rawReg.arabicNotesF4 || ""),
+        englishLevelF4: rawReg.englishLevelF4 || "TIDAK_BISA",
+        englishNotesF4: String(rawReg.englishNotesF4 || ""),
+        willingCareBaby: rawReg.willingCareBaby ?? true,
+        willingCareBabyNotes: String(rawReg.willingCareBabyNotes || ""),
+        willingCareElderly: rawReg.willingCareElderly ?? true,
+        willingCareElderlyNotes: String(rawReg.willingCareElderlyNotes || ""),
+        willingHousekeeping: rawReg.willingHousekeeping ?? true,
+        willingHousekeepingNotes: String(rawReg.willingHousekeepingNotes || ""),
+        arabicCookingSkills: rawReg.arabicCookingSkills || [],
+        desiredJobCleaner: rawReg.desiredJobCleaner ?? true,
+        desiredJobFactory: rawReg.desiredJobFactory ?? false,
+        desiredJobNurse: rawReg.desiredJobNurse ?? true,
+        desiredJobHospitality: rawReg.desiredJobHospitality ?? false,
+        desiredJobOther: rawReg.desiredJobOther ?? false,
+        desiredJobOtherText: String(rawReg.desiredJobOtherText || ""),
+        docHandover: rawReg.docHandover || {
+          ktp: "NONE",
+          kk: "NONE",
+          akteKelahiran: "NONE",
+          izinKeluarga: "NONE",
+          izinSuami: "NONE",
+          sttbIjazah: "NONE",
+          kartuBpjs: "NONE",
+          skck: "NONE",
+          paspor: "NONE",
+          otherDoc8Name: "",
+          otherDoc8Status: "NONE",
+          otherDoc9Name: "",
+          otherDoc9Status: "NONE",
+        },
+        languageSkills: rawReg.languageSkills || {
+          english: "CUKUP",
+          mandarin: "BURUK",
+          arabic: "CUKUP",
+          otherLanguageName: "",
+          otherLanguageLevel: "NONE",
+        },
+        acceptanceDecision: rawReg.acceptanceDecision || "PENDING",
+        accByName: String(rawReg.accByName || actorName || ""),
+        interviewMethod,
+        processTrack: resolvedTrack,
+        fullBodyPhotoUrl: String(rawReg.fullBodyPhotoUrl || ""),
+        candidateNotes: String(rawReg.candidateNotes || ""),
+        sponsorOfficerName: spObj
+          ? `${spObj.name} (${spObj.code})`
+          : String(rawReg.sponsorOfficerName || "Sponsor Lapangan"),
+        sponsorOfficerPhone: spObj?.phone || String(rawReg.sponsorOfficerPhone || "-"),
+        sponsorNotes: String(rawReg.sponsorNotes || "").trim(),
+        receivedByPtOfficer: String(rawReg.receivedByPtOfficer || actorName || "Petugas PT."),
+        formSignedDate: String(rawReg.formSignedDate || new Date().toISOString().slice(0, 10)),
+      };
+
       const newSub: SponsorFormSubmission = {
         id: `sub-form-${Date.now()}`,
-        submissionCode: `FORM-SP/2026/040${db.sponsorSubmissions.length + 1}`,
+        submissionCode: nextCode,
         submittedAt: nowTimestamp(),
-        sponsorId: spObj?.id || "sp-1",
+        sponsorId: spObj?.id || "",
         sponsorName: spObj ? `${spObj.name} (${spObj.code})` : "Sponsor Lapangan",
-        sponsorPhone: spObj?.phone || "0812-0000-0000",
+        sponsorPhone: spObj?.phone || "-",
         branchId: branchId || spObj?.branchId || "br-idm",
         status: "MENUNGGU_DATA_ENTRY",
         sourceMethod,
-        physicalFormImageUrl,
-        fullName: String(fullName || "Calon PMI Baru").trim(),
-        nik: nik ? String(nik).trim() : undefined,
+        interviewMethod,
+        processTrack: resolvedTrack,
+        physicalFormImageUrl: physicalFormImageUrl || undefined,
+        fullName: cleanFullName,
+        nik: cleanNik || undefined,
         gender,
-        avatarUrl,
-        birthPlace,
-        birthDate,
-        phone,
-        address,
+        avatarUrl: avatarUrl || undefined,
+        birthPlace: String(birthPlace || "").trim(),
+        birthDate: String(birthDate || "").trim(),
+        phone: String(phone || "").trim(),
+        address: String(address || "").trim(),
         maritalStatus,
         education,
         destinationCountry: destinationCountry as DestinationCountry,
-        jobSector,
-        registrationForm: registrationForm as OfficialRegistrationForm,
+        jobSector: String(jobSector || "Housekeeping & Caregiver").trim(),
+        registrationForm: normalizedRegForm,
       };
       db.sponsorSubmissions.unshift(newSub);
+      db.auditLogs.unshift({
+        id: `aud-${Date.now()}`,
+        candidateName: newSub.fullName,
+        actorName: actorName || "Admin Pusat",
+        actorRole: actorRole as UserRole,
+        branchName: branchName || "Kantor Pusat Jakarta",
+        actionType: "CANDIDATE_CREATED",
+        summary: `Menambahkan Antrean Interview CPMI Baru (${newSub.submissionCode}) — ${newSub.fullName}`,
+        details: `Sponsor: ${newSub.sponsorName} · Tujuan: ${newSub.destinationCountry} · Jalur: ${resolvedTrack} · Metode: ${interviewMethod}`,
+        timestamp: nowTimestamp(),
+      });
       writeDb(db);
       return NextResponse.json({ ok: true, submission: newSub, db });
+    }
+
+    if (action === "DELETE_SPONSOR_SUBMISSION") {
+      const { submissionId } = body.payload || {};
+      if (!db.sponsorSubmissions) db.sponsorSubmissions = [];
+      const idx = db.sponsorSubmissions.findIndex((s) => s.id === submissionId);
+      if (idx === -1) {
+        return NextResponse.json(
+          { ok: false, error: "Data antrean tidak ditemukan." },
+          { status: 404 }
+        );
+      }
+      const [removed] = db.sponsorSubmissions.splice(idx, 1);
+      db.auditLogs.unshift({
+        id: `aud-${Date.now()}`,
+        candidateName: removed.fullName,
+        actorName: actorName || "Admin Pusat",
+        actorRole: actorRole as UserRole,
+        branchName: branchName || "Kantor Pusat Jakarta",
+        actionType: "MASTER_DATA_UPDATED",
+        summary: `Menghapus Antrean Hasil Interview (${removed.submissionCode}) — ${removed.fullName}`,
+        details: `Status antrean saat dihapus: ${removed.status}.`,
+        timestamp: nowTimestamp(),
+      });
+      writeDb(db);
+      return NextResponse.json({ ok: true, deletedId: removed.id, db });
     }
 
     if (action === "UPDATE_CANDIDATE") {

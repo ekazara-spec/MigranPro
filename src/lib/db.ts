@@ -44,6 +44,7 @@ export interface DatabaseSchema {
   sponsors2026ExcelImported?: boolean;
   demoCpmiTrimmedTo4?: boolean;
   demoVacanciesTrimmedTo2?: boolean;
+  demoSponsorSubmissionsCleared?: boolean;
   tenants?: TenantCompany[];
   branches: Branch[];
   sponsors: Sponsor[];
@@ -1365,6 +1366,8 @@ function createInitialSeed(): DatabaseSchema {
     foreignAgencies: createInitialForeignAgencies(),
     medicalClinics: createInitialMedicalClinics(),
     bpjsFinancingPartners: createInitialBpjsFinancing(),
+    sponsorSubmissions: [],
+    demoSponsorSubmissionsCleared: true,
     whatsAppLogs: createInitialWhatsAppLogs(),
     cashJournals: createInitialCashJournals(),
     cashAdvances: createInitialCashAdvances(),
@@ -3175,12 +3178,18 @@ export function syncExpirationsAndTasks(db: DatabaseSchema): void {
     if (!db.employerInterviews || db.employerInterviews.length === 0) {
       db.employerInterviews = createInitialEmployerInterviews();
     }
-    if (
-      !db.sponsorSubmissions ||
-      db.sponsorSubmissions.length === 0 ||
-      !db.sponsorSubmissions[0]?.registrationForm?.overseasExperiences
-    ) {
-      db.sponsorSubmissions = createInitialSponsorSubmissions();
+    if (!db.demoSponsorSubmissionsCleared) {
+      const demoSubmissionIds = new Set([
+        "sub-form-001",
+        "sub-form-002",
+        "sub-form-003",
+      ]);
+      db.sponsorSubmissions = (db.sponsorSubmissions || []).filter(
+        (s) => !demoSubmissionIds.has(s.id)
+      );
+      db.demoSponsorSubmissionsCleared = true;
+    } else if (!db.sponsorSubmissions) {
+      db.sponsorSubmissions = [];
     }
     const initialVacancies = createInitialVacancies();
     if (

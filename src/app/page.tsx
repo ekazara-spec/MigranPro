@@ -584,6 +584,52 @@ export default function PASMigranProCommandCenter() {
     "INBOX_SPONSOR" | "SCAN_DAN_WA" | "FORM_LENGKAP"
   >("INBOX_SPONSOR");
   const [activeSponsorSubmissionId, setActiveSponsorSubmissionId] = useState<string | null>(null);
+  const [showNewQueueForm, setShowNewQueueForm] = useState(false);
+  const [queueSaving, setQueueSaving] = useState(false);
+  const [confirmDeleteSubmissionId, setConfirmDeleteSubmissionId] = useState<string | null>(null);
+  const [newQueueForm, setNewQueueForm] = useState({
+    sponsorId: "",
+    branchId: "",
+    interviewMethod: "VIDEO_CALL" as "TELEPON" | "VIDEO_CALL" | "DATANG_LANGSUNG",
+    sourceMethod: "SCAN_FORM_FISIK" as SponsorFormSubmission["sourceMethod"],
+    processTrack: "REKOM" as ProcessTrack,
+    fullName: "",
+    nickname: "",
+    nik: "",
+    gender: "P" as "P" | "L",
+    phone: "",
+    birthPlace: "",
+    birthDate: "",
+    education: "SMA/SMK",
+    maritalStatus: "Belum Kawin",
+    address: "",
+    heightCm: "",
+    weightKg: "",
+    destinationCountry: "Arab Saudi" as DestinationCountry,
+    jobSector: "Housekeeping & Caregiver (SPSK Syarikah)",
+    fatherName: "",
+    motherName: "",
+    spouseOrGuardianName: "",
+    emergencyContactPhone: "",
+    sponsorNotes: "",
+    avatarUrl: "",
+    physicalFormImageUrl: "",
+    docHandover: {
+      ktp: "NONE" as DocHandoverType,
+      kk: "NONE" as DocHandoverType,
+      akteKelahiran: "NONE" as DocHandoverType,
+      izinKeluarga: "NONE" as DocHandoverType,
+      izinSuami: "NONE" as DocHandoverType,
+      sttbIjazah: "NONE" as DocHandoverType,
+      kartuBpjs: "NONE" as DocHandoverType,
+      skck: "NONE" as DocHandoverType,
+      paspor: "NONE" as DocHandoverType,
+      otherDoc8Name: "",
+      otherDoc8Status: "NONE" as DocHandoverType,
+      otherDoc9Name: "",
+      otherDoc9Status: "NONE" as DocHandoverType,
+    },
+  });
   const [physicalFormScanUrl, setPhysicalFormScanUrl] = useState<string>(
     "/form-sudah-terisi.jpg"
   );
@@ -1672,6 +1718,218 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
         details: [data.error],
       });
     }
+  }
+
+  function resetNewQueueForm(defaultSponsorId?: string, defaultBranchId?: string) {
+    setNewQueueForm({
+      sponsorId: defaultSponsorId ?? db?.sponsors?.[0]?.id ?? "",
+      branchId: defaultBranchId ?? db?.branches?.[0]?.id ?? "br-idm",
+      interviewMethod: "VIDEO_CALL",
+      sourceMethod: "SCAN_FORM_FISIK",
+      processTrack: "REKOM",
+      fullName: "",
+      nickname: "",
+      nik: "",
+      gender: "P",
+      phone: "",
+      birthPlace: "",
+      birthDate: "",
+      education: "SMA/SMK",
+      maritalStatus: "Belum Kawin",
+      address: "",
+      heightCm: "",
+      weightKg: "",
+      destinationCountry: "Arab Saudi",
+      jobSector: "Housekeeping & Caregiver (SPSK Syarikah)",
+      fatherName: "",
+      motherName: "",
+      spouseOrGuardianName: "",
+      emergencyContactPhone: "",
+      sponsorNotes: "",
+      avatarUrl: "",
+      physicalFormImageUrl: "",
+      docHandover: {
+        ktp: "NONE",
+        kk: "NONE",
+        akteKelahiran: "NONE",
+        izinKeluarga: "NONE",
+        izinSuami: "NONE",
+        sttbIjazah: "NONE",
+        kartuBpjs: "NONE",
+        skck: "NONE",
+        paspor: "NONE",
+        otherDoc8Name: "",
+        otherDoc8Status: "NONE",
+        otherDoc9Name: "",
+        otherDoc9Status: "NONE",
+      },
+    });
+  }
+
+  async function handleCreateSponsorSubmission(e: React.FormEvent) {
+    e.preventDefault();
+    const cleanName = newQueueForm.fullName.trim();
+    if (!cleanName) {
+      setToast({
+        type: "error",
+        title: "Nama Lengkap CPMI Wajib Diisi",
+        details: ["Silakan isi nama lengkap kandidat hasil interview sebelum menyimpan ke antrean."],
+      });
+      return;
+    }
+
+    const cleanNik = newQueueForm.nik.trim();
+    if (cleanNik && !/^\d{16}$/.test(cleanNik)) {
+      setToast({
+        type: "error",
+        title: "Format NIK Tidak Valid",
+        details: ["NIK harus tepat 16 digit angka, atau kosongkan jika dokumen KTP menyusul."],
+      });
+      return;
+    }
+
+    const resolvedSponsorId = newQueueForm.sponsorId || db?.sponsors?.[0]?.id || "";
+    const resolvedBranchId = newQueueForm.branchId || db?.branches?.[0]?.id || "br-idm";
+    const birthYear = newQueueForm.birthDate
+      ? Number(newQueueForm.birthDate.split("-")[0])
+      : 0;
+    const calcRealAge =
+      birthYear > 1950 && birthYear <= new Date().getFullYear()
+        ? new Date().getFullYear() - birthYear
+        : undefined;
+
+    setQueueSaving(true);
+    try {
+      const { data } = await callApi("CREATE_SPONSOR_SUBMISSION", {
+        sponsorId: resolvedSponsorId,
+        branchId: resolvedBranchId,
+        sourceMethod: newQueueForm.sourceMethod,
+        interviewMethod: newQueueForm.interviewMethod,
+        processTrack: newQueueForm.processTrack,
+        physicalFormImageUrl: newQueueForm.physicalFormImageUrl || undefined,
+        fullName: cleanName,
+        nik: cleanNik || undefined,
+        gender: newQueueForm.gender,
+        avatarUrl: newQueueForm.avatarUrl || undefined,
+        birthPlace: newQueueForm.birthPlace.trim(),
+        birthDate: newQueueForm.birthDate,
+        phone: newQueueForm.phone.trim(),
+        address: newQueueForm.address.trim(),
+        maritalStatus: newQueueForm.maritalStatus,
+        education: newQueueForm.education,
+        destinationCountry: newQueueForm.destinationCountry,
+        jobSector: newQueueForm.jobSector.trim() || "Housekeeping & Caregiver",
+        registrationForm: {
+          nickname: newQueueForm.nickname.trim() || cleanName.split(/\s+/)[0] || cleanName,
+          processTrack: newQueueForm.processTrack,
+          interviewMethod: newQueueForm.interviewMethod,
+          realAge: calcRealAge,
+          heightCm: Number(newQueueForm.heightCm || 0),
+          weightKg: Number(newQueueForm.weightKg || 0),
+          religion: "Islam",
+          postalCode: "",
+          graduationYear: "",
+          ktpOrPassportNo: cleanNik,
+          fatherName: newQueueForm.fatherName.trim(),
+          fatherAge: 0,
+          motherName: newQueueForm.motherName.trim(),
+          motherAge: 0,
+          paternalGrandfatherName: "",
+          spouseOrGuardianName: newQueueForm.spouseOrGuardianName.trim(),
+          spouseAge: 0,
+          spouseOccupation: "",
+          childrenTotalCount: 0,
+          firstChildAge: "-",
+          lastChildAge: "-",
+          boysCountAndAges: "-",
+          girlsCountAndAges: "-",
+          childOrder: 1,
+          siblingsCount: 1,
+          emergencyContactName: newQueueForm.spouseOrGuardianName.trim() || newQueueForm.fatherName.trim(),
+          emergencyContactRelation: "Suami / Orang Tua",
+          emergencyContactPhone: newQueueForm.emergencyContactPhone.trim() || newQueueForm.phone.trim(),
+          workExperience1: "",
+          workExperience2: "",
+          overseasExperiences: [
+            { no: 1, countryAndCity: "", duration: "", period: "", returnStatus: "NONE", remarks: "" },
+            { no: 2, countryAndCity: "", duration: "", period: "", returnStatus: "NONE", remarks: "" },
+            { no: 3, countryAndCity: "", duration: "", period: "", returnStatus: "NONE", remarks: "" },
+            { no: 4, countryAndCity: "", duration: "", period: "", returnStatus: "NONE", remarks: "" },
+          ],
+          overseasExperienceNotes: "",
+          arabicLevelF4: "TIDAK_BISA",
+          arabicNotesF4: "",
+          englishLevelF4: "TIDAK_BISA",
+          englishNotesF4: "",
+          willingCareBaby: true,
+          willingCareBabyNotes: "",
+          willingCareElderly: true,
+          willingCareElderlyNotes: "",
+          willingHousekeeping: true,
+          willingHousekeepingNotes: "",
+          arabicCookingSkills: [],
+          desiredJobCleaner: true,
+          desiredJobFactory: false,
+          desiredJobNurse: true,
+          desiredJobHospitality: false,
+          desiredJobOther: false,
+          desiredJobOtherText: "",
+          docHandover: newQueueForm.docHandover,
+          languageSkills: {
+            english: "CUKUP",
+            mandarin: "BURUK",
+            arabic: "CUKUP",
+            otherLanguageName: "",
+            otherLanguageLevel: "NONE",
+          },
+          acceptanceDecision: "PENDING",
+          accByName: loggedInStaff?.name || "",
+          candidateNotes: "",
+          sponsorNotes: newQueueForm.sponsorNotes.trim(),
+          receivedByPtOfficer: loggedInStaff?.name || "Petugas PT.",
+          formSignedDate: new Date().toISOString().slice(0, 10),
+        },
+      });
+      if (!data.ok) {
+        setToast({
+          type: "error",
+          title: "Gagal Menambah Antrean Interview",
+          details: [data.error || "Terjadi kesalahan saat menyimpan antrean."],
+        });
+        return;
+      }
+      resetNewQueueForm(resolvedSponsorId, resolvedBranchId);
+      setShowNewQueueForm(false);
+      setToast({
+        type: "success",
+        title: `Antrean Baru (${data.submission.submissionCode}) Berhasil Disimpan!`,
+        details: [
+          `Kandidat "${data.submission.fullName}" masuk ke daftar antrean Data Entry.`,
+        ],
+      });
+    } finally {
+      setQueueSaving(false);
+    }
+  }
+
+  async function handleDeleteSponsorSubmission(submissionId: string) {
+    const { data } = await callApi("DELETE_SPONSOR_SUBMISSION", { submissionId });
+    if (!data.ok) {
+      setToast({
+        type: "error",
+        title: "Gagal Menghapus Antrean",
+        details: [data.error || "Terjadi kesalahan saat menghapus data antrean."],
+      });
+      return;
+    }
+    if (activeSponsorSubmissionId === submissionId) {
+      setActiveSponsorSubmissionId(null);
+    }
+    setConfirmDeleteSubmissionId(null);
+    setToast({
+      type: "success",
+      title: "Antrean Hasil Interview Dihapus",
+    });
   }
 
   // Handler Salin Draft Formulir dari Antrean Sponsor ke Form Data Entry
@@ -9721,184 +9979,796 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                       </a>
                       <button
                         type="button"
-                        onClick={async () => {
-                          const randNum = Math.floor(1000 + Math.random() * 8999);
-                          const { data } = await callApi("CREATE_SPONSOR_SUBMISSION", {
-                            sponsorId: "sp-1",
-                            branchId: "br-idm",
-                            sourceMethod: "SCAN_FORM_FISIK",
-                            physicalFormImageUrl: "/form-sudah-terisi.jpg",
-                            fullName: `Nengsih Rahayu (${randNum})`,
-                            nik: `321215580998${randNum}`,
-                            gender: "P",
-                            avatarUrl: AVATAR_PRESETS[1].url,
-                            birthPlace: "Indramayu",
-                            birthDate: "1998-09-18",
-                            phone: `0812-8844-${randNum}`,
-                            address: "Desa Karangampel Kidul RT 005/002 Kec. Karangampel, Indramayu",
-                            maritalStatus: "Kawin",
-                            education: "SMA/SMK",
-                            destinationCountry: "Arab Saudi",
-                            jobSector: "Housekeeping & Caregiver (SPSK)",
-                            registrationForm: {
-                              ...regForm,
-                              nickname: "Nengsih",
-                              interviewMethod: "VIDEO_CALL",
-                              heightCm: 158,
-                              weightKg: 52,
-                              ktpOrPassportNo: `321215580998${randNum}`,
-                              fatherName: "H. Wono",
-                              fatherAge: 57,
-                              motherName: "Hj. Rohimah",
-                              motherAge: 52,
-                              spouseOrGuardianName: "Asep Saepudin",
-                              spouseAge: 34,
-                              spouseOccupation: "Wiraswasta",
-                              workExperience1:
-                                "2021 - 2024 : Asisten Rumah Tangga & Lansia di Jakarta",
-                              workExperience2: "2024 - 2025 : Pelatihan Bahasa Arab & Caregiving",
-                              sponsorOfficerName: "Kang Dedi Kusnadi (PL-IDM-001)",
-                              sponsorOfficerPhone: "0812-2301-4455",
-                              sponsorNotes:
-                                "Sudah di-interview via Video Call oleh Petugas PT Panca, blanko F4 fisik telah diisi manual & di-scan untuk diinput ke sistem.",
-                            },
-                          });
-                          if (data.ok) {
-                            setToast({
-                              type: "success",
-                              title: `Data Hasil Interview (${data.submission.submissionCode}) Masuk ke Antrean Input Sistem!`,
-                            });
+                        onClick={() => {
+                          if (!showNewQueueForm) {
+                            resetNewQueueForm(
+                              newQueueForm.sponsorId || db?.sponsors?.[0]?.id || "",
+                              newQueueForm.branchId || db?.branches?.[0]?.id || "br-idm"
+                            );
                           }
+                          setShowNewQueueForm((prev) => !prev);
                         }}
-                        className="rounded-xl bg-emerald-700 px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-800"
+                        className={`rounded-xl px-3.5 py-2 text-xs font-bold shadow-xs transition ${
+                          showNewQueueForm
+                            ? "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                            : "bg-emerald-700 text-white hover:bg-emerald-800"
+                        }`}
                       >
-                        + Tambah Antrean Hasil Interview Baru
+                        {showNewQueueForm
+                          ? "✕ Tutup Form Input Antrean"
+                          : "+ Tambah Antrean Hasil Interview Baru"}
                       </button>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-                    {(db.sponsorSubmissions || []).map((sub) => {
-                      const isPending = sub.status === "MENUNGGU_DATA_ENTRY";
-                      const rf = sub.registrationForm;
-                      const asliDocs = Object.entries(rf.docHandover)
-                        .filter(
-                          ([k, v]) =>
-                            v === "ASLI" && !["otherDoc8Name", "otherDoc9Name"].includes(k)
-                        )
-                        .map(([k]) => k.toUpperCase());
-
-                      return (
-                        <div
-                          key={sub.id}
-                          className={`flex flex-col justify-between rounded-2xl border p-4 shadow-xs transition ${
-                            isPending
-                              ? "border-sky-200 bg-white hover:border-sky-400"
-                              : "border-slate-200 bg-slate-50/80 opacity-85"
-                          }`}
+                  {showNewQueueForm && (
+                    <form
+                      onSubmit={handleCreateSponsorSubmission}
+                      className="rounded-2xl border-2 border-emerald-500/40 bg-white p-5 shadow-sm space-y-4 text-xs"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                        <div>
+                          <span className="rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase text-emerald-900">
+                            FORM INPUT ANTREAN NYATA · INTERVIEW & INFO AWAL SPONSOR
+                          </span>
+                          <h4 className="mt-1 text-sm font-bold text-slate-900">
+                            Catat Hasil Interview / Titipan Kandidat Baru dari Sponsor ke Antrean Data Entry
+                          </h4>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setShowNewQueueForm(false)}
+                          className="rounded-lg border border-slate-200 px-2.5 py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-50"
                         >
-                          <div>
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="rounded bg-slate-100 px-2 py-0.5 font-mono text-[10px] font-bold text-slate-700">
-                                {sub.submissionCode}
-                              </span>
-                              <span
-                                className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold ${
-                                  isPending
-                                    ? "bg-amber-100 text-amber-900"
-                                    : "bg-emerald-100 text-emerald-800"
+                          Batal
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
+                        <div>
+                          <label className="mb-1 block font-bold text-slate-700">
+                            Sponsor / PL Pengirim *
+                          </label>
+                          <select
+                            value={newQueueForm.sponsorId || db?.sponsors?.[0]?.id || ""}
+                            onChange={(e) => {
+                              const sp = db.sponsors.find((s) => s.id === e.target.value);
+                              setNewQueueForm((prev) => ({
+                                ...prev,
+                                sponsorId: e.target.value,
+                                branchId: sp?.branchId || prev.branchId,
+                              }));
+                            }}
+                            className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-xs text-slate-900"
+                          >
+                            {(db.sponsors || []).map((sp) => (
+                              <option key={sp.id} value={sp.id}>
+                                {sp.code} — {sp.name} ({sp.area})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block font-bold text-slate-700">
+                            Cabang Penerima
+                          </label>
+                          <select
+                            value={newQueueForm.branchId || db?.branches?.[0]?.id || "br-idm"}
+                            onChange={(e) =>
+                              setNewQueueForm((prev) => ({ ...prev, branchId: e.target.value }))
+                            }
+                            className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-xs text-slate-900"
+                          >
+                            {(db.branches || []).map((br) => (
+                              <option key={br.id} value={br.id}>
+                                {br.name} ({br.city})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block font-bold text-slate-700">
+                            Metode Interview Petugas PT
+                          </label>
+                          <select
+                            value={newQueueForm.interviewMethod}
+                            onChange={(e) =>
+                              setNewQueueForm((prev) => ({
+                                ...prev,
+                                interviewMethod: e.target.value as
+                                  | "TELEPON"
+                                  | "VIDEO_CALL"
+                                  | "DATANG_LANGSUNG",
+                              }))
+                            }
+                            className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-xs text-slate-900"
+                          >
+                            <option value="VIDEO_CALL">Video Call (Petugas PT)</option>
+                            <option value="TELEPON">Telepon (Petugas PT)</option>
+                            <option value="DATANG_LANGSUNG">Tatap Muka di Kantor</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block font-bold text-slate-700">
+                            Jalur Penempatan
+                          </label>
+                          <select
+                            value={newQueueForm.processTrack}
+                            onChange={(e) =>
+                              setNewQueueForm((prev) => ({
+                                ...prev,
+                                processTrack: e.target.value as ProcessTrack,
+                              }))
+                            }
+                            className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-xs text-slate-900"
+                          >
+                            <option value="REKOM">Jalur Rekom (SISKOP2MI)</option>
+                            <option value="NON_REKOM">Jalur Non-Rekom (Langsung Tiket)</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
+                        <div className="lg:col-span-2">
+                          <label className="mb-1 block font-bold text-slate-700">
+                            Nama Lengkap CPMI (sesuai KTP/KK) *
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={newQueueForm.fullName}
+                            onChange={(e) =>
+                              setNewQueueForm((prev) => ({ ...prev, fullName: e.target.value }))
+                            }
+                            placeholder="Contoh: Siti Aminah Binti Darman"
+                            className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-xs text-slate-900"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block font-bold text-slate-700">
+                            Nama Panggilan
+                          </label>
+                          <input
+                            type="text"
+                            value={newQueueForm.nickname}
+                            onChange={(e) =>
+                              setNewQueueForm((prev) => ({ ...prev, nickname: e.target.value }))
+                            }
+                            placeholder="Opsional"
+                            className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-xs text-slate-900"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block font-bold text-slate-700">
+                            NIK 16 Digit (Kosongkan jika menyusul)
+                          </label>
+                          <input
+                            type="text"
+                            maxLength={16}
+                            value={newQueueForm.nik}
+                            onChange={(e) =>
+                              setNewQueueForm((prev) => ({
+                                ...prev,
+                                nik: e.target.value.replace(/\D/g, ""),
+                              }))
+                            }
+                            placeholder="16 digit angka"
+                            className="w-full rounded-lg border border-slate-300 px-2.5 py-2 font-mono text-xs text-slate-900"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block font-bold text-slate-700">
+                            Jenis Kelamin
+                          </label>
+                          <select
+                            value={newQueueForm.gender}
+                            onChange={(e) =>
+                              setNewQueueForm((prev) => ({
+                                ...prev,
+                                gender: e.target.value as "P" | "L",
+                              }))
+                            }
+                            className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-xs text-slate-900"
+                          >
+                            <option value="P">Perempuan (P)</option>
+                            <option value="L">Laki-laki (L)</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block font-bold text-slate-700">
+                            No. HP / WhatsApp CPMI
+                          </label>
+                          <input
+                            type="text"
+                            value={newQueueForm.phone}
+                            onChange={(e) =>
+                              setNewQueueForm((prev) => ({ ...prev, phone: e.target.value }))
+                            }
+                            placeholder="08xx-xxxx-xxxx"
+                            className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-xs text-slate-900"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block font-bold text-slate-700">
+                            Tempat Lahir
+                          </label>
+                          <input
+                            type="text"
+                            value={newQueueForm.birthPlace}
+                            onChange={(e) =>
+                              setNewQueueForm((prev) => ({ ...prev, birthPlace: e.target.value }))
+                            }
+                            placeholder="Kota / Kabupaten"
+                            className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-xs text-slate-900"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block font-bold text-slate-700">
+                            Tanggal Lahir
+                          </label>
+                          <input
+                            type="date"
+                            value={newQueueForm.birthDate}
+                            onChange={(e) =>
+                              setNewQueueForm((prev) => ({ ...prev, birthDate: e.target.value }))
+                            }
+                            className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-xs text-slate-900"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block font-bold text-slate-700">
+                            Pendidikan Terakhir
+                          </label>
+                          <select
+                            value={newQueueForm.education}
+                            onChange={(e) =>
+                              setNewQueueForm((prev) => ({ ...prev, education: e.target.value }))
+                            }
+                            className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-xs text-slate-900"
+                          >
+                            <option value="SD">SD</option>
+                            <option value="SMP">SMP</option>
+                            <option value="SMA/SMK">SMA/SMK</option>
+                            <option value="Diploma/Sarjana">Diploma/Sarjana</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block font-bold text-slate-700">
+                            Status Perkawinan
+                          </label>
+                          <select
+                            value={newQueueForm.maritalStatus}
+                            onChange={(e) =>
+                              setNewQueueForm((prev) => ({
+                                ...prev,
+                                maritalStatus: e.target.value,
+                              }))
+                            }
+                            className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-xs text-slate-900"
+                          >
+                            <option value="Belum Kawin">Belum Kawin</option>
+                            <option value="Kawin">Kawin</option>
+                            <option value="Cerai Hidup">Cerai Hidup</option>
+                            <option value="Cerai Mati">Cerai Mati</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block font-bold text-slate-700">
+                            Negara Tujuan
+                          </label>
+                          <select
+                            value={newQueueForm.destinationCountry}
+                            onChange={(e) =>
+                              setNewQueueForm((prev) => ({
+                                ...prev,
+                                destinationCountry: e.target.value as DestinationCountry,
+                              }))
+                            }
+                            className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-xs text-slate-900"
+                          >
+                            <option value="Arab Saudi">Arab Saudi</option>
+                            <option value="Uni Emirat Arab (UAE)">Uni Emirat Arab (UAE)</option>
+                            <option value="Qatar">Qatar</option>
+                            <option value="Kuwait">Kuwait</option>
+                            <option value="Bahrain">Bahrain</option>
+                            <option value="Oman">Oman</option>
+                            <option value="Yordania">Yordania</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block font-bold text-slate-700">
+                            Sektor / Jabatan
+                          </label>
+                          <input
+                            type="text"
+                            value={newQueueForm.jobSector}
+                            onChange={(e) =>
+                              setNewQueueForm((prev) => ({ ...prev, jobSector: e.target.value }))
+                            }
+                            placeholder="Housekeeping & Caregiver"
+                            className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-xs text-slate-900"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block font-bold text-slate-700">
+                            Tinggi Badan (cm) & Berat (kg)
+                          </label>
+                          <div className="grid grid-cols-2 gap-2">
+                            <input
+                              type="number"
+                              min={100}
+                              max={220}
+                              value={newQueueForm.heightCm}
+                              onChange={(e) =>
+                                setNewQueueForm((prev) => ({ ...prev, heightCm: e.target.value }))
+                              }
+                              placeholder="Tinggi cm"
+                              className="w-full rounded-lg border border-slate-300 px-2 py-2 text-xs text-slate-900"
+                            />
+                            <input
+                              type="number"
+                              min={30}
+                              max={150}
+                              value={newQueueForm.weightKg}
+                              onChange={(e) =>
+                                setNewQueueForm((prev) => ({ ...prev, weightKg: e.target.value }))
+                              }
+                              placeholder="Berat kg"
+                              className="w-full rounded-lg border border-slate-300 px-2 py-2 text-xs text-slate-900"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="lg:col-span-3">
+                          <label className="mb-1 block font-bold text-slate-700">
+                            Alamat Lengkap
+                          </label>
+                          <input
+                            type="text"
+                            value={newQueueForm.address}
+                            onChange={(e) =>
+                              setNewQueueForm((prev) => ({ ...prev, address: e.target.value }))
+                            }
+                            placeholder="Desa/Kelurahan, RT/RW, Kecamatan, Kabupaten"
+                            className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-xs text-slate-900"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
+                        <div>
+                          <label className="mb-1 block font-bold text-slate-700">
+                            Nama Bapak Kandung
+                          </label>
+                          <input
+                            type="text"
+                            value={newQueueForm.fatherName}
+                            onChange={(e) =>
+                              setNewQueueForm((prev) => ({ ...prev, fatherName: e.target.value }))
+                            }
+                            placeholder="Nama ayah"
+                            className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-xs text-slate-900"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block font-bold text-slate-700">
+                            Nama Ibu Kandung
+                          </label>
+                          <input
+                            type="text"
+                            value={newQueueForm.motherName}
+                            onChange={(e) =>
+                              setNewQueueForm((prev) => ({ ...prev, motherName: e.target.value }))
+                            }
+                            placeholder="Nama ibu"
+                            className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-xs text-slate-900"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block font-bold text-slate-700">
+                            Nama Suami / Wali
+                          </label>
+                          <input
+                            type="text"
+                            value={newQueueForm.spouseOrGuardianName}
+                            onChange={(e) =>
+                              setNewQueueForm((prev) => ({
+                                ...prev,
+                                spouseOrGuardianName: e.target.value,
+                              }))
+                            }
+                            placeholder="Nama suami / wali izin"
+                            className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-xs text-slate-900"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block font-bold text-slate-700">
+                            No. HP Keluarga / Darurat
+                          </label>
+                          <input
+                            type="text"
+                            value={newQueueForm.emergencyContactPhone}
+                            onChange={(e) =>
+                              setNewQueueForm((prev) => ({
+                                ...prev,
+                                emergencyContactPhone: e.target.value,
+                              }))
+                            }
+                            placeholder="08xx-xxxx-xxxx"
+                            className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-xs text-slate-900"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                        <p className="mb-2 font-bold text-slate-700">
+                          Dokumen Fisik Awal yang Diserahkan (Klik untuk ubah status: Belum / Copy / Asli):
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {(
+                            [
+                              ["ktp", "KTP"],
+                              ["kk", "KK"],
+                              ["akteKelahiran", "Akta Lahir"],
+                              ["izinKeluarga", "Izin Orang Tua"],
+                              ["izinSuami", "Izin Suami"],
+                              ["sttbIjazah", "Ijazah/STTB"],
+                              ["kartuBpjs", "Kartu BPJS"],
+                              ["skck", "SKCK"],
+                              ["paspor", "Paspor Lama"],
+                            ] as const
+                          ).map(([key, label]) => {
+                            const val = newQueueForm.docHandover[key];
+                            const nextVal: DocHandoverType =
+                              val === "NONE" ? "ASLI" : val === "ASLI" ? "COPY" : "NONE";
+                            return (
+                              <button
+                                key={key}
+                                type="button"
+                                onClick={() =>
+                                  setNewQueueForm((prev) => ({
+                                    ...prev,
+                                    docHandover: {
+                                      ...prev.docHandover,
+                                      [key]: nextVal,
+                                    },
+                                  }))
+                                }
+                                className={`rounded-lg border px-2.5 py-1 text-[11px] font-bold transition ${
+                                  val === "ASLI"
+                                    ? "border-teal-500 bg-teal-100 text-teal-900"
+                                    : val === "COPY"
+                                    ? "border-sky-400 bg-sky-100 text-sky-900"
+                                    : "border-slate-300 bg-white text-slate-500 hover:bg-slate-100"
                                 }`}
                               >
-                                {isPending
-                                  ? "⏳ MENUNGGU DATA ENTRY"
-                                  : `✓ SUDAH DIINPUT (${sub.processedRegNumber || "TERDAFTAR"})`}
-                              </span>
-                            </div>
+                                {label}: {val === "NONE" ? "Belum" : val}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
 
-                            <div className="mt-3 flex items-center gap-3">
-                              <img
-                                src={sub.avatarUrl || AVATAR_PRESETS[0].url}
-                                alt={sub.fullName}
-                                className="h-14 w-11 shrink-0 rounded-lg border border-slate-300 object-cover"
-                              />
-                              <div>
-                                <h5 className="text-sm font-bold text-slate-900">
-                                  {sub.fullName}{" "}
-                                  <span className="text-xs font-normal text-slate-500">
-                                    ({rf.nickname})
-                                  </span>
-                                </h5>
-                                <p className="font-mono text-[11px] font-semibold text-teal-700">
-                                  NIK: {sub.nik || "Menyusul"}
-                                </p>
-                                <p className="text-[11px] text-slate-600">
-                                  Tujuan: <strong>{sub.destinationCountry}</strong> · {sub.jobSector}
-                                </p>
-                              </div>
-                            </div>
+                      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                        <div className="md:col-span-2">
+                          <label className="mb-1 block font-bold text-slate-700">
+                            Catatan Hasil Interview Petugas PT
+                          </label>
+                          <textarea
+                            rows={2}
+                            value={newQueueForm.sponsorNotes}
+                            onChange={(e) =>
+                              setNewQueueForm((prev) => ({
+                                ...prev,
+                                sponsorNotes: e.target.value,
+                              }))
+                            }
+                            placeholder="Ringkasan hasil interview telepon/video call, kesiapan berangkat, kondisi fisik, atau kekurangan berkas..."
+                            className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-xs text-slate-900"
+                          />
+                        </div>
 
-                            <div className="mt-3 space-y-1.5 rounded-xl bg-slate-50 p-3 text-[11px] text-slate-600 border border-slate-100">
-                              <div className="flex justify-between">
-                                <span>Sponsor Pengirim:</span>
-                                <strong className="text-slate-900">{sub.sponsorName}</strong>
-                              </div>
-                              <div className="flex justify-between">
-                                <span>Tinggi / Berat & TTL:</span>
-                                <strong className="text-slate-900">
-                                  {rf.heightCm} cm / {rf.weightKg} kg · {sub.birthPlace},{" "}
-                                  {sub.birthDate}
-                                </strong>
-                              </div>
-                              <div className="flex justify-between">
-                                <span>Orang Tua & Wali:</span>
-                                <strong className="text-slate-900">
-                                  Bpk. {rf.fatherName} ({rf.fatherAge}Th) / {rf.spouseOrGuardianName}
-                                </strong>
-                              </div>
-                              <div>
-                                <span className="block text-slate-500">
-                                  Dokumen Fisik Diserahkan (ASLI):
-                                </span>
-                                <div className="mt-1 flex flex-wrap gap-1">
-                                  {asliDocs.map((d) => (
-                                    <span
-                                      key={d}
-                                      className="rounded bg-teal-100 px-1.5 py-0.5 text-[9px] font-bold text-teal-900"
-                                    >
-                                      ✓ {d} ASLI
-                                    </span>
-                                  ))}
-                                </div>
-                              </div>
-                              <p className="italic text-slate-500 pt-1">
-                                &ldquo;{rf.sponsorNotes}&rdquo;
-                              </p>
+                        <div className="space-y-2">
+                          <div>
+                            <label className="mb-1 block font-bold text-slate-700">
+                              Upload Scan Blanko F4 / Foto Pas Foto (Opsional)
+                            </label>
+                            <div className="flex flex-wrap gap-2">
+                              <label className="cursor-pointer rounded-lg border border-sky-300 bg-sky-50 px-2.5 py-1.5 text-[11px] font-bold text-sky-900 hover:bg-sky-100">
+                                {newQueueForm.physicalFormImageUrl
+                                  ? "✓ Scan F4 Terlampir"
+                                  : "📄 Scan Blanko F4"}
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (!file) return;
+                                    const reader = new FileReader();
+                                    reader.onload = () => {
+                                      setNewQueueForm((prev) => ({
+                                        ...prev,
+                                        physicalFormImageUrl: String(reader.result || ""),
+                                      }));
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }}
+                                />
+                              </label>
+                              <label className="cursor-pointer rounded-lg border border-slate-300 bg-slate-50 px-2.5 py-1.5 text-[11px] font-bold text-slate-800 hover:bg-slate-100">
+                                {newQueueForm.avatarUrl ? "✓ Pas Foto Terpasang" : "📷 Pas Foto CPMI"}
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (!file) return;
+                                    const reader = new FileReader();
+                                    reader.onload = () => {
+                                      setNewQueueForm((prev) => ({
+                                        ...prev,
+                                        avatarUrl: String(reader.result || ""),
+                                      }));
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }}
+                                />
+                              </label>
                             </div>
                           </div>
-
-                          <div className="mt-4 flex flex-col gap-2 border-t border-slate-100 pt-3">
+                          <div className="flex justify-end gap-2 pt-1">
                             <button
                               type="button"
-                              onClick={() => handleApplySponsorSubmission(sub)}
-                              className="w-full rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-slate-800"
+                              onClick={() => setShowNewQueueForm(false)}
+                              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50"
                             >
-                              ⚡ Salin Isi ke Form Data Entry & Verifikasi →
+                              Batal
                             </button>
                             <button
-                              type="button"
-                              onClick={() => {
-                                handleApplySponsorSubmission(sub);
-                                setRegModalTab("SCAN_DAN_WA");
-                              }}
-                              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-50"
+                              type="submit"
+                              disabled={queueSaving}
+                              className="rounded-xl bg-emerald-700 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-800 disabled:opacity-60"
                             >
-                              📸 Bandingkan dengan Scan Formulir Kertas
+                              {queueSaving ? "Menyimpan..." : "Simpan ke Antrean Data Entry"}
                             </button>
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
+                      </div>
+                    </form>
+                  )}
+
+                  {(db.sponsorSubmissions || []).length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/80 p-8 text-center">
+                      <p className="text-sm font-bold text-slate-800">
+                        Belum Ada Antrean Hasil Interview Sponsor (0 Antrean)
+                      </p>
+                      <p className="mx-auto mt-1 max-w-xl text-xs text-slate-600">
+                        Saat Sponsor menyerahkan info awal CPMI dan Petugas PT selesai melakukan interview, catat di sini agar masuk ke antrean tim Data Entry — atau langsung isi Formulir Lengkap di Tab 3.
+                      </p>
+                      {!showNewQueueForm && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            resetNewQueueForm(
+                              db?.sponsors?.[0]?.id || "",
+                              db?.branches?.[0]?.id || "br-idm"
+                            );
+                            setShowNewQueueForm(true);
+                          }}
+                          className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-emerald-700 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-800"
+                        >
+                          + Catat Antrean Hasil Interview Baru
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                      {(db.sponsorSubmissions || []).map((sub) => {
+                        const isPending = sub.status === "MENUNGGU_DATA_ENTRY";
+                        const rf = sub.registrationForm;
+                        const asliDocs = Object.entries(rf.docHandover || {})
+                          .filter(
+                            ([k, v]) =>
+                              v === "ASLI" && !["otherDoc8Name", "otherDoc9Name"].includes(k)
+                          )
+                          .map(([k]) => k.toUpperCase());
+                        const copyDocs = Object.entries(rf.docHandover || {})
+                          .filter(
+                            ([k, v]) =>
+                              v === "COPY" && !["otherDoc8Name", "otherDoc9Name"].includes(k)
+                          )
+                          .map(([k]) => k.toUpperCase());
+                        const avatarSrc = getCandidateAvatarUrl({
+                          avatarUrl: sub.avatarUrl,
+                          gender: sub.gender,
+                          fullName: sub.fullName,
+                          destinationCountry: sub.destinationCountry,
+                        });
+
+                        return (
+                          <div
+                            key={sub.id}
+                            className={`flex flex-col justify-between rounded-2xl border p-4 shadow-xs transition ${
+                              isPending
+                                ? "border-sky-200 bg-white hover:border-sky-400"
+                                : "border-slate-200 bg-slate-50/80 opacity-85"
+                            }`}
+                          >
+                            <div>
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="rounded bg-slate-100 px-2 py-0.5 font-mono text-[10px] font-bold text-slate-700">
+                                  {sub.submissionCode}
+                                </span>
+                                <span
+                                  className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold ${
+                                    isPending
+                                      ? "bg-amber-100 text-amber-900"
+                                      : "bg-emerald-100 text-emerald-800"
+                                  }`}
+                                >
+                                  {isPending
+                                    ? "⏳ MENUNGGU DATA ENTRY"
+                                    : `✓ SUDAH DIINPUT (${sub.processedRegNumber || "TERDAFTAR"})`}
+                                </span>
+                              </div>
+
+                              <div className="mt-3 flex items-center gap-3">
+                                <img
+                                  src={avatarSrc}
+                                  alt={sub.fullName}
+                                  className="h-14 w-11 shrink-0 rounded-lg border border-slate-300 object-cover"
+                                />
+                                <div>
+                                  <h5 className="text-sm font-bold text-slate-900">
+                                    {sub.fullName}{" "}
+                                    {rf.nickname && (
+                                      <span className="text-xs font-normal text-slate-500">
+                                        ({rf.nickname})
+                                      </span>
+                                    )}
+                                  </h5>
+                                  <p className="font-mono text-[11px] font-semibold text-teal-700">
+                                    NIK: {sub.nik || "Menyusul"}
+                                  </p>
+                                  <p className="text-[11px] text-slate-600">
+                                    Tujuan: <strong>{sub.destinationCountry}</strong> ·{" "}
+                                    {sub.jobSector}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="mt-3 space-y-1.5 rounded-xl border border-slate-100 bg-slate-50 p-3 text-[11px] text-slate-600">
+                                <div className="flex justify-between gap-2">
+                                  <span>Sponsor Pengirim:</span>
+                                  <strong className="text-right text-slate-900">
+                                    {sub.sponsorName}
+                                  </strong>
+                                </div>
+                                <div className="flex justify-between gap-2">
+                                  <span>Tinggi / Berat & TTL:</span>
+                                  <strong className="text-right text-slate-900">
+                                    {rf.heightCm ? `${rf.heightCm} cm` : "-"} /{" "}
+                                    {rf.weightKg ? `${rf.weightKg} kg` : "-"} ·{" "}
+                                    {sub.birthPlace || "-"}
+                                    {sub.birthDate ? `, ${sub.birthDate}` : ""}
+                                  </strong>
+                                </div>
+                                <div className="flex justify-between gap-2">
+                                  <span>Orang Tua & Wali:</span>
+                                  <strong className="text-right text-slate-900">
+                                    {rf.fatherName || "-"}
+                                    {rf.fatherAge ? ` (${rf.fatherAge}Th)` : ""} /{" "}
+                                    {rf.spouseOrGuardianName || "-"}
+                                  </strong>
+                                </div>
+                                <div>
+                                  <span className="block text-slate-500">
+                                    Dokumen Fisik Diserahkan:
+                                  </span>
+                                  {asliDocs.length === 0 && copyDocs.length === 0 ? (
+                                    <span className="mt-1 inline-block text-[10px] italic text-slate-400">
+                                      Belum ada dokumen fisik dicentang (menyusul)
+                                    </span>
+                                  ) : (
+                                    <div className="mt-1 flex flex-wrap gap-1">
+                                      {asliDocs.map((d) => (
+                                        <span
+                                          key={`asli-${d}`}
+                                          className="rounded bg-teal-100 px-1.5 py-0.5 text-[9px] font-bold text-teal-900"
+                                        >
+                                          ✓ {d} ASLI
+                                        </span>
+                                      ))}
+                                      {copyDocs.map((d) => (
+                                        <span
+                                          key={`copy-${d}`}
+                                          className="rounded bg-sky-100 px-1.5 py-0.5 text-[9px] font-bold text-sky-900"
+                                        >
+                                          • {d} COPY
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                                {rf.sponsorNotes && (
+                                  <p className="pt-1 italic text-slate-500">
+                                    &ldquo;{rf.sponsorNotes}&rdquo;
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="mt-4 flex flex-col gap-2 border-t border-slate-100 pt-3">
+                              <button
+                                type="button"
+                                onClick={() => handleApplySponsorSubmission(sub)}
+                                className="w-full rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-slate-800"
+                              >
+                                ⚡ Salin Isi ke Form Data Entry & Verifikasi →
+                              </button>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    handleApplySponsorSubmission(sub);
+                                    setRegModalTab("SCAN_DAN_WA");
+                                  }}
+                                  className="flex-1 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-50"
+                                >
+                                  📸 Scan Formulir
+                                </button>
+                                {confirmDeleteSubmissionId === sub.id ? (
+                                  <div className="flex items-center gap-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteSponsorSubmission(sub.id)}
+                                      className="rounded-xl bg-rose-600 px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-rose-700"
+                                    >
+                                      Ya, Hapus
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setConfirmDeleteSubmissionId(null)}
+                                      className="rounded-xl border border-slate-200 bg-white px-2 py-1.5 text-[11px] font-semibold text-slate-600 hover:bg-slate-50"
+                                    >
+                                      Batal
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => setConfirmDeleteSubmissionId(sub.id)}
+                                    className="rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-[11px] font-bold text-rose-700 hover:bg-rose-100"
+                                  >
+                                    🗑️ Hapus
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
 
