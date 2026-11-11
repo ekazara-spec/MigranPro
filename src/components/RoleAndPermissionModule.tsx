@@ -242,6 +242,25 @@ export default function RoleAndPermissionModule({
   const [deletingStaff, setDeletingStaff] = useState<StaffAccount | null>(null);
   const [deletingStaffBusy, setDeletingStaffBusy] = useState(false);
 
+  // State Tampilan & Aksi Database Sponsor (PL)
+  const [sponsorViewMode, setSponsorViewMode] = useState<"matrix" | "cards">("matrix");
+  const [sponsorSearchQuery, setSponsorSearchQuery] = useState("");
+  const [sponsorBranchFilter, setSponsorBranchFilter] = useState("ALL");
+  const [showAddSponsorModal, setShowAddSponsorModal] = useState(false);
+  const [newSponsorForm, setNewSponsorForm] = useState({
+    name: "",
+    phone: "",
+    area: "",
+    branchId: "ALL",
+    bankAccount: "",
+    commissionPerCpmi: 5000000,
+  });
+  const [savingAddSponsor, setSavingAddSponsor] = useState(false);
+  const [editingSponsor, setEditingSponsor] = useState<Sponsor | null>(null);
+  const [savingEditSponsor, setSavingEditSponsor] = useState(false);
+  const [deletingSponsor, setDeletingSponsor] = useState<Sponsor | null>(null);
+  const [deletingSponsorBusy, setDeletingSponsorBusy] = useState(false);
+
   // State Modal Tambah Role
   const [showAddRoleModal, setShowAddRoleModal] = useState(false);
   const [newRoleForm, setNewRoleForm] = useState({
@@ -589,6 +608,156 @@ export default function RoleAndPermissionModule({
       const matchPhone = (st.phone || "").toLowerCase().includes(q);
       const matchRole = (st.roleLabel || st.role).toLowerCase().includes(q);
       if (!matchName && !matchEmail && !matchPhone && !matchRole) return false;
+    }
+    return true;
+  });
+
+  // Handler Tambah Sponsor PL
+  async function handleCreateSponsor(e: React.FormEvent) {
+    e.preventDefault();
+    setSavingAddSponsor(true);
+    setFeedbackMsg(null);
+    try {
+      const res = await fetch("/api/p3mi", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "CREATE_SPONSOR",
+          actorName,
+          actorRole,
+          payload: {
+            name: newSponsorForm.name.trim(),
+            phone: newSponsorForm.phone.trim() || "-",
+            area: newSponsorForm.area.trim() || "-",
+            branchId:
+              newSponsorForm.branchId === "ALL"
+                ? branches[0]?.id || "br-idm"
+                : newSponsorForm.branchId,
+            bankAccount: newSponsorForm.bankAccount.trim() || "-",
+            commissionPerCpmi: Number(newSponsorForm.commissionPerCpmi) || 5000000,
+          },
+        }),
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || "Gagal menambahkan Sponsor PL.");
+
+      setFeedbackMsg({
+        type: "success",
+        text: `Sponsor / PL '${data.sponsor?.name || newSponsorForm.name}' berhasil ditambahkan.`,
+      });
+      setShowAddSponsorModal(false);
+      setNewSponsorForm({
+        name: "",
+        phone: "",
+        area: "",
+        branchId: "ALL",
+        bankAccount: "",
+        commissionPerCpmi: 5000000,
+      });
+      onRefreshDb();
+    } catch (err: unknown) {
+      setFeedbackMsg({
+        type: "error",
+        text: err instanceof Error ? err.message : "Gagal menambahkan Sponsor PL.",
+      });
+    } finally {
+      setSavingAddSponsor(false);
+    }
+  }
+
+  // Handler Edit Sponsor PL
+  async function handleUpdateSponsor(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingSponsor) return;
+    setSavingEditSponsor(true);
+    setFeedbackMsg(null);
+    try {
+      const res = await fetch("/api/p3mi", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "UPDATE_SPONSOR",
+          actorName,
+          actorRole,
+          payload: {
+            id: editingSponsor.id,
+            updates: {
+              code: editingSponsor.code.trim(),
+              name: editingSponsor.name.trim(),
+              area: editingSponsor.area.trim() || "-",
+              branchId: editingSponsor.branchId,
+              phone: editingSponsor.phone.trim() || "-",
+              bankAccount: (editingSponsor.bankAccount || "").trim() || "-",
+              commissionPerCpmi: Number(editingSponsor.commissionPerCpmi) || 0,
+            },
+          },
+        }),
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || "Gagal memperbarui data Sponsor PL.");
+
+      setFeedbackMsg({
+        type: "success",
+        text: `Data Sponsor / PL '${editingSponsor.name}' berhasil diperbarui.`,
+      });
+      setEditingSponsor(null);
+      onRefreshDb();
+    } catch (err: unknown) {
+      setFeedbackMsg({
+        type: "error",
+        text: err instanceof Error ? err.message : "Gagal memperbarui data Sponsor PL.",
+      });
+    } finally {
+      setSavingEditSponsor(false);
+    }
+  }
+
+  // Handler Hapus Sponsor PL
+  async function handleConfirmDeleteSponsor() {
+    if (!deletingSponsor) return;
+    setDeletingSponsorBusy(true);
+    setFeedbackMsg(null);
+    try {
+      const res = await fetch("/api/p3mi", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "DELETE_SPONSOR",
+          actorName,
+          actorRole,
+          payload: { id: deletingSponsor.id },
+        }),
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || "Gagal menghapus data Sponsor PL.");
+
+      setFeedbackMsg({
+        type: "success",
+        text: `Sponsor / PL '${deletingSponsor.name}' (${deletingSponsor.code}) berhasil dihapus.`,
+      });
+      setDeletingSponsor(null);
+      onRefreshDb();
+    } catch (err: unknown) {
+      setFeedbackMsg({
+        type: "error",
+        text: err instanceof Error ? err.message : "Gagal menghapus data Sponsor PL.",
+      });
+    } finally {
+      setDeletingSponsorBusy(false);
+    }
+  }
+
+  // Filter daftar sponsor untuk tampilan matrix & kartu
+  const filteredSponsors = sponsors.filter((sp) => {
+    if (sponsorBranchFilter !== "ALL" && sp.branchId !== sponsorBranchFilter) return false;
+    if (sponsorSearchQuery.trim()) {
+      const q = sponsorSearchQuery.toLowerCase();
+      const matchName = sp.name.toLowerCase().includes(q);
+      const matchCode = sp.code.toLowerCase().includes(q);
+      const matchArea = (sp.area || "").toLowerCase().includes(q);
+      const matchPhone = (sp.phone || "").toLowerCase().includes(q);
+      const matchBank = (sp.bankAccount || "").toLowerCase().includes(q);
+      if (!matchName && !matchCode && !matchArea && !matchPhone && !matchBank) return false;
     }
     return true;
   });
@@ -1431,54 +1600,251 @@ export default function RoleAndPermissionModule({
       )}
 
       {/* ============================================================
-          PANEL 4: DATABASE SPONSOR (PL)
+          PANEL 4: DATABASE SPONSOR (PL) (MATRIX BARIS KOLOM & KARTU)
          ============================================================ */}
       {activeSubTab === "sponsors" && (
-        <div className="rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-xl space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <div>
-              <h3 className="text-base font-bold text-white">
-                Database Petugas Lapangan (Sponsor / PL Rekrutmen)
-              </h3>
+        <div className="space-y-4">
+          {/* Toolbar Kontrol Database Sponsor PL */}
+          <div className="flex flex-col gap-3 rounded-xl border border-slate-700 bg-slate-900/70 p-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-sm font-bold text-white">
+                  Database Petugas Lapangan (Sponsor / PL Rekrutmen)
+                </h3>
+                <span className="rounded-full bg-amber-500/20 text-amber-300 px-2.5 py-0.5 text-[10px] font-bold border border-amber-500/30">
+                  {sponsors.length} Sponsor Terdaftar
+                </span>
+              </div>
               <p className="text-xs text-slate-400">
-                Data mitra sponsor lapangan perekrut PMI kawasan Timur Tengah.
+                Menampilkan <strong className="text-sky-300">{filteredSponsors.length}</strong> mitra sponsor lapangan perekrut PMI kawasan Timur Tengah.
               </p>
             </div>
-            <span className="rounded-full bg-amber-500/20 text-amber-300 px-3 py-1 text-xs font-bold border border-amber-500/30">
-              {sponsors.length} Sponsor Terdaftar
-            </span>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative">
+                <Search className="h-3.5 w-3.5 absolute left-2.5 top-2.5 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Cari kode, nama PL, wilayah..."
+                  value={sponsorSearchQuery}
+                  onChange={(e) => setSponsorSearchQuery(e.target.value)}
+                  className="w-48 rounded-lg border border-slate-700 bg-slate-800 pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-400 focus:border-sky-500 focus:outline-none"
+                />
+              </div>
+
+              <select
+                value={sponsorBranchFilter}
+                onChange={(e) => setSponsorBranchFilter(e.target.value)}
+                className="rounded-lg border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-xs text-slate-200 focus:border-sky-500 focus:outline-none"
+              >
+                <option value="ALL">Semua Cabang ({sponsors.length})</option>
+                {branches.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+
+              {/* Toggle Matrix Baris & Kolom vs Kartu */}
+              <div className="inline-flex rounded-lg border border-slate-700 bg-slate-950 p-0.5 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setSponsorViewMode("matrix")}
+                  className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 font-semibold transition cursor-pointer ${
+                    sponsorViewMode === "matrix"
+                      ? "bg-sky-600 text-white shadow-sm"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <Table className="h-3.5 w-3.5" />
+                  Matrix Baris &amp; Kolom
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSponsorViewMode("cards")}
+                  className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 font-semibold transition cursor-pointer ${
+                    sponsorViewMode === "cards"
+                      ? "bg-sky-600 text-white shadow-sm"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <LayoutGrid className="h-3.5 w-3.5" />
+                  Kartu
+                </button>
+              </div>
+
+              {hasStaffManagePrivilege && (
+                <button
+                  type="button"
+                  onClick={() => setShowAddSponsorModal(true)}
+                  className="flex items-center gap-1.5 rounded-lg bg-sky-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-sky-500 cursor-pointer"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Tambah Sponsor PL
+                </button>
+              )}
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {sponsors.map((sp) => {
-              const cpmiCount = candidates.filter((c) => c.sponsorId === sp.id).length;
-              return (
-                <div
-                  key={sp.id}
-                  className="rounded-xl border border-slate-800 bg-slate-950/60 p-4 space-y-2"
-                >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <span className="text-[10px] font-mono font-bold text-amber-400">
-                        {sp.code}
+          {/* TAMPILAN 1: MATRIX BARIS & KOLOM */}
+          {sponsorViewMode === "matrix" && (
+            <div className="overflow-x-auto rounded-2xl border border-slate-700 bg-slate-900 shadow-xl">
+              <table className="w-full text-left text-xs text-slate-200">
+                <thead className="bg-slate-950 text-[10px] font-bold uppercase tracking-wider text-slate-300 border-b border-slate-800">
+                  <tr>
+                    <th className="py-3 px-3 text-center w-10">No</th>
+                    <th className="py-3 px-4 min-w-[180px]">Kode &amp; Nama Sponsor (PL)</th>
+                    <th className="py-3 px-3 min-w-[180px]">Wilayah &amp; Cabang</th>
+                    <th className="py-3 px-3 min-w-[130px]">Kontak (HP/WA)</th>
+                    <th className="py-3 px-3 min-w-[200px]">Rekening Bank</th>
+                    <th className="py-3 px-3 text-right min-w-[120px]">Fee / CPMI</th>
+                    <th className="py-3 px-3 text-center min-w-[100px]">Total CPMI</th>
+                    {hasStaffManagePrivilege && (
+                      <th className="py-3 px-4 text-right min-w-[150px]">Aksi</th>
+                    )}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/70">
+                  {filteredSponsors.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={hasStaffManagePrivilege ? 8 : 7}
+                        className="py-8 text-center text-slate-400"
+                      >
+                        Tidak ada data sponsor PL yang cocok dengan filter pencarian.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredSponsors.map((sp, idx) => {
+                      const cpmiCount = candidates.filter((c) => c.sponsorId === sp.id).length;
+                      const branchName =
+                        branches.find((b) => b.id === sp.branchId)?.name || sp.branchId;
+
+                      return (
+                        <tr key={sp.id} className="hover:bg-slate-800/45 transition-colors">
+                          <td className="py-3 px-3 text-center font-mono text-slate-400">
+                            {idx + 1}
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="font-bold text-white">{sp.name}</div>
+                            <div className="text-[10px] font-mono font-bold text-amber-400">
+                              {sp.code}
+                            </div>
+                          </td>
+                          <td className="py-3 px-3">
+                            <div className="text-slate-200 font-medium">{sp.area || "-"}</div>
+                            <div className="text-[10px] text-slate-400">{branchName}</div>
+                          </td>
+                          <td className="py-3 px-3 font-mono text-[11px] text-slate-300">
+                            {sp.phone || "-"}
+                          </td>
+                          <td className="py-3 px-3 font-mono text-[11px] text-slate-300">
+                            {sp.bankAccount || "-"}
+                          </td>
+                          <td className="py-3 px-3 text-right font-semibold text-emerald-300">
+                            Rp {(sp.commissionPerCpmi || 0).toLocaleString("id-ID")}
+                          </td>
+                          <td className="py-3 px-3 text-center">
+                            <span className="inline-flex rounded-full bg-sky-500/15 border border-sky-500/30 px-2.5 py-0.5 text-[10px] font-bold text-sky-300">
+                              {cpmiCount} CPMI
+                            </span>
+                          </td>
+                          {hasStaffManagePrivilege && (
+                            <td className="py-3 px-4">
+                              <div className="flex items-center justify-end gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingSponsor({ ...sp })}
+                                  className="inline-flex items-center gap-1 rounded-lg border border-slate-600 bg-slate-800 px-2.5 py-1 text-[11px] font-semibold text-slate-200 hover:border-sky-400 hover:text-sky-300 transition cursor-pointer"
+                                >
+                                  <Edit3 className="h-3 w-3" />
+                                  Edit
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setDeletingSponsor(sp)}
+                                  className="inline-flex items-center gap-1 rounded-lg border border-rose-500/30 bg-rose-500/10 px-2.5 py-1 text-[11px] font-semibold text-rose-300 hover:bg-rose-500/25 transition cursor-pointer"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                  Hapus
+                                </button>
+                              </div>
+                            </td>
+                          )}
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* TAMPILAN 2: KARTU (CARD GRID) */}
+          {sponsorViewMode === "cards" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {filteredSponsors.map((sp) => {
+                const cpmiCount = candidates.filter((c) => c.sponsorId === sp.id).length;
+                const branchName =
+                  branches.find((b) => b.id === sp.branchId)?.name || sp.branchId;
+
+                return (
+                  <div
+                    key={sp.id}
+                    className="rounded-2xl border border-slate-700 bg-slate-900/80 p-4.5 space-y-3"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <span className="text-[10px] font-mono font-bold text-amber-400">
+                          {sp.code}
+                        </span>
+                        <h4 className="font-bold text-white text-sm">{sp.name}</h4>
+                      </div>
+                      <span className="rounded-full bg-sky-500/15 border border-sky-500/30 px-2.5 py-0.5 text-[10px] font-bold text-sky-300">
+                        {cpmiCount} CPMI
                       </span>
-                      <h4 className="font-bold text-white">{sp.name}</h4>
                     </div>
-                    <span className="text-xs font-bold text-sky-400">
-                      {cpmiCount} CPMI
-                    </span>
+
+                    <div className="text-xs text-slate-300 space-y-1">
+                      <p>
+                        Wilayah: <strong>{sp.area}</strong> ({branchName})
+                      </p>
+                      <p className="text-slate-400 text-[11px]">Kontak: {sp.phone}</p>
+                      <p className="text-[11px] font-mono text-slate-400">
+                        Rek: {sp.bankAccount || "-"}
+                      </p>
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-800 flex items-center justify-between gap-2">
+                      <span className="text-[11px] font-semibold text-emerald-300">
+                        Fee: Rp {(sp.commissionPerCpmi || 0).toLocaleString("id-ID")}
+                      </span>
+                      {hasStaffManagePrivilege && (
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setEditingSponsor({ ...sp })}
+                            className="inline-flex items-center gap-1 rounded-lg border border-slate-600 bg-slate-800 px-2.5 py-1 text-[11px] font-semibold text-slate-200 hover:border-sky-400 hover:text-sky-300 transition cursor-pointer"
+                          >
+                            <Edit3 className="h-3 w-3" />
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeletingSponsor(sp)}
+                            className="inline-flex items-center gap-1 rounded-lg border border-rose-500/30 bg-rose-500/10 px-2.5 py-1 text-[11px] font-semibold text-rose-300 hover:bg-rose-500/25 transition cursor-pointer"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                            Hapus
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="text-xs text-slate-400 space-y-0.5">
-                    <p>Wilayah: {sp.area}</p>
-                    <p>Kontak: {sp.phone}</p>
-                    <p className="text-[11px] font-mono text-slate-500">
-                      Rek: {sp.bankAccount}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
@@ -2082,6 +2448,349 @@ export default function RoleAndPermissionModule({
                 className="rounded-lg bg-rose-600 px-4 py-2 text-xs font-bold text-white hover:bg-rose-500 disabled:opacity-50 cursor-pointer"
               >
                 {deletingStaffBusy ? "Menghapus..." : "Ya, Hapus User"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================
+          MODAL: TAMBAH SPONSOR / PL BARU
+         ============================================================ */}
+      {showAddSponsorModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-700 pb-3">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <Briefcase className="h-5 w-5 text-amber-400" />
+                Tambah Sponsor / PL Rekrutmen
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowAddSponsorModal(false)}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateSponsor} className="space-y-3.5 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="sm:col-span-2">
+                  <label className="block text-slate-300 font-semibold mb-1">
+                    Nama Lengkap Sponsor / PL *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newSponsorForm.name}
+                    onChange={(e) =>
+                      setNewSponsorForm({ ...newSponsorForm, name: e.target.value })
+                    }
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white"
+                    placeholder="Contoh: H. Ahmad Fauzi"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">
+                    Wilayah Garapan
+                  </label>
+                  <input
+                    type="text"
+                    value={newSponsorForm.area}
+                    onChange={(e) =>
+                      setNewSponsorForm({ ...newSponsorForm, area: e.target.value })
+                    }
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white"
+                    placeholder="Indramayu & Subang"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">
+                    Cabang Induk
+                  </label>
+                  <select
+                    value={newSponsorForm.branchId}
+                    onChange={(e) =>
+                      setNewSponsorForm({ ...newSponsorForm, branchId: e.target.value })
+                    }
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white"
+                  >
+                    <option value="ALL">Pilih Cabang Otomatis</option>
+                    {branches.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">
+                    No. Telp / WhatsApp
+                  </label>
+                  <input
+                    type="text"
+                    value={newSponsorForm.phone}
+                    onChange={(e) =>
+                      setNewSponsorForm({ ...newSponsorForm, phone: e.target.value })
+                    }
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white"
+                    placeholder="0812-xxxx-xxxx"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">
+                    Standar Fee / CPMI (Rp)
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    step={50000}
+                    value={newSponsorForm.commissionPerCpmi}
+                    onChange={(e) =>
+                      setNewSponsorForm({
+                        ...newSponsorForm,
+                        commissionPerCpmi: Number(e.target.value) || 0,
+                      })
+                    }
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white font-mono"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-slate-300 font-semibold mb-1">
+                    Rekening Bank Pencairan Komisi
+                  </label>
+                  <input
+                    type="text"
+                    value={newSponsorForm.bankAccount}
+                    onChange={(e) =>
+                      setNewSponsorForm({ ...newSponsorForm, bankAccount: e.target.value })
+                    }
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white font-mono"
+                    placeholder="BRI 4192-01-xxxx a.n. Nama Sponsor"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-3 border-t border-slate-700">
+                <button
+                  type="button"
+                  onClick={() => setShowAddSponsorModal(false)}
+                  className="rounded-lg border border-slate-600 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800 cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingAddSponsor}
+                  className="rounded-lg bg-sky-600 px-5 py-2 text-xs font-bold text-white hover:bg-sky-500 disabled:opacity-50 cursor-pointer"
+                >
+                  {savingAddSponsor ? "Menyimpan..." : "Simpan Sponsor PL"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================
+          MODAL: EDIT DATA SPONSOR / PL
+         ============================================================ */}
+      {editingSponsor && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-700 pb-3">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <Edit3 className="h-5 w-5 text-sky-400" />
+                Edit Sponsor PL: {editingSponsor.name}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setEditingSponsor(null)}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateSponsor} className="space-y-3.5 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">
+                    Kode Sponsor (PL) *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editingSponsor.code}
+                    onChange={(e) =>
+                      setEditingSponsor({ ...editingSponsor, code: e.target.value })
+                    }
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">
+                    Cabang Induk
+                  </label>
+                  <select
+                    value={editingSponsor.branchId}
+                    onChange={(e) =>
+                      setEditingSponsor({ ...editingSponsor, branchId: e.target.value })
+                    }
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white"
+                  >
+                    {branches.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-slate-300 font-semibold mb-1">
+                    Nama Lengkap Sponsor / PL *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editingSponsor.name}
+                    onChange={(e) =>
+                      setEditingSponsor({ ...editingSponsor, name: e.target.value })
+                    }
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">
+                    Wilayah Garapan
+                  </label>
+                  <input
+                    type="text"
+                    value={editingSponsor.area}
+                    onChange={(e) =>
+                      setEditingSponsor({ ...editingSponsor, area: e.target.value })
+                    }
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">
+                    No. Telp / WhatsApp
+                  </label>
+                  <input
+                    type="text"
+                    value={editingSponsor.phone}
+                    onChange={(e) =>
+                      setEditingSponsor({ ...editingSponsor, phone: e.target.value })
+                    }
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-slate-300 font-semibold mb-1">
+                    Rekening Bank Pencairan
+                  </label>
+                  <input
+                    type="text"
+                    value={editingSponsor.bankAccount || ""}
+                    onChange={(e) =>
+                      setEditingSponsor({
+                        ...editingSponsor,
+                        bankAccount: e.target.value,
+                      })
+                    }
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white font-mono"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-slate-300 font-semibold mb-1">
+                    Standar Fee / CPMI (Rp)
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    step={50000}
+                    value={editingSponsor.commissionPerCpmi}
+                    onChange={(e) =>
+                      setEditingSponsor({
+                        ...editingSponsor,
+                        commissionPerCpmi: Number(e.target.value) || 0,
+                      })
+                    }
+                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-3 border-t border-slate-700">
+                <button
+                  type="button"
+                  onClick={() => setEditingSponsor(null)}
+                  className="rounded-lg border border-slate-600 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800 cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingEditSponsor}
+                  className="rounded-lg bg-sky-600 px-5 py-2 text-xs font-bold text-white hover:bg-sky-500 disabled:opacity-50 cursor-pointer"
+                >
+                  {savingEditSponsor ? "Menyimpan..." : "Simpan Perubahan Sponsor"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================
+          MODAL: KONFIRMASI HAPUS SPONSOR / PL
+         ============================================================ */}
+      {deletingSponsor && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-rose-500/40 bg-slate-900 p-6 shadow-2xl space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-500/20 text-rose-400">
+                <Trash2 className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">
+                  Hapus Data Sponsor / PL?
+                </h3>
+                <p className="mt-1 text-xs text-slate-300">
+                  Sponsor <strong>{deletingSponsor.name}</strong> ({deletingSponsor.code}) wilayah{" "}
+                  <strong className="text-amber-300">{deletingSponsor.area}</strong> akan dihapus permanen dan dicatat pada Log Audit.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => setDeletingSponsor(null)}
+                className="rounded-lg border border-slate-600 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800 cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                disabled={deletingSponsorBusy}
+                onClick={handleConfirmDeleteSponsor}
+                className="rounded-lg bg-rose-600 px-4 py-2 text-xs font-bold text-white hover:bg-rose-500 disabled:opacity-50 cursor-pointer"
+              >
+                {deletingSponsorBusy ? "Menghapus..." : "Ya, Hapus Sponsor"}
               </button>
             </div>
           </div>

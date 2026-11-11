@@ -2912,12 +2912,64 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === "UPDATE_SPONSOR") {
-      const { id, updates } = body.payload;
+      const { id, updates } = body.payload || {};
       const sp = db.sponsors?.find((x) => x.id === id);
       if (!sp) return NextResponse.json({ ok: false, error: "Sponsor tidak ditemukan." }, { status: 404 });
       Object.assign(sp, updates);
+      db.auditLogs.unshift({
+        id: `aud-${Date.now()}`,
+        actorName: actorName || "Superadmin",
+        actorRole: actorRole as UserRole,
+        branchName: branchName || "Kantor Pusat Jakarta",
+        actionType: "MASTER_DATA_UPDATED",
+        summary: `Memperbarui Data Sponsor / PL: ${sp.name} (${sp.code})`,
+        details: `Wilayah: ${sp.area} · Kontak: ${sp.phone} · Rekening: ${sp.bankAccount || "-"}`,
+        timestamp: nowTimestamp(),
+      });
       writeDb(db);
-      return NextResponse.json({ ok: true, db });
+      return NextResponse.json({ ok: true, sponsor: sp, db });
+    }
+
+    if (action === "DELETE_SPONSOR") {
+      if (!actorCanManageStaff()) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error:
+              "Akses Ditolak: Hanya Superadmin atau role dengan hak akses kelola data yang dapat menghapus Sponsor / PL.",
+          },
+          { status: 403 }
+        );
+      }
+      const { id } = body.payload || {};
+      const target = db.sponsors?.find((x) => x.id === id);
+      if (!target) {
+        return NextResponse.json({ ok: false, error: "Sponsor tidak ditemukan." }, { status: 404 });
+      }
+      const linkedCandidates = (db.candidates || []).filter((c) => c.sponsorId === id);
+      if (linkedCandidates.length > 0) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: `Sponsor '${target.name}' tidak dapat dihapus karena masih tertaut pada ${linkedCandidates.length} data CPMI. Ubah sponsor pada data CPMI terkait terlebih dahulu.`,
+          },
+          { status: 400 }
+        );
+      }
+
+      db.sponsors = db.sponsors.filter((x) => x.id !== id);
+      db.auditLogs.unshift({
+        id: `aud-${Date.now()}`,
+        actorName: actorName || "Superadmin",
+        actorRole: actorRole as UserRole,
+        branchName: branchName || "Kantor Pusat Jakarta",
+        actionType: "MASTER_DATA_UPDATED",
+        summary: `Menghapus Data Sponsor / PL: ${target.name} (${target.code})`,
+        details: `Wilayah: ${target.area} · Kontak: ${target.phone}`,
+        timestamp: nowTimestamp(),
+      });
+      writeDb(db);
+      return NextResponse.json({ ok: true, deletedId: id, db });
     }
 
     if (action === "UPDATE_MEDICAL_CLINIC") {
