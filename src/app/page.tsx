@@ -685,7 +685,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
       otherLanguageLevel: "NONE",
     },
     acceptanceDecision: "TERIMA",
-    accByName: "H. Bambang Wijaya, S.E.",
+    accByName: "Ahmad Sarkoni",
     candidateNotes: "",
     sponsorOfficerName: "Kang Dedi Kusnadi (PL-IDM-001)",
     sponsorOfficerPhone: "0812-2301-4455",
@@ -1026,7 +1026,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action,
-        actorName: loggedInStaff?.name || "H. Bambang Wijaya, S.E.",
+        actorName: loggedInStaff?.name || "Ahmad Sarkoni",
         actorRole: currentRole,
         branchName: branchObj ? branchObj.name : "Kantor Pusat Jakarta",
         payload,
@@ -9535,7 +9535,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                           type="text"
                           value={regForm.accByName}
                           onChange={(e) => setRegForm({ ...regForm, accByName: e.target.value })}
-                          placeholder="H. Bambang Wijaya, S.E."
+                          placeholder="Ahmad Sarkoni"
                           className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-bold"
                         />
                       </div>

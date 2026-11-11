@@ -60,7 +60,7 @@ export default function DocumentPrintModule({
   const tenantAddress = activeTenant?.address || "Jl. Kayu Manis No. 51, Kel. Balekambang, Kec. Kramat Jati, Jakarta Timur";
   const tenantPhone = activeTenant?.phone || "+62-21 2937373";
   const tenantEmail = activeTenant?.email || "pancabanyu@yahoo.com";
-  const picName = activeTenant?.picName || "H. Bambang Wijaya, S.E.";
+  const picName = activeTenant?.picName || "Ahmad Sarkoni";
 
   const today = new Date();
   const dateFormatted = `${today.getDate()} ${

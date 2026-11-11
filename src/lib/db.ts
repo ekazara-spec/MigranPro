@@ -358,7 +358,7 @@ function createInitialStaff(): StaffAccount[] {
   return [
     {
       id: "stf-1",
-      name: "H. Bambang Wijaya, S.E.",
+      name: "Ahmad Sarkoni",
       email: "direktur@pasmigranpro.id",
       role: "DIREKTUR",
       roleLabel: "Direktur Utama (Superadmin)",
@@ -545,7 +545,7 @@ function createInitialCases(): CaseTicket[] {
         },
         {
           id: "cn-3",
-          authorName: "H. Bambang Wijaya, S.E.",
+          authorName: "Ahmad Sarkoni",
           authorRole: "DIREKTUR",
           note: "Eskalasi resmi ditembuskan ke KJRI Dubai bila dalam 2x24 jam bukti transfer gaji WPS belum diterima.",
           createdAt: relativeDate(-1) + " 15:40 WIB",
@@ -884,7 +884,7 @@ export function createInitialTenants(): TenantCompany[] {
       address: "Jl. Kayu Manis No. 51, Kel. Balekambang, Kec. Kramat Jati, Jakarta Timur",
       phone: "+62-21 2937373",
       email: "pancabanyu@yahoo.com",
-      picName: "H. Bambang Wijaya, S.E. (Direktur Utama)",
+      picName: "Ahmad Sarkoni (Direktur Utama)",
       isPrimary: true,
       createdAt: "2021-06-15",
     },
@@ -1129,7 +1129,7 @@ function createInitialSeed(): DatabaseSchema {
       code: "JKT-HQ",
       name: "Kantor Pusat Jakarta",
       city: "Jakarta Timur",
-      headName: "H. Bambang Wijaya, S.E.",
+      headName: "Ahmad Sarkoni",
       phone: "021-87901122",
       address: "Jl. Kayu Manis No. 51, Jakarta Timur",
       status: "ACTIVE",
@@ -2014,7 +2014,7 @@ function createInitialSeed(): DatabaseSchema {
       id: "aud-3",
       candidateId: "cpmi-2",
       candidateName: "Ahmad Fauzi",
-      actorName: "H. Bambang Wijaya, S.E.",
+      actorName: "Ahmad Sarkoni",
       actorRole: "DIREKTUR",
       branchName: "Kantor Pusat Jakarta",
       actionType: "SENSITIVE_DOC_VIEW",
@@ -2971,7 +2971,7 @@ export function createInitialCashAdvances(): CashAdvance[] {
       reason: "Bantuan Transport & Operasional Rekrutmen CPMI Indramayu Barat",
       dateGiven: relativeDate(-20),
       status: "DISETUJUI",
-      approvedBy: "H. Bambang Wijaya (Direktur)",
+      approvedBy: "Ahmad Sarkoni (Direktur)",
       deductions: [
         {
           id: "ded-01",
@@ -3279,7 +3279,7 @@ export function buildDefaultRegistrationFormForCandidate(
       otherLanguageLevel: c.destinationCountry === "Jepang" ? "BAIK" : "NONE",
     },
     acceptanceDecision: "TERIMA",
-    accByName: "H. Bambang Wijaya, S.E.",
+    accByName: "Ahmad Sarkoni",
     candidateNotes:
       "Berkas fisik asli telah diserahkan saat pendaftaran awal di kantor cabang PT Panca Banyu Ajisakti.",
     sponsorOfficerName: sp ? sp.name : "Petugas Rekrut Lapangan (PL)",
@@ -3433,7 +3433,7 @@ function createInitialSponsorSubmissions(): SponsorFormSubmission[] {
           otherLanguageLevel: "NONE",
         },
         acceptanceDecision: "TERIMA",
-        accByName: "H. Bambang Wijaya, S.E.",
+        accByName: "Ahmad Sarkoni",
         candidateNotes: "Siap langsung masuk pemeriksaan Wafid (GAMCA) minggu ini.",
         sponsorOfficerName: "Kang Dedi Kusnadi (PL-IDM-001)",
         sponsorOfficerPhone: "0812-2301-4455",
@@ -3579,7 +3579,7 @@ function createInitialSponsorSubmissions(): SponsorFormSubmission[] {
           otherLanguageLevel: "NONE",
         },
         acceptanceDecision: "TERIMA",
-        accByName: "H. Bambang Wijaya, S.E.",
+        accByName: "Ahmad Sarkoni",
         candidateNotes: "Siap proses biometrik & Wafid.",
         sponsorOfficerName: "Pak Slamet Riyadi (PL-CLP-002)",
         sponsorOfficerPhone: "0813-2700-9911",
@@ -3727,7 +3727,7 @@ function createInitialSponsorSubmissions(): SponsorFormSubmission[] {
           otherLanguageLevel: "NONE",
         },
         acceptanceDecision: "TERIMA",
-        accByName: "H. Bambang Wijaya, S.E.",
+        accByName: "Ahmad Sarkoni",
         candidateNotes: "Formulir Baru F4 sudah diisi lengkap.",
         sponsorOfficerName: "Bu Nurhayati (PL-MLG-003)",
         sponsorOfficerPhone: "0812-3388-7766",
@@ -3771,7 +3771,11 @@ export function syncExpirationsAndTasks(db: DatabaseSchema): void {
     if (!b.status) b.status = "ACTIVE";
   }
 
-  // Migrasi otomatis user & role dummy lama ke struktur divisi & user baru PT. Panca Banyu Ajisakti (sambil mempertahankan Direktur Utama)
+  // Migrasi otomatis user & role dummy lama ke struktur divisi & user baru PT. Panca Banyu Ajisakti (sambil mempertahankan data Direktur Utama jika sudah diubah)
+  const existingDirector = Array.isArray(db.staffAccounts)
+    ? db.staffAccounts.find((s) => s.role === "DIREKTUR" || s.id === "stf-1")
+    : undefined;
+
   const hasLegacyDummyStaff =
     Array.isArray(db.staffAccounts) &&
     db.staffAccounts.some(
@@ -3783,7 +3787,35 @@ export function syncExpirationsAndTasks(db: DatabaseSchema): void {
     db.roles = createInitialRoles();
   }
   if (!db.staffAccounts || db.staffAccounts.length === 0 || hasLegacyDummyStaff) {
-    db.staffAccounts = createInitialStaff();
+    const freshStaff = createInitialStaff();
+    if (existingDirector && existingDirector.name && !existingDirector.name.includes("Bambang")) {
+      const dirIdx = freshStaff.findIndex((s) => s.role === "DIREKTUR");
+      if (dirIdx !== -1) {
+        freshStaff[dirIdx] = {
+          ...freshStaff[dirIdx],
+          ...existingDirector,
+          role: "DIREKTUR",
+        };
+      }
+    }
+    db.staffAccounts = freshStaff;
+  }
+
+  // Pastikan nama Direktur Utama bawaan lama tidak menimpa nama resmi Ahmad Sarkoni
+  for (const st of db.staffAccounts) {
+    if (st.role === "DIREKTUR" && st.name.includes("Bambang Wijaya")) {
+      st.name = "Ahmad Sarkoni";
+    }
+  }
+  for (const tn of db.tenants || []) {
+    if (tn.picName && tn.picName.includes("Bambang Wijaya")) {
+      tn.picName = "Ahmad Sarkoni (Direktur Utama)";
+    }
+  }
+  for (const br of db.branches || []) {
+    if (br.headName && br.headName.includes("Bambang Wijaya")) {
+      br.headName = "Ahmad Sarkoni";
+    }
   }
   // Pastikan DIREKTUR selalu memiliki akses modul maintenance
   const directorRole = db.roles.find((r) => r.code === "DIREKTUR");
