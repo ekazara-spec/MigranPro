@@ -105,6 +105,8 @@ export async function POST(req: NextRequest) {
       "CREATE_MEDICAL_CLINIC",
       "CREATE_BPJS_FINANCING",
       "CREATE_STAFF",
+      "UPDATE_STAFF",
+      "DELETE_STAFF",
       "CREATE_ROLE",
       "UPDATE_ROLE",
       "DELETE_ROLE",
@@ -188,22 +190,53 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, staff, db });
     }
 
+    // Helper Otorisasi Kelola Akun Staf (Hanya Superadmin / Role dengan canManageStaff)
+    function actorCanManageStaff(): boolean {
+      if (actorRole === "DIREKTUR") return true;
+      const matchedActorRole = (db.roles || []).find((r) => r.code === actorRole);
+      return Boolean(matchedActorRole?.permissions?.canManageStaff);
+    }
+
     // 2. MANAJEMEN STAF BARU
     if (action === "CREATE_STAFF") {
+      if (!actorCanManageStaff()) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error:
+              "Akses Ditolak: Hanya Superadmin atau peran dengan izin kelola akun staf yang dapat menambah user.",
+          },
+          { status: 403 }
+        );
+      }
       const { name, email, role, branchId, phone, pinCode = "1234" } = body.payload;
+      const cleanName = String(name || "").trim();
+      const cleanEmail = String(email || "").trim().toLowerCase();
+      if (!cleanName || !cleanEmail) {
+        return NextResponse.json(
+          { ok: false, error: "Nama lengkap dan email login wajib diisi." },
+          { status: 400 }
+        );
+      }
+      if (db.staffAccounts.some((s) => s.email.toLowerCase() === cleanEmail)) {
+        return NextResponse.json(
+          { ok: false, error: `Email '${cleanEmail}' sudah terdaftar pada akun staf lain.` },
+          { status: 409 }
+        );
+      }
       if (!db.roles) db.roles = createInitialRoles();
       const matchedRole = db.roles.find((r) => r.code === role);
       const roleLabel = matchedRole ? matchedRole.name : String(role);
       const newStaff: StaffAccount = {
         id: `stf-${Date.now()}`,
-        name: String(name).trim(),
-        email: String(email).trim().toLowerCase(),
+        name: cleanName,
+        email: cleanEmail,
         role: role as UserRole,
         roleLabel,
         branchId: branchId || "ALL",
-        phone: phone || "-",
+        phone: String(phone || "-").trim() || "-",
         active: true,
-        pinCode: String(pinCode || "1234"),
+        pinCode: String(pinCode || "1234").trim() || "1234",
       };
       db.staffAccounts.push(newStaff);
       db.auditLogs.unshift({
@@ -218,6 +251,158 @@ export async function POST(req: NextRequest) {
       });
       writeDb(db);
       return NextResponse.json({ ok: true, staff: newStaff, db });
+    }
+
+    // 2.0.1 EDIT AKUN STAF (KHUSUS SUPERADMIN / KELOLA STAF)
+    if (action === "UPDATE_STAFF") {
+      if (!actorCanManageStaff()) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error:
+              "Akses Ditolak: Hanya Superadmin atau role dengan hak akses kelola user yang dapat mengedit akun staf.",
+          },
+          { status: 403 }
+        );
+      }
+      const { id, name, email, role, branchId, phone, pinCode, active } = body.payload || {};
+      const idx = db.staffAccounts.findIndex((s) => s.id === id);
+      if (idx === -1) {
+        return NextResponse.json(
+          { ok: false, error: "Data akun staf tidak ditemukan." },
+          { status: 404 }
+        );
+      }
+
+      const existing = db.staffAccounts[idx];
+      const cleanName = String(name ?? existing.name).trim();
+      const cleanEmail = String(email ?? existing.email).trim().toLowerCase();
+      if (!cleanName || !cleanEmail) {
+        return NextResponse.json(
+          { ok: false, error: "Nama lengkap dan email login tidak boleh kosong." },
+          { status: 400 }
+        );
+      }
+      if (db.staffAccounts.some((s) => s.id !== id && s.email.toLowerCase() === cleanEmail)) {
+        return NextResponse.json(
+          { ok: false, error: `Email '${cleanEmail}' sudah dipakai akun staf lain.` },
+          { status: 409 }
+        );
+      }
+
+      if (!db.roles) db.roles = createInitialRoles();
+      const nextRole = (role ?? existing.role) as UserRole;
+      const nextActive = active !== undefined ? Boolean(active) : existing.active;
+
+      // Pastikan masih ada minimal 1 akun DIREKTUR aktif agar tidak mengunci akses Superadmin
+      const isExistingDirector = existing.role === "DIREKTUR" && existing.active;
+      const losesDirectorAccess = nextRole !== "DIREKTUR" || !nextActive;
+      if (isExistingDirector && losesDirectorAccess) {
+        const otherActiveDirectors = db.staffAccounts.filter(
+          (s) => s.id !== id && s.role === "DIREKTUR" && s.active
+        );
+        if (otherActiveDirectors.length === 0) {
+          return NextResponse.json(
+            {
+              ok: false,
+              error:
+                "Sistem harus memiliki minimal 1 akun Direktur Utama (Superadmin) aktif.",
+            },
+            { status: 400 }
+          );
+        }
+      }
+
+      const matchedRole = db.roles.find((r) => r.code === nextRole);
+      const updatedStaff: StaffAccount = {
+        ...existing,
+        name: cleanName,
+        email: cleanEmail,
+        role: nextRole,
+        roleLabel: matchedRole ? matchedRole.name : String(nextRole),
+        branchId: branchId !== undefined ? String(branchId) : existing.branchId,
+        phone: phone !== undefined ? String(phone).trim() || "-" : existing.phone,
+        pinCode:
+          pinCode !== undefined && String(pinCode).trim()
+            ? String(pinCode).trim()
+            : existing.pinCode,
+        active: nextActive,
+      };
+
+      db.staffAccounts[idx] = updatedStaff;
+      db.auditLogs.unshift({
+        id: `aud-${Date.now()}`,
+        actorName: actorName || "Superadmin",
+        actorRole: actorRole || "DIREKTUR",
+        branchName: branchName || "Kantor Pusat Jakarta",
+        actionType: "STAFF_UPDATED",
+        summary: `Memperbarui Akun Staf: ${updatedStaff.name} (${updatedStaff.roleLabel})`,
+        details: `Email: ${updatedStaff.email} · Cabang: ${updatedStaff.branchId} · Status: ${
+          updatedStaff.active ? "Aktif" : "Non-Aktif"
+        }`,
+        timestamp: nowTimestamp(),
+      });
+      writeDb(db);
+      return NextResponse.json({ ok: true, staff: updatedStaff, db });
+    }
+
+    // 2.0.2 HAPUS AKUN STAF (KHUSUS SUPERADMIN / KELOLA STAF)
+    if (action === "DELETE_STAFF") {
+      if (!actorCanManageStaff()) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error:
+              "Akses Ditolak: Hanya Superadmin atau role dengan hak akses kelola user yang dapat menghapus akun staf.",
+          },
+          { status: 403 }
+        );
+      }
+      const { id, currentLoggedInStaffId } = body.payload || {};
+      const target = db.staffAccounts.find((s) => s.id === id);
+      if (!target) {
+        return NextResponse.json(
+          { ok: false, error: "Data akun staf tidak ditemukan." },
+          { status: 404 }
+        );
+      }
+      if (currentLoggedInStaffId && target.id === currentLoggedInStaffId) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: "Akun yang sedang aktif login tidak dapat dihapus. Beralih ke akun lain terlebih dahulu.",
+          },
+          { status: 400 }
+        );
+      }
+      if (target.role === "DIREKTUR") {
+        const remainingDirectors = db.staffAccounts.filter(
+          (s) => s.id !== id && s.role === "DIREKTUR" && s.active
+        );
+        if (remainingDirectors.length === 0) {
+          return NextResponse.json(
+            {
+              ok: false,
+              error: "Akun Direktur Utama (Superadmin) terakhir tidak dapat dihapus.",
+            },
+            { status: 400 }
+          );
+        }
+      }
+
+      db.staffAccounts = db.staffAccounts.filter((s) => s.id !== id);
+      db.auditLogs.unshift({
+        id: `aud-${Date.now()}`,
+        actorName: actorName || "Superadmin",
+        actorRole: actorRole || "DIREKTUR",
+        branchName: branchName || "Kantor Pusat Jakarta",
+        actionType: "STAFF_DELETED",
+        summary: `Menghapus Akun Staf: ${target.name} (${target.roleLabel})`,
+        details: `Email: ${target.email} · Cabang: ${target.branchId}`,
+        timestamp: nowTimestamp(),
+      });
+      writeDb(db);
+      return NextResponse.json({ ok: true, deletedId: id, db });
     }
 
     // 2.1 MANAJEMEN ROLE: TAMBAH ROLE BARU (CUSTOM DYNAMIC ROLE)

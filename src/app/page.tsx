@@ -978,6 +978,8 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
         "CREATE_MEDICAL_CLINIC",
         "CREATE_BPJS_FINANCING",
         "CREATE_STAFF",
+        "UPDATE_STAFF",
+        "DELETE_STAFF",
         "SEND_WHATSAPP_MESSAGE",
         "CREATE_CASH_JOURNAL",
         "CREATE_CASH_ADVANCE",
@@ -5453,9 +5455,16 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
               candidates={db.candidates || []}
               loggedInStaff={loggedInStaff}
               isBranchViewOnly={isBranchViewOnly}
+              canManageStaff={perms.canManageStaff || currentRole === "DIREKTUR"}
               actorName={loggedInStaff?.name || "Superadmin Direktur"}
               actorRole={loggedInStaff?.role || "DIREKTUR"}
               onRefreshDb={fetchDb}
+              onStaffUpdated={(updatedStaff) => {
+                setLoggedInStaff(updatedStaff);
+                setSelectedBranchId(
+                  updatedStaff.branchId === "ALL" ? "ALL" : updatedStaff.branchId
+                );
+              }}
               onSwitchStaffAccount={async (st) => {
                 const { data } = await callApi("LOGIN_STAFF", {
                   email: st.email,

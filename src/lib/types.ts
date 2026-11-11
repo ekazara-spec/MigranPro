@@ -433,6 +433,8 @@ export interface AuditLog {
     | "BADIL_PROCESSED"
     | "MASTER_DATA_UPDATED"
     | "STAFF_CREATED"
+    | "STAFF_UPDATED"
+    | "STAFF_DELETED"
     | "ROLE_CREATED"
     | "ROLE_UPDATED"
     | "ROLE_DELETED";
