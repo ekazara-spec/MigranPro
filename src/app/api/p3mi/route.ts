@@ -309,6 +309,10 @@ export async function POST(req: NextRequest) {
       "DELETE_SPONSOR",
       "UPDATE_BPJS_FINANCING",
       "DELETE_BPJS_FINANCING",
+      "CREATE_VACANCY",
+      "UPDATE_VACANCY",
+      "DELETE_VACANCY",
+      "TOGGLE_VACANCY_PUBLISH",
     ];
 
     if (
@@ -1357,6 +1361,96 @@ export async function POST(req: NextRequest) {
         vac.isPublished = !vac.isPublished;
         writeDb(db);
       }
+      return NextResponse.json({ ok: true, db });
+    }
+
+    if (action === "UPDATE_VACANCY") {
+      const {
+        vacancyId,
+        title,
+        destinationCountry,
+        jobSector,
+        agencyPartner,
+        employerName,
+        salaryForeign,
+        salaryIdrEstimate,
+        placementFee,
+        quotaTotal,
+        genderPref,
+        minEducation,
+        ageRange,
+        requirementsText,
+        closingDate,
+        isPublished,
+      } = body.payload || {};
+
+      const vac = (db.vacancies || []).find((v) => v.id === vacancyId);
+      if (!vac) {
+        return NextResponse.json(
+          { ok: false, error: "Job Order / lowongan tidak ditemukan." },
+          { status: 404 }
+        );
+      }
+
+      if (title !== undefined) vac.title = String(title).trim();
+      if (destinationCountry !== undefined) vac.destinationCountry = destinationCountry;
+      if (jobSector !== undefined) vac.jobSector = String(jobSector).trim();
+      if (agencyPartner !== undefined) vac.agencyPartner = String(agencyPartner).trim();
+      if (employerName !== undefined) vac.employerName = String(employerName).trim();
+      if (salaryForeign !== undefined) vac.salaryForeign = String(salaryForeign).trim();
+      if (salaryIdrEstimate !== undefined) vac.salaryIdrEstimate = Number(salaryIdrEstimate) || 0;
+      if (placementFee !== undefined) vac.placementFee = Number(placementFee) || 0;
+      if (quotaTotal !== undefined) vac.quotaTotal = Math.max(1, Number(quotaTotal) || 1);
+      if (genderPref !== undefined) vac.genderPref = genderPref;
+      if (minEducation !== undefined) vac.minEducation = String(minEducation).trim();
+      if (ageRange !== undefined) vac.ageRange = String(ageRange).trim();
+      if (closingDate !== undefined) vac.closingDate = String(closingDate).trim();
+      if (typeof isPublished === "boolean") vac.isPublished = isPublished;
+      if (requirementsText !== undefined) {
+        vac.requirements = String(requirementsText)
+          .split("\n")
+          .map((s) => s.trim())
+          .filter(Boolean);
+      }
+
+      db.auditLogs.unshift({
+        id: `aud-${Date.now()}`,
+        actorName,
+        actorRole,
+        branchName: "Kantor Pusat",
+        actionType: "MASTER_DATA_UPDATED",
+        summary: `Memperbarui Job Order ${vac.code} (${vac.title})`,
+        details: `Negara: ${vac.destinationCountry} · Kuota: ${vac.quotaTotal} · Agensi: ${vac.agencyPartner}`,
+        timestamp: nowTimestamp(),
+      });
+
+      writeDb(db);
+      return NextResponse.json({ ok: true, vacancy: vac, db });
+    }
+
+    if (action === "DELETE_VACANCY") {
+      const { vacancyId } = body.payload || {};
+      const vac = (db.vacancies || []).find((v) => v.id === vacancyId);
+      if (!vac) {
+        return NextResponse.json(
+          { ok: false, error: "Job Order / lowongan tidak ditemukan." },
+          { status: 404 }
+        );
+      }
+
+      db.vacancies = db.vacancies.filter((v) => v.id !== vacancyId);
+      db.auditLogs.unshift({
+        id: `aud-${Date.now()}`,
+        actorName,
+        actorRole,
+        branchName: "Kantor Pusat",
+        actionType: "MASTER_DATA_UPDATED",
+        summary: `Menghapus Job Order ${vac.code} (${vac.title})`,
+        details: `Negara: ${vac.destinationCountry} · Agensi: ${vac.agencyPartner}`,
+        timestamp: nowTimestamp(),
+      });
+
+      writeDb(db);
       return NextResponse.json({ ok: true, db });
     }
 

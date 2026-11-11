@@ -25,6 +25,7 @@ import {
   LogOut,
   Menu,
   MessageSquarePlus,
+  Pencil,
   Plane,
   Plus,
   Printer,
@@ -38,6 +39,7 @@ import {
   Sparkles,
   Stethoscope,
   Table,
+  Trash2,
   TrendingUp,
   UserCheck,
   UserPlus,
@@ -492,6 +494,8 @@ export default function PASMigranProCommandCenter() {
 
   // State Lowongan (Job Order / Vacancy — Khusus Kawasan Timur Tengah Zero Cost)
   const [showNewVacancyModal, setShowNewVacancyModal] = useState(false);
+  const [editingVacancy, setEditingVacancy] = useState<JobVacancy | null>(null);
+  const [deletingVacancyId, setDeletingVacancyId] = useState<string | null>(null);
   const [newVacancyForm, setNewVacancyForm] = useState({
     title: "",
     destinationCountry: "Arab Saudi" as JobVacancy["destinationCountry"],
@@ -2390,17 +2394,105 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
     }
   }
 
-  // Handler Buat Lowongan Baru
-  async function handleCreateVacancy(e: React.FormEvent) {
-    e.preventDefault();
-    const { data } = await callApi("CREATE_VACANCY", newVacancyForm);
-    if (data.ok) {
-      setShowNewVacancyModal(false);
-      setToast({
-        type: "success",
-        title: `Lowongan ${data.vacancy.code} (${data.vacancy.title}) Ditayangkan`,
+  function openVacancyModal(vac?: JobVacancy) {
+    if (vac) {
+      setEditingVacancy(vac);
+      setNewVacancyForm({
+        title: vac.title,
+        destinationCountry: vac.destinationCountry,
+        jobSector: vac.jobSector,
+        agencyPartner: vac.agencyPartner,
+        employerName: vac.employerName,
+        salaryForeign: vac.salaryForeign,
+        salaryIdrEstimate: vac.salaryIdrEstimate || 8000000,
+        placementFee: vac.placementFee || 36000000,
+        quotaTotal: vac.quotaTotal,
+        genderPref: vac.genderPref,
+        minEducation: vac.minEducation,
+        ageRange: vac.ageRange,
+        closingDate: vac.closingDate,
+        requirementsText: (vac.requirements || []).join("\n"),
+      });
+    } else {
+      setEditingVacancy(null);
+      setNewVacancyForm({
+        title: "",
+        destinationCountry: "Arab Saudi",
+        jobSector: "Housekeeping & Caregiver (SPSK Syarikah)",
+        agencyPartner: "",
+        employerName: "",
+        salaryForeign: "SAR 1.500 - 1.800 / bulan (Zero Cost)",
+        salaryIdrEstimate: 7200000,
+        placementFee: 36000000,
+        quotaTotal: 25,
+        genderPref: "P",
+        minEducation: "SD / SMP / SMA",
+        ageRange: "21 - 40 Tahun",
+        closingDate: "2026-12-31",
+        requirementsText:
+          "Wajib KTP Elektronik 16 digit & KK asli\nSehat jasmani & rohani (Medical Wafid / GAMCA FIT)\nSurat izin suami/orang tua diketahui Kepala Desa\n100% Zero Cost (Seluruh biaya ditanggung langsung oleh Syarikah/Majikan)",
       });
     }
+    setShowNewVacancyModal(true);
+  }
+
+  // Handler Buat / Update Lowongan
+  async function handleSaveVacancy(e: React.FormEvent) {
+    e.preventDefault();
+    if (editingVacancy) {
+      const { status, data } = await callApi("UPDATE_VACANCY", {
+        vacancyId: editingVacancy.id,
+        ...newVacancyForm,
+      });
+      if (status >= 400 || !data.ok) {
+        setToast({
+          type: "error",
+          title: "Gagal Mengubah Job Order",
+          details: [data.error || "Terjadi kesalahan saat menyimpan perubahan."],
+        });
+        return;
+      }
+      setShowNewVacancyModal(false);
+      setEditingVacancy(null);
+      setToast({
+        type: "success",
+        title: `Job Order ${data.vacancy.code} Berhasil Diperbarui`,
+      });
+      return;
+    }
+
+    const { status, data } = await callApi("CREATE_VACANCY", newVacancyForm);
+    if (status >= 400 || !data.ok) {
+      setToast({
+        type: "error",
+        title: "Gagal Menambah Job Order",
+        details: [data.error || "Terjadi kesalahan saat menayangkan lowongan."],
+      });
+      return;
+    }
+    setShowNewVacancyModal(false);
+    setToast({
+      type: "success",
+      title: `Lowongan ${data.vacancy.code} (${data.vacancy.title}) Ditayangkan`,
+    });
+  }
+
+  // Handler Hapus Lowongan
+  async function handleDeleteVacancy(vac: JobVacancy) {
+    const { status, data } = await callApi("DELETE_VACANCY", { vacancyId: vac.id });
+    if (status >= 400 || !data.ok) {
+      setToast({
+        type: "error",
+        title: "Gagal Menghapus Job Order",
+        details: [data.error || "Anda tidak memiliki izin atau data tidak ditemukan."],
+      });
+      return;
+    }
+    setDeletingVacancyId(null);
+    setToast({
+      type: "success",
+      title: `Job Order ${vac.code} (${vac.title}) Dihapus`,
+    });
   }
 
   // Handler Pelamar Melamar dari Lowongan Publik -> Masuk jadi LEAD
@@ -5361,13 +5453,15 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   </p>
                 </div>
 
-                <button
-                  onClick={() => setShowNewVacancyModal(true)}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2.5 text-xs font-semibold text-white hover:bg-slate-800"
-                >
-                  <Plus className="h-4 w-4 text-sky-400" />
-                  + Buat Job Order / Lowongan Baru
-                </button>
+                {!isBranchViewOnly && (
+                  <button
+                    onClick={() => openVacancyModal()}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2.5 text-xs font-semibold text-white hover:bg-slate-800 cursor-pointer"
+                  >
+                    <Plus className="h-4 w-4 text-sky-400" />
+                    Buat Job Order / Lowongan Baru
+                  </button>
+                )}
               </div>
 
               {/* Panel Informasi Skema Penempatan Timur Tengah */}
@@ -5416,131 +5510,187 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                {db.vacancies?.map((vac) => {
-                  const pct = Math.min(
-                    100,
-                    Math.round((vac.quotaFilled / Math.max(1, vac.quotaTotal)) * 100)
-                  );
-                  return (
-                    <div
-                      key={vac.id}
-                      className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
-                    >
-                      <div>
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <div className="flex items-center gap-2">
-                            <span className="rounded bg-sky-100 px-2.5 py-0.5 font-mono text-xs font-bold text-sky-800">
-                              {vac.code}
-                            </span>
-                            <span className="rounded-full bg-slate-900 px-3 py-0.5 text-xs font-bold text-white">
-                              🌏 {vac.destinationCountry}
-                            </span>
-                            {[
-                              "Arab Saudi",
-                              "Uni Emirat Arab (UAE)",
-                              "Kuwait",
-                              "Oman",
-                              "Yordania",
-                            ].includes(vac.destinationCountry) && (
-                              <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800 border border-emerald-300">
-                                Skema Timur Tengah · Zero Cost
+              {(!db.vacancies || db.vacancies.length === 0) ? (
+                <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center text-xs text-slate-500">
+                  Belum ada Job Order / lowongan aktif. Klik{" "}
+                  <strong>Buat Job Order / Lowongan Baru</strong> untuk menayangkan lowongan.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                  {db.vacancies.map((vac) => {
+                    const pct = Math.min(
+                      100,
+                      Math.round((vac.quotaFilled / Math.max(1, vac.quotaTotal)) * 100)
+                    );
+                    const isConfirmingDelete = deletingVacancyId === vac.id;
+                    return (
+                      <div
+                        key={vac.id}
+                        className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+                      >
+                        <div>
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="rounded bg-sky-100 px-2.5 py-0.5 font-mono text-xs font-bold text-sky-800">
+                                {vac.code}
                               </span>
-                            )}
+                              <span className="rounded-full bg-slate-900 px-3 py-0.5 text-xs font-bold text-white">
+                                🌏 {vac.destinationCountry}
+                              </span>
+                              {[
+                                "Arab Saudi",
+                                "Uni Emirat Arab (UAE)",
+                                "Kuwait",
+                                "Oman",
+                                "Yordania",
+                              ].includes(vac.destinationCountry) && (
+                                <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800 border border-emerald-300">
+                                  Skema Timur Tengah · Zero Cost
+                                </span>
+                              )}
+                            </div>
+
+                            <button
+                              disabled={isBranchViewOnly}
+                              onClick={() =>
+                                callApi("TOGGLE_VACANCY_PUBLISH", { vacancyId: vac.id })
+                              }
+                              className={`rounded-full px-3 py-1 text-[11px] font-bold transition ${
+                                vac.isPublished
+                                  ? "bg-teal-100 text-teal-800 hover:bg-teal-200"
+                                  : "bg-slate-200 text-slate-600 hover:bg-slate-300"
+                              } disabled:opacity-60 disabled:cursor-not-allowed`}
+                            >
+                              {vac.isPublished ? "● Tayang di Kanal Publik" : "○ Draft / Ditutup"}
+                            </button>
                           </div>
 
+                          <h3 className="mt-3 text-base font-bold text-slate-900">{vac.title}</h3>
+                          <p className="mt-1 text-xs text-slate-500">
+                            Agensi Mitra: <strong>{vac.agencyPartner}</strong> · Pemberi Kerja:{" "}
+                            {vac.employerName}
+                          </p>
+
+                          <div className="mt-4 grid grid-cols-3 gap-2 rounded-xl bg-slate-50 p-3 text-xs">
+                            <div>
+                              <span className="text-slate-400 block text-[11px]">Gaji Kontrak</span>
+                              <strong className="text-teal-700">{vac.salaryForeign}</strong>
+                              <span className="block text-[10px] text-slate-500">
+                                ± {formatRupiah(vac.salaryIdrEstimate)}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-slate-400 block text-[11px]">
+                                Syarat Usia &amp; Pend
+                              </span>
+                              <strong className="text-slate-800">{vac.ageRange}</strong>
+                              <span className="block text-[10px] text-slate-500">
+                                Min. {vac.minEducation} ({vac.genderPref})
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-slate-400 block text-[11px]">
+                                Batas Lamaran
+                              </span>
+                              <strong className="text-slate-800">{vac.closingDate}</strong>
+                            </div>
+                          </div>
+
+                          {/* Progress Kuota Job Order */}
+                          <div className="mt-4">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="font-semibold text-slate-700">
+                                Kuota Terisi: {vac.quotaFilled} dari {vac.quotaTotal} orang
+                              </span>
+                              <span className="font-bold text-sky-600">{pct}%</span>
+                            </div>
+                            <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                              <div
+                                className="h-full rounded-full bg-sky-500 transition-all"
+                                style={{ width: `${pct}%` }}
+                              />
+                            </div>
+                          </div>
+
+                          <ul className="mt-4 space-y-1 text-xs text-slate-600">
+                            {vac.requirements.map((req, i) => (
+                              <li key={i} className="flex items-center gap-2">
+                                <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-teal-600" />
+                                {req}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        <div className="mt-5 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-4">
+                          {!isBranchViewOnly ? (
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => openVacancyModal(vac)}
+                                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
+                              >
+                                <Pencil className="h-3.5 w-3.5 text-sky-600" />
+                                Edit
+                              </button>
+                              {isConfirmingDelete ? (
+                                <div className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-2 py-1">
+                                  <span className="text-[11px] font-bold text-rose-700">
+                                    Hapus?
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteVacancy(vac)}
+                                    className="rounded bg-rose-600 px-2 py-0.5 text-[11px] font-bold text-white hover:bg-rose-700 cursor-pointer"
+                                  >
+                                    Ya
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setDeletingVacancyId(null)}
+                                    className="rounded border border-slate-200 bg-white px-2 py-0.5 text-[11px] font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer"
+                                  >
+                                    Batal
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => setDeletingVacancyId(vac.id)}
+                                  className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100 cursor-pointer"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                  Hapus
+                                </button>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-[11px] text-slate-400">
+                              Pelamar otomatis tercatat di Journey Engine
+                            </span>
+                          )}
                           <button
-                            onClick={() =>
-                              callApi("TOGGLE_VACANCY_PUBLISH", { vacancyId: vac.id })
-                            }
-                            className={`rounded-full px-3 py-1 text-[11px] font-bold transition ${
-                              vac.isPublished
-                                ? "bg-teal-100 text-teal-800 hover:bg-teal-200"
-                                : "bg-slate-200 text-slate-600 hover:bg-slate-300"
-                            }`}
+                            onClick={() => {
+                              setApplyingVacancy(vac);
+                              setApplyForm({
+                                fullName: "",
+                                phone: "",
+                                nik: "",
+                                gender: vac.genderPref === "L" ? "L" : "P",
+                                branchId: "br-idm",
+                              });
+                            }}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-sky-700 cursor-pointer"
                           >
-                            {vac.isPublished ? "● Tayang di Kanal Publik" : "○ Draft / Ditutup"}
+                            <UserPlus className="h-3.5 w-3.5" />
+                            Simulasikan Pelamar Melamar Lowongan Ini
                           </button>
                         </div>
-
-                        <h3 className="mt-3 text-base font-bold text-slate-900">{vac.title}</h3>
-                        <p className="mt-1 text-xs text-slate-500">
-                          Agensi Mitra: <strong>{vac.agencyPartner}</strong> · Pemberi Kerja:{" "}
-                          {vac.employerName}
-                        </p>
-
-                        <div className="mt-4 grid grid-cols-3 gap-2 rounded-xl bg-slate-50 p-3 text-xs">
-                          <div>
-                            <span className="text-slate-400 block text-[11px]">Gaji Kontrak</span>
-                            <strong className="text-teal-700">{vac.salaryForeign}</strong>
-                            <span className="block text-[10px] text-slate-500">
-                              ± {formatRupiah(vac.salaryIdrEstimate)}
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-slate-400 block text-[11px]">Syarat Usia & Pend</span>
-                            <strong className="text-slate-800">{vac.ageRange}</strong>
-                            <span className="block text-[10px] text-slate-500">
-                              Min. {vac.minEducation} ({vac.genderPref})
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-slate-400 block text-[11px]">Batas Lamaran</span>
-                            <strong className="text-slate-800">{vac.closingDate}</strong>
-                          </div>
-                        </div>
-
-                        {/* Progress Kuota Job Order */}
-                        <div className="mt-4">
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="font-semibold text-slate-700">
-                              Kuota Terisi: {vac.quotaFilled} dari {vac.quotaTotal} orang
-                            </span>
-                            <span className="font-bold text-sky-600">{pct}%</span>
-                          </div>
-                          <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-slate-100">
-                            <div
-                              className="h-full rounded-full bg-sky-500 transition-all"
-                              style={{ width: `${pct}%` }}
-                            />
-                          </div>
-                        </div>
-
-                        <ul className="mt-4 space-y-1 text-xs text-slate-600">
-                          {vac.requirements.map((req, i) => (
-                            <li key={i} className="flex items-center gap-2">
-                              <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-teal-600" />
-                              {req}
-                            </li>
-                          ))}
-                        </ul>
                       </div>
-
-                      <div className="mt-5 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-4">
-                        <span className="text-[11px] text-slate-400">
-                          Pelamar otomatis tercatat di Journey Engine
-                        </span>
-                        <button
-                          onClick={() => {
-                            setApplyingVacancy(vac);
-                            setApplyForm({
-                              fullName: "",
-                              phone: "",
-                              nik: "",
-                              gender: vac.genderPref === "L" ? "L" : "P",
-                              branchId: "br-idm",
-                            });
-                          }}
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-sky-700"
-                        >
-                          <UserPlus className="h-3.5 w-3.5" />
-                          Simulasikan Pelamar Melamar Lowongan Ini
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 
@@ -8597,23 +8747,29 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
       )}
 
       {/* =========================================================
-          MODAL TAMBAH JOB ORDER / LOWONGAN BARU
+          MODAL TAMBAH / EDIT JOB ORDER / LOWONGAN
          ========================================================= */}
       {showNewVacancyModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
+          <div className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-base font-bold text-slate-900">
-                Tambah Job Order / Publikasi Lowongan Baru
+                {editingVacancy
+                  ? `Edit Job Order / Lowongan (${editingVacancy.code})`
+                  : "Tambah Job Order / Publikasi Lowongan Baru"}
               </h3>
               <button
-                onClick={() => setShowNewVacancyModal(false)}
+                type="button"
+                onClick={() => {
+                  setShowNewVacancyModal(false);
+                  setEditingVacancy(null);
+                }}
                 className="rounded-lg p-1 text-slate-400 hover:bg-slate-100"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <form onSubmit={handleCreateVacancy} className="mt-4 space-y-3 text-xs">
+            <form onSubmit={handleSaveVacancy} className="mt-4 space-y-3 text-xs">
               <div>
                 <label className="font-bold text-slate-700 block mb-1">Judul Lowongan *</label>
                 <input
@@ -8623,7 +8779,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   onChange={(e) =>
                     setNewVacancyForm({ ...newVacancyForm, title: e.target.value })
                   }
-                  placeholder="Contoh: Caregiver Rumah Sakit Taipei"
+                  placeholder="Contoh: Penata Laksana Rumah Tangga & Babysitter (Riyadh)"
                   className="w-full rounded-lg border border-slate-300 px-3 py-2"
                 />
               </div>
@@ -8653,9 +8809,11 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   </select>
                 </div>
                 <div>
-                  <label className="font-bold text-slate-700 block mb-1">Kuota Dibutuhkan</label>
+                  <label className="font-bold text-slate-700 block mb-1">Kuota Dibutuhkan *</label>
                   <input
                     type="number"
+                    min={1}
+                    required
                     value={newVacancyForm.quotaTotal}
                     onChange={(e) =>
                       setNewVacancyForm({
@@ -8708,6 +8866,34 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   </select>
                 </div>
                 <div>
+                  <label className="font-bold text-slate-700 block mb-1">Pemberi Kerja / Majikan</label>
+                  <input
+                    type="text"
+                    value={newVacancyForm.employerName}
+                    onChange={(e) =>
+                      setNewVacancyForm({ ...newVacancyForm, employerName: e.target.value })
+                    }
+                    placeholder="Syarikah / Keluarga Majikan"
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Sektor / Jabatan *</label>
+                  <input
+                    type="text"
+                    required
+                    value={newVacancyForm.jobSector}
+                    onChange={(e) =>
+                      setNewVacancyForm({ ...newVacancyForm, jobSector: e.target.value })
+                    }
+                    placeholder="Housekeeping & Caregiver"
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                  />
+                </div>
+                <div>
                   <label className="font-bold text-slate-700 block mb-1">Gaji Kontrak *</label>
                   <input
                     type="text"
@@ -8716,25 +8902,115 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                     onChange={(e) =>
                       setNewVacancyForm({ ...newVacancyForm, salaryForeign: e.target.value })
                     }
-                    placeholder="NT$ 27.470 / bulan"
+                    placeholder="SAR 1.500 - 1.800 / bulan (Zero Cost)"
                     className="w-full rounded-lg border border-slate-300 px-3 py-2"
                   />
                 </div>
               </div>
 
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Estimasi Gaji (Rp)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={newVacancyForm.salaryIdrEstimate}
+                    onChange={(e) =>
+                      setNewVacancyForm({
+                        ...newVacancyForm,
+                        salaryIdrEstimate: Number(e.target.value),
+                      })
+                    }
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Gender</label>
+                  <select
+                    value={newVacancyForm.genderPref}
+                    onChange={(e) =>
+                      setNewVacancyForm({
+                        ...newVacancyForm,
+                        genderPref: e.target.value as "P" | "L" | "P/L",
+                      })
+                    }
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                  >
+                    <option value="P">Wanita (P)</option>
+                    <option value="L">Pria (L)</option>
+                    <option value="P/L">Wanita / Pria (P/L)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Batas Lamaran</label>
+                  <input
+                    type="date"
+                    value={newVacancyForm.closingDate}
+                    onChange={(e) =>
+                      setNewVacancyForm({ ...newVacancyForm, closingDate: e.target.value })
+                    }
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Syarat Usia</label>
+                  <input
+                    type="text"
+                    value={newVacancyForm.ageRange}
+                    onChange={(e) =>
+                      setNewVacancyForm({ ...newVacancyForm, ageRange: e.target.value })
+                    }
+                    placeholder="21 - 40 Tahun"
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Minimal Pendidikan</label>
+                  <input
+                    type="text"
+                    value={newVacancyForm.minEducation}
+                    onChange={(e) =>
+                      setNewVacancyForm({ ...newVacancyForm, minEducation: e.target.value })
+                    }
+                    placeholder="SD / SMP / SMA"
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">
+                  Persyaratan (1 baris = 1 poin)
+                </label>
+                <textarea
+                  rows={3}
+                  value={newVacancyForm.requirementsText}
+                  onChange={(e) =>
+                    setNewVacancyForm({ ...newVacancyForm, requirementsText: e.target.value })
+                  }
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                />
+              </div>
+
               <div className="flex justify-end gap-2 pt-3">
                 <button
                   type="button"
-                  onClick={() => setShowNewVacancyModal(false)}
+                  onClick={() => {
+                    setShowNewVacancyModal(false);
+                    setEditingVacancy(null);
+                  }}
                   className="rounded-lg border border-slate-200 px-4 py-2 font-semibold text-slate-600"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="rounded-lg bg-slate-900 px-5 py-2 font-semibold text-white hover:bg-slate-800"
+                  className="rounded-lg bg-slate-900 px-5 py-2 font-semibold text-white hover:bg-slate-800 cursor-pointer"
                 >
-                  Tayangkan Lowongan
+                  {editingVacancy ? "Simpan Perubahan" : "Tayangkan Lowongan"}
                 </button>
               </div>
             </form>

@@ -43,6 +43,7 @@ export interface DatabaseSchema {
   isCleanProduction?: boolean;
   sponsors2026ExcelImported?: boolean;
   demoCpmiTrimmedTo4?: boolean;
+  demoVacanciesTrimmedTo2?: boolean;
   tenants?: TenantCompany[];
   branches: Branch[];
   sponsors: Sponsor[];
@@ -614,196 +615,6 @@ function createInitialVacancies(): JobVacancy[] {
       closingDate: relativeDate(45),
       createdAt: relativeDate(-20),
     },
-    {
-      id: "vac-3",
-      code: "JOB-2026-AE03",
-      title: "Housemaid & Caregiver Lansia (Jalur Non-Rekom Dubai & Abu Dhabi)",
-      destinationCountry: "Uni Emirat Arab (UAE)",
-      placementRegion: "TIMUR_TENGAH",
-      middleEastScheme: "NON_REKOM_DIRECT_MAJIKAN",
-      jobSector: "Domestic Worker & Caregiver (PRT / Lansia)",
-      agencyPartner: "Al-Noor Tadbeer & Domestic Services (Dubai)",
-      employerName: "Verified Emirati Families (Dubai / Abu Dhabi / Sharjah)",
-      salaryForeign: "AED 1.600 - 2.000 / bulan (Zero Cost)",
-      salaryIdrEstimate: 8200000,
-      placementFee: 35000000,
-      quotaTotal: 30,
-      quotaFilled: 18,
-      genderPref: "P",
-      minEducation: "SD / SMP / SMA",
-      ageRange: "21 - 40 Tahun",
-      requirements: [
-        "100% Zero Cost — Seluruh biaya tiket, visa, paspor & medical ditanggung Majikan / Syarikah UAE",
-        "Jalur Non-Rekom Cepat: Tanpa BPJS-TK, PAP & KTKLN — langsung proses Tiket & Keberangkatan setelah Visa terbit",
-        "Bisa memasak masakan Arab dasar & merawat anak/lansia",
-      ],
-      isPublished: true,
-      closingDate: relativeDate(20),
-      createdAt: relativeDate(-35),
-    },
-    {
-      id: "vac-4",
-      code: "JOB-2026-QA04",
-      title: "Housekeeping Hospitality & Home Care Doha Qatar",
-      destinationCountry: "Qatar",
-      placementRegion: "TIMUR_TENGAH",
-      middleEastScheme: "FORMAL_WAKALAH_GCC",
-      jobSector: "Hospitality & Home Care Doha",
-      agencyPartner: "Doha Gulf Manpower & Hospitality W.L.L",
-      employerName: "Doha Pearl Residential & Hospitality Group",
-      salaryForeign: "QAR 1.600 - 2.100 / bulan (Zero Cost)",
-      salaryIdrEstimate: 8400000,
-      placementFee: 36000000,
-      quotaTotal: 20,
-      quotaFilled: 9,
-      genderPref: "P/L",
-      minEducation: "SMP / SMA",
-      ageRange: "21 - 40 Tahun",
-      requirements: [
-        "100% Zero Cost — Dibiayai penuh oleh Syarikah / Majikan di Doha Qatar",
-        "Sehat jasmani (Medical Wafid FIT) & siap bekerja kontrak 2 tahun",
-        "Komunikasi dasar Bahasa Arab atau Bahasa Inggris praktis",
-      ],
-      isPublished: true,
-      closingDate: relativeDate(25),
-      createdAt: relativeDate(-15),
-    },
-    {
-      id: "vac-5",
-      code: "JOB-2026-SA05",
-      title: "Skema SPSK (Sistem Penempatan Satu Kanal) & Hospitality Riyad/Jeddah",
-      destinationCountry: "Arab Saudi",
-      placementRegion: "TIMUR_TENGAH",
-      middleEastScheme: "SPSK_MUSANED_SAUDI",
-      jobSector: "Home Care / Hospitality Syarikah (SPSK)",
-      agencyPartner: "Al-Mawarid Manpower / ARCO (Syarikah Resmi Musaned)",
-      employerName: "Syarikah Al-Mawarid (Kontrak Resmi Kemnaker SPSK)",
-      salaryForeign: "SAR 1.500 - 2.200 / bulan (Bebas Potongan)",
-      salaryIdrEstimate: 8800000,
-      placementFee: 38000000,
-      quotaTotal: 50,
-      quotaFilled: 28,
-      genderPref: "P",
-      minEducation: "SD / SMP / SMA",
-      ageRange: "21 - 42 Tahun",
-      requirements: [
-        "100% ZERO COST (Seluruh biaya tiket, visa, paspor & pelatihan ditanggung Syarikah)",
-        "Wajib lolos Medical Check-Up Wafid (eks-GAMCA) di klinik terakreditasi GCC",
-        "Rekam Biometrik Tasheer & terdaftar di Sistem Satu Kanal (SPSK) SISKOP2MI - Musaned",
-        "Majikan adalah Badan Usaha (Syarikah Resmi), gaji ditransfer via Bank Saudi tiap bulan",
-      ],
-      isPublished: true,
-      closingDate: relativeDate(40),
-      createdAt: relativeDate(-18),
-    },
-    {
-      id: "vac-6",
-      code: "JOB-2026-AE06",
-      title: "Hospitality Housekeeping & Tadbeer Center Dubai / Abu Dhabi",
-      destinationCountry: "Uni Emirat Arab (UAE)",
-      placementRegion: "TIMUR_TENGAH",
-      middleEastScheme: "TADBEER_MOHRE_UAE",
-      jobSector: "Hospitality & Housekeeping (Tadbeer / Hotel)",
-      agencyPartner: "Emirates Tadbeer & Hospitality Services LLC (Dubai)",
-      employerName: "Dubai Marina Hospitality & Tadbeer Center",
-      salaryForeign: "AED 1.800 - 2.500 / bulan",
-      salaryIdrEstimate: 9500000,
-      placementFee: 36000000,
-      quotaTotal: 35,
-      quotaFilled: 19,
-      genderPref: "P/L",
-      minEducation: "SMP / SMA / SMK Perhotelan",
-      ageRange: "21 - 38 Tahun",
-      requirements: [
-        "100% Zero Cost (Full Employer Paid sesuai regulasi MOHRE UAE)",
-        "Medical Check-Up Wafid (GAMCA) FIT & e-Visa Kerja MOHRE Dubai",
-        "Komunikasi dasar Bahasa Inggris atau Bahasa Arab praktis",
-      ],
-      isPublished: true,
-      closingDate: relativeDate(35),
-      createdAt: relativeDate(-14),
-    },
-    {
-      id: "vac-7",
-      code: "JOB-2026-KW07",
-      title: "Spa Therapist, Salon Wanita, Barista & Perawat Klinik Kuwait City",
-      destinationCountry: "Kuwait",
-      placementRegion: "TIMUR_TENGAH",
-      middleEastScheme: "FORMAL_WAKALAH_GCC",
-      jobSector: "Spa Therapist / Hospitality / Perawat Formal",
-      agencyPartner: "Al-Dhow International Recruitment (Kuwait City)",
-      employerName: "Royal Orchid Ladies Spa & Medical Center Kuwait",
-      salaryForeign: "KWD 150 - 230 / bulan (Kurs Dinar Tinggi)",
-      salaryIdrEstimate: 10500000,
-      placementFee: 35000000,
-      quotaTotal: 20,
-      quotaFilled: 11,
-      genderPref: "P/L",
-      minEducation: "SMA / SMK Kecantikan / Perhotelan / D3 Keperawatan",
-      ageRange: "21 - 38 Tahun",
-      requirements: [
-        "Penempatan Sektor Formal Berbadan Hukum (Bukan Perseorangan)",
-        "Lolos Medical Wafid (GAMCA), SKCK Mabes Polri & Legalisir Kedutaan Kuwait",
-        "100% Zero Cost bagi CPMI + Akomodasi Apartemen & Transportasi Disediakan",
-      ],
-      isPublished: true,
-      closingDate: relativeDate(30),
-      createdAt: relativeDate(-12),
-    },
-    {
-      id: "vac-8",
-      code: "JOB-2026-OM08",
-      title: "Waitress, Room Attendant Hotel Bintang 5 & Caregiver Muscat",
-      destinationCountry: "Oman",
-      placementRegion: "TIMUR_TENGAH",
-      middleEastScheme: "FORMAL_WAKALAH_GCC",
-      jobSector: "Perhotelan (Hospitality) & Caregiver Formal",
-      agencyPartner: "Muscat Gulf Manpower Solutions LLC",
-      employerName: "Al-Bustan Palace & Muscat Healthcare Group",
-      salaryForeign: "OMR 150 - 200 / bulan",
-      salaryIdrEstimate: 8900000,
-      placementFee: 33000000,
-      quotaTotal: 25,
-      quotaFilled: 10,
-      genderPref: "P/L",
-      minEducation: "SMA / SMK",
-      ageRange: "21 - 40 Tahun",
-      requirements: [
-        "Medical Wafid (GAMCA) FIT & Visa Kerja Resmi Kesultanan Oman",
-        "Skema Zero Cost (Biaya Tiket & Visa Ditanggung Perusahaan di Muscat)",
-        "Bersedia mengikuti pelatihan bahasa Arab/Inggris dasar di BLK-LN",
-      ],
-      isPublished: true,
-      closingDate: relativeDate(32),
-      createdAt: relativeDate(-10),
-    },
-    {
-      id: "vac-9",
-      code: "JOB-2026-JO09",
-      title: "Operator Garment Ekspor (Kawasan Industri QIZ) & Caregiver Amman",
-      destinationCountry: "Yordania",
-      placementRegion: "TIMUR_TENGAH",
-      middleEastScheme: "QIZ_GARMENT_JORDAN",
-      jobSector: "Operator Garment / Tekstil & Hospitality",
-      agencyPartner: "Amman Industrial Apparel & Manpower Co.",
-      employerName: "Classic Fashion Apparel Industry (Kawasan QIZ Amman/Irbid)",
-      salaryForeign: "JOD 260 - 330 / bulan + Insentif Lembur",
-      salaryIdrEstimate: 7800000,
-      placementFee: 29000000,
-      quotaTotal: 40,
-      quotaFilled: 21,
-      genderPref: "P",
-      minEducation: "SMP / SMA / SMK Tata Busana",
-      ageRange: "20 - 38 Tahun",
-      requirements: [
-        "Penempatan Sektor Formal Pabrik Garment Ekspor AS/Eropa di Yordania",
-        "Mampu mengoperasikan mesin jahit industri (Single Needle / Overlock)",
-        "Skema Zero Cost — Makan 3x, Asrama & Tiket Pulang-Pergi Ditanggung Pabrik",
-      ],
-      isPublished: true,
-      closingDate: relativeDate(28),
-      createdAt: relativeDate(-9),
-    },
   ];
 }
 
@@ -1371,7 +1182,6 @@ function createInitialSeed(): DatabaseSchema {
       jobSector: "Domestic Worker & Caregiver (PRT / Lansia)",
       employerName: "Al-Suwaidi Family Villa (Abu Dhabi)",
       agencyPartner: "Al-Noor Tadbeer & Domestic Services (Dubai)",
-      vacancyId: "vac-3",
       stage: "CPMI",
       specialStatus: "NORMAL",
       processTrack: "NON_REKOM",
@@ -1463,7 +1273,6 @@ function createInitialSeed(): DatabaseSchema {
       jobSector: "Hospitality & Housekeeping (Tadbeer / Hotel)",
       employerName: "Al-Maktoum Residence & Tadbeer Dubai",
       agencyPartner: "Emirates Tadbeer & Hospitality Services LLC (Dubai)",
-      vacancyId: "vac-6",
       stage: "ACTIVE_WORKER",
       specialStatus: "NORMAL",
       processTrack: "REKOM",
@@ -3376,16 +3185,23 @@ export function syncExpirationsAndTasks(db: DatabaseSchema): void {
     const initialVacancies = createInitialVacancies();
     if (
       !db.vacancies ||
-      db.vacancies.length === 0 ||
+      (db.vacancies.length === 0 && !db.demoVacanciesTrimmedTo2) ||
       db.vacancies.some((v) => legacyAsiaCountries.includes(v.destinationCountry))
     ) {
       db.vacancies = initialVacancies;
-    } else {
-      for (const iv of initialVacancies) {
-        if (!db.vacancies.some((v) => v.id === iv.id)) {
-          db.vacancies.push(iv);
-        }
-      }
+      db.demoVacanciesTrimmedTo2 = true;
+    } else if (!db.demoVacanciesTrimmedTo2) {
+      const removedDemoVacancyIds = new Set([
+        "vac-3",
+        "vac-4",
+        "vac-5",
+        "vac-6",
+        "vac-7",
+        "vac-8",
+        "vac-9",
+      ]);
+      db.vacancies = db.vacancies.filter((v) => !removedDemoVacancyIds.has(v.id));
+      db.demoVacanciesTrimmedTo2 = true;
     }
   }
   if (
