@@ -165,7 +165,7 @@ const ROLE_PERMISSIONS: Record<
   ADMIN_PUSAT: {
     canVerify: true,
     canViewSensitive: true,
-    canSeeFinance: true,
+    canSeeFinance: false,
     canManageStaff: true,
     canExecuteOperation: true,
     isReadOnlyCabang: false,
@@ -4152,14 +4152,20 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                           </strong>
                         </div>
                         <div className="rounded-xl bg-slate-50 p-3">
-                          <span className="text-slate-400 block">Biaya & Margin Penempatan</span>
-                          <strong className="text-teal-700 mt-0.5 block">
-                            {perms.canSeeFinance
-                              ? `${formatRupiah(selectedCandidate.placementFee)} (Margin ${formatRupiah(
-                                  selectedCandidate.placementFee - selectedCandidate.costIncurred
-                                )})`
-                              : "Hanya Direktur & Keuangan"}
-                          </strong>
+                          <span className="text-slate-400 block">Biaya &amp; Margin Penempatan</span>
+                          {perms.canSeeFinance ? (
+                            <strong className="text-teal-700 mt-0.5 block">
+                              {formatRupiah(selectedCandidate.placementFee)} (Margin{" "}
+                              {formatRupiah(
+                                selectedCandidate.placementFee - selectedCandidate.costIncurred
+                              )}
+                              )
+                            </strong>
+                          ) : (
+                            <strong className="text-slate-400 mt-0.5 block text-[11px]">
+                              🔒 Khusus Role Keuangan &amp; Superadmin
+                            </strong>
+                          )}
                         </div>
                       </div>
 

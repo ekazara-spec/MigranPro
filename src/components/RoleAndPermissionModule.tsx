@@ -361,6 +361,8 @@ export default function RoleAndPermissionModule({
                 allowedMenus: updatedMenus,
                 permissions: {
                   ...role.permissions,
+                  canSeeFinance:
+                    role.code === "DIREKTUR" || updatedMenus.includes("keuangan"),
                   canManageStaff: nextManageStaff,
                 },
               },
@@ -2256,6 +2258,37 @@ export default function RoleAndPermissionModule({
                       {editingRole.code === "DIREKTUR"
                         ? "Direktur Utama (Superadmin) selalu memiliki wewenang penuh kelola akun user."
                         : "Aktifkan bila role ini diizinkan mengedit dan menghapus akun staf di modul Daftar Akun."}
+                    </p>
+                  </div>
+                </label>
+
+                <label className="col-span-2 flex items-center gap-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    disabled={editingRole.code === "DIREKTUR"}
+                    checked={
+                      editingRole.code === "DIREKTUR" ||
+                      Boolean(editingRole.permissions?.canSeeFinance)
+                    }
+                    onChange={(e) =>
+                      setEditingRole({
+                        ...editingRole,
+                        permissions: {
+                          ...editingRole.permissions,
+                          canSeeFinance: e.target.checked,
+                        },
+                      })
+                    }
+                    className="rounded border-slate-600 text-emerald-500 focus:ring-emerald-500"
+                  />
+                  <div>
+                    <p className="font-bold text-emerald-200">
+                      Hak Akses Finansial: Lihat Biaya &amp; Margin Penempatan CPMI
+                    </p>
+                    <p className="text-[11px] text-emerald-300/80">
+                      {editingRole.code === "DIREKTUR"
+                        ? "Superadmin selalu dapat melihat rincian biaya & margin penempatan."
+                        : "Hanya aktifkan pada role Keuangan. Divisi lain otomatis melihat label terbatas."}
                     </p>
                   </div>
                 </label>
