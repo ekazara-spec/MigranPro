@@ -101,9 +101,11 @@ import CashAndAdvancesModule from "@/components/CashAndAdvancesModule";
 import EmployerMatchingModule from "@/components/EmployerMatchingModule";
 import RoleAndPermissionModule from "@/components/RoleAndPermissionModule";
 import { MasterPartnerDatabaseModule } from "@/components/MasterPartnerDatabaseModule";
+import MaintenanceModule from "@/components/MaintenanceModule";
 import SidebarNav, { NavKey } from "@/components/SidebarNav";
 
 interface DbPayload {
+  isCleanProduction?: boolean;
   tenants?: TenantCompany[];
   branches: Branch[];
   sponsors: Sponsor[];
@@ -295,24 +297,7 @@ function getCandidateAvatarUrl(
 export default function PASMigranProCommandCenter() {
   const [db, setDb] = useState<DbPayload | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeNav, setActiveNav] = useState<
-    | "beranda"
-    | "saas_tenants"
-    | "doc_print"
-    | "whatsapp_gateway"
-    | "aruskas_kasbon"
-    | "employer_matching"
-    | "cpmi"
-    | "keuangan"
-    | "pelatihan"
-    | "pengingat"
-    | "cases"
-    | "vacancy"
-    | "portal_cpmi"
-    | "medical_visa"
-    | "master_data"
-    | "cabang_audit"
-  >("beranda");
+  const [activeNav, setActiveNav] = useState<NavKey>("beranda");
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
@@ -458,10 +443,11 @@ export default function PASMigranProCommandCenter() {
   const [newStaffForm, setNewStaffForm] = useState({
     name: "",
     email: "",
-    role: "STAF_DOKUMEN" as UserRole,
+    role: "INTERVIEW_PENDAFTARAN" as UserRole,
+    secondaryRoles: [] as UserRole[],
     branchId: "ALL",
     phone: "",
-    pinCode: "1234",
+    pinCode: "",
   });
 
   // Notifikasi / Feedback Banner
@@ -895,11 +881,22 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
 
   const currentRole: UserRole = loggedInStaff?.role || "DIREKTUR";
   const matchedDbRole = (db?.roles || []).find((r) => r.code === currentRole);
+  const secondaryDbRoles = useMemo(() => {
+    const codes = loggedInStaff?.secondaryRoles || [];
+    return codes
+      .map((code) => (db?.roles || []).find((r) => r.code === code))
+      .filter((r): r is AppRole => Boolean(r));
+  }, [db?.roles, loggedInStaff?.secondaryRoles]);
 
   const perms = useMemo(() => {
     if (matchedDbRole) {
+      const allRoles = [matchedDbRole, ...secondaryDbRoles];
       return {
-        ...matchedDbRole.permissions,
+        canVerify: allRoles.some((r) => r.permissions?.canVerify),
+        canViewSensitive: allRoles.some((r) => r.permissions?.canViewSensitive),
+        canSeeFinance: allRoles.some((r) => r.permissions?.canSeeFinance),
+        canManageStaff: allRoles.some((r) => r.permissions?.canManageStaff),
+        canExecuteOperation: allRoles.some((r) => r.permissions?.canExecuteOperation),
         isReadOnlyCabang:
           matchedDbRole.isReadOnly ||
           matchedDbRole.allowedScope === "BRANCH" ||
@@ -916,13 +913,19 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
         isReadOnlyCabang: true,
       }
     );
-  }, [matchedDbRole, currentRole]);
+  }, [matchedDbRole, secondaryDbRoles, currentRole]);
 
-  // Hak Akses Menu Dinamis Berbasis Role & Matrix
+  // Hak Akses Menu Dinamis Berbasis Role & Matrix (Mendukung Rangkap Divisi)
   const allowedMenuIds = useMemo<string[] | null>(() => {
     if (!loggedInStaff || currentRole === "DIREKTUR") return null;
     if (matchedDbRole?.allowedMenus && matchedDbRole.allowedMenus.length > 0) {
-      return matchedDbRole.allowedMenus;
+      const combined = new Set<string>(matchedDbRole.allowedMenus);
+      for (const sr of secondaryDbRoles) {
+        for (const m of sr.allowedMenus || []) {
+          combined.add(m);
+        }
+      }
+      return Array.from(combined);
     }
     if (currentRole === "ADMIN_PUSAT") return null;
     if (currentRole === "STAF_DOKUMEN") {
@@ -946,9 +949,12 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
       return ["beranda", "cpmi", "portal_cpmi"];
     }
     return null;
-  }, [loggedInStaff, currentRole, matchedDbRole]);
+  }, [loggedInStaff, currentRole, matchedDbRole, secondaryDbRoles]);
 
   function isMenuAllowed(menuId: string): boolean {
+    if (menuId === "maintenance") {
+      return Boolean(perms.canManageStaff || currentRole === "DIREKTUR");
+    }
     if (!allowedMenuIds) return true;
     return allowedMenuIds.includes(menuId);
   }
@@ -2630,6 +2636,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                 {activeNav === "master_data" &&
                   "Master Data & Database Mitra P3MI (Agensi/Syarikah, Sponsor, Klinik Wafid, BPJS/KUR & Badil)"}
                 {activeNav === "cabang_audit" && "Manajemen Staf (RBAC), Komisi Sponsor & Jejak Audit"}
+                {activeNav === "maintenance" && "Pengaturan Maintenance: Backup, Restore & Reset Database (Superadmin)"}
               </h1>
             </div>
               <p className="text-[11px] sm:text-xs text-slate-500 truncate">
@@ -5487,6 +5494,20 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
           )}
 
           {/* =========================================================
+              TAB: PENGATURAN MAINTENANCE (BACKUP, RESTORE & RESET DATABASE)
+             ========================================================= */}
+          {activeNav === "maintenance" && (
+            <MaintenanceModule
+              db={db}
+              loggedInStaff={loggedInStaff}
+              actorName={loggedInStaff?.name || "Direktur Utama"}
+              actorRole={loggedInStaff?.role || "DIREKTUR"}
+              canAccessMaintenance={Boolean(perms.canManageStaff || currentRole === "DIREKTUR")}
+              onRefreshDb={fetchDb}
+            />
+          )}
+
+          {/* =========================================================
               TAB 9: MODUL KEUANGAN P3MI — PEMBAYARAN FEE SPONSOR BERTAHAP
               (DP 1, DP 2, DP 3, PELUNASAN), RINCIAN HPP, KUR PMI & MARGIN
              ========================================================= */}
@@ -6884,7 +6905,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                     Login Multi-User PASMigranPro
                   </h3>
                   <p className="text-[11px] text-slate-500">
-                    Pilih akun staf atau masukkan Email & PIN (Default: 1234)
+                    Pilih akun staf lalu masukkan Email &amp; Password / PIN Login
                   </p>
                 </div>
               </div>
@@ -6904,7 +6925,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
 
             <div className="mt-3">
               <p className="text-[11px] font-bold uppercase text-slate-400 mb-1.5">
-                Pilih Cepat Akun Staf (Klik untuk Isi):
+                Pilih Cepat Akun Staf (Isi Email):
               </p>
               <div className="space-y-1.5 max-h-44 overflow-y-auto pr-1">
                 {db.staffAccounts?.map((st) => (
@@ -6913,7 +6934,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                     type="button"
                     onClick={() => {
                       setLoginEmail(st.email);
-                      setLoginPin(st.pinCode);
+                      setLoginPin("");
                     }}
                     className={`flex w-full items-center justify-between rounded-lg border px-3 py-2 text-left text-xs transition ${
                       loginEmail === st.email
@@ -6925,7 +6946,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                       <p className="font-bold">{st.name}</p>
                       <p className="text-[11px] text-slate-500">{st.roleLabel}</p>
                     </div>
-                    <span className="font-mono text-[10px] text-slate-400">PIN: {st.pinCode}</span>
+                    <span className="font-mono text-[10px] text-slate-400">{st.email}</span>
                   </button>
                 ))}
               </div>
@@ -6943,7 +6964,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                 />
               </div>
               <div>
-                <label className="font-bold text-slate-700 block mb-1">PIN Keamanan</label>
+                <label className="font-bold text-slate-700 block mb-1">Password / PIN Login</label>
                 <input
                   type="password"
                   required
@@ -7339,7 +7360,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
          ========================================================= */}
       {showAddStaffModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <h3 className="text-base font-bold text-slate-900">Tambah Akun Staf P3MI Baru</h3>
             <form
               onSubmit={async (e) => {
@@ -7347,6 +7368,15 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                 const { data } = await callApi("CREATE_STAFF", newStaffForm);
                 if (data.ok) {
                   setShowAddStaffModal(false);
+                  setNewStaffForm({
+                    name: "",
+                    email: "",
+                    role: "INTERVIEW_PENDAFTARAN",
+                    secondaryRoles: [],
+                    branchId: "ALL",
+                    phone: "",
+                    pinCode: "",
+                  });
                   setToast({
                     type: "success",
                     title: `Akun Staf ${data.staff.name} Berhasil Ditambahkan`,
@@ -7375,8 +7405,31 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 font-mono"
                 />
               </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Password / PIN *</label>
+                  <input
+                    type="text"
+                    required
+                    value={newStaffForm.pinCode}
+                    onChange={(e) => setNewStaffForm({ ...newStaffForm, pinCode: e.target.value })}
+                    placeholder="Contoh: PBAS-Nama#26"
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">No. Telp / WA</label>
+                  <input
+                    type="text"
+                    value={newStaffForm.phone}
+                    onChange={(e) => setNewStaffForm({ ...newStaffForm, phone: e.target.value })}
+                    placeholder="08xx-xxxx-xxxx"
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                  />
+                </div>
+              </div>
               <div>
-                <label className="font-bold text-slate-700 block mb-1">Peran RBAC</label>
+                <label className="font-bold text-slate-700 block mb-1">Peran Utama (Role RBAC)</label>
                 <select
                   value={newStaffForm.role}
                   onChange={(e) =>
@@ -7384,23 +7437,42 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   }
                   className="w-full rounded-lg border border-slate-300 px-3 py-2"
                 >
-                  {(db.roles && db.roles.length > 0
-                    ? db.roles
-                    : [
-                        { code: "ADMIN_PUSAT", name: "Admin Operasional Pusat" },
-                        { code: "STAF_DOKUMEN", name: "Staf Dokumen, Medical & Visa" },
-                        { code: "STAF_KEUANGAN", name: "Staf Keuangan & Kasir" },
-                        { code: "INSTRUKTUR_BLK", name: "Instruktur BLK-LN & Asrama" },
-                        { code: "KEPALA_CABANG", name: "Kepala Cabang Daerah" },
-                        { code: "PEREKRUT_PL", name: "Perekrut / Sponsor Lapangan (PL)" },
-                        { code: "DIREKTUR", name: "Direktur Utama" },
-                      ]
-                  ).map((r) => (
+                  {(db.roles || []).map((r) => (
                     <option key={r.code} value={r.code}>
                       {r.name} ({r.code})
                     </option>
                   ))}
                 </select>
+              </div>
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">
+                  Peran Tambahan / Rangkap Divisi (Opsional)
+                </label>
+                <div className="grid grid-cols-2 gap-1.5 rounded-lg border border-slate-200 bg-slate-50 p-2 max-h-32 overflow-y-auto">
+                  {(db.roles || [])
+                    .filter((r) => r.code !== newStaffForm.role)
+                    .map((r) => {
+                      const checked = newStaffForm.secondaryRoles.includes(r.code);
+                      return (
+                        <label
+                          key={r.code}
+                          className="flex items-center gap-1.5 text-[11px] text-slate-700 cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={(e) => {
+                              const next = e.target.checked
+                                ? [...newStaffForm.secondaryRoles, r.code]
+                                : newStaffForm.secondaryRoles.filter((x) => x !== r.code);
+                              setNewStaffForm({ ...newStaffForm, secondaryRoles: next });
+                            }}
+                          />
+                          <span className="truncate">{r.name}</span>
+                        </label>
+                      );
+                    })}
+                </div>
               </div>
               <div>
                 <label className="font-bold text-slate-700 block mb-1">Penempatan Cabang</label>

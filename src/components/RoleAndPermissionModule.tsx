@@ -183,6 +183,14 @@ export const APP_MODULES: NavigationModuleItem[] = [
     groupLabel: "5. Setting / Pengaturan",
     description: "Broadcast notifikasi tahapan otomatis & gateway pengiriman pesan",
   },
+  {
+    id: "maintenance",
+    code: "MOD_MAINTENANCE",
+    name: "Maintenance & Backup",
+    group: "SETTING",
+    groupLabel: "5. Setting / Pengaturan",
+    description: "Khusus Superadmin: Backup database (.json), restore & reset data dummy",
+  },
 ];
 
 interface Props {
@@ -531,6 +539,7 @@ export default function RoleAndPermissionModule({
             name: editingStaff.name,
             email: editingStaff.email,
             role: editingStaff.role,
+            secondaryRoles: editingStaff.secondaryRoles || [],
             branchId: editingStaff.branchId,
             phone: editingStaff.phone,
             pinCode: editingStaff.pinCode,
@@ -1396,11 +1405,27 @@ export default function RoleAndPermissionModule({
                             <div className="text-[11px] font-mono text-slate-400">{st.email}</div>
                           </td>
                           <td className="py-3 px-3">
-                            <span className="inline-flex rounded-full bg-slate-800 border border-slate-700 px-2.5 py-0.5 text-[10px] font-bold text-sky-300">
-                              {matchedRole?.name || st.roleLabel || st.role}
-                            </span>
+                            <div className="flex flex-wrap gap-1">
+                              <span className="inline-flex rounded-full bg-slate-800 border border-slate-700 px-2.5 py-0.5 text-[10px] font-bold text-sky-300">
+                                {matchedRole?.name || st.role}
+                              </span>
+                              {(st.secondaryRoles || []).map((sr) => {
+                                const srObj = roles.find((r) => r.code === sr);
+                                return (
+                                  <span
+                                    key={sr}
+                                    className="inline-flex rounded-full bg-indigo-500/15 border border-indigo-500/30 px-2 py-0.5 text-[10px] font-semibold text-indigo-300"
+                                  >
+                                    + {srObj?.name || sr}
+                                  </span>
+                                );
+                              })}
+                            </div>
                             <div className="mt-0.5 text-[10px] font-mono text-slate-500">
                               {st.role}
+                              {st.secondaryRoles?.length
+                                ? ` + ${st.secondaryRoles.join(", ")}`
+                                : ""}
                             </div>
                           </td>
                           <td className="py-3 px-3 text-slate-300 font-medium">
@@ -1409,7 +1434,7 @@ export default function RoleAndPermissionModule({
                           <td className="py-3 px-3">
                             <div className="text-slate-300">{st.phone || "-"}</div>
                             <div className="text-[10px] text-slate-400">
-                              PIN: <strong className="font-mono text-white">{st.pinCode}</strong>
+                              Pass: <strong className="font-mono text-white">{st.pinCode}</strong>
                             </div>
                           </td>
                           <td className="py-3 px-3 text-center">
@@ -1521,6 +1546,17 @@ export default function RoleAndPermissionModule({
                         <span className="rounded-full bg-slate-800 border border-slate-700 px-2 py-0.5 text-[10px] font-bold text-sky-300">
                           {matchedRole?.name || st.role}
                         </span>
+                        {(st.secondaryRoles || []).map((sr) => {
+                          const srObj = roles.find((r) => r.code === sr);
+                          return (
+                            <span
+                              key={sr}
+                              className="rounded-full bg-indigo-500/15 border border-indigo-500/30 px-2 py-0.5 text-[9px] font-semibold text-indigo-300"
+                            >
+                              + {srObj?.name || sr}
+                            </span>
+                          );
+                        })}
                         {isUserSuperadmin && (
                           <span className="rounded-full bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-[9px] font-bold text-amber-300">
                             Superadmin
@@ -1534,7 +1570,7 @@ export default function RoleAndPermissionModule({
                         Wilayah Akses: <strong>{branchLabel}</strong>
                       </p>
                       <p className="text-slate-400 text-[11px]">
-                        Telp: {st.phone} · PIN: <strong className="font-mono text-white">{st.pinCode}</strong>
+                        Telp: {st.phone} · Pass: <strong className="font-mono text-white">{st.pinCode}</strong>
                       </p>
                     </div>
 
@@ -2358,7 +2394,7 @@ export default function RoleAndPermissionModule({
 
                 <div>
                   <label className="block text-slate-300 font-semibold mb-1">
-                    PIN Login
+                    Password / PIN Login
                   </label>
                   <input
                     type="text"
@@ -2369,6 +2405,44 @@ export default function RoleAndPermissionModule({
                     }
                     className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-white font-mono"
                   />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-slate-300 font-semibold mb-1.5">
+                    Peran Tambahan / Rangkap Divisi (Opsional)
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 rounded-xl border border-slate-800 bg-slate-950/50 p-2.5 max-h-36 overflow-y-auto">
+                    {roles
+                      .filter((r) => r.code !== editingStaff.role)
+                      .map((r) => {
+                        const checked = (editingStaff.secondaryRoles || []).includes(r.code);
+                        return (
+                          <label
+                            key={r.code}
+                            className="flex items-center gap-2 rounded px-1.5 py-1 hover:bg-slate-800/60 cursor-pointer"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={(e) => {
+                                const current = editingStaff.secondaryRoles || [];
+                                const next = e.target.checked
+                                  ? [...current, r.code]
+                                  : current.filter((x) => x !== r.code);
+                                setEditingStaff({
+                                  ...editingStaff,
+                                  secondaryRoles: next,
+                                });
+                              }}
+                              className="rounded border-slate-600 text-sky-500"
+                            />
+                            <span className="text-[11px] text-slate-200 truncate">
+                              {r.name}
+                            </span>
+                          </label>
+                        );
+                      })}
+                  </div>
                 </div>
 
                 <div className="sm:col-span-2">

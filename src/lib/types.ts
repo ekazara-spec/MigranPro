@@ -20,6 +20,14 @@ export type ProcessTrack = "REKOM" | "NON_REKOM";
 
 export type UserRole =
   | "DIREKTUR"
+  | "INTERVIEW_PENDAFTARAN"
+  | "PENDATAAN_MEDICAL"
+  | "PASPOR_ENJAZ_TASHEEL"
+  | "KEUANGAN"
+  | "TICKETING_HANDLE"
+  | "MARKETING"
+  | "OPP"
+  | "CASE_CARECENTER"
   | "ADMIN_PUSAT"
   | "KEPALA_CABANG"
   | "STAF_DOKUMEN"
@@ -184,6 +192,7 @@ export interface StaffAccount {
   name: string;
   email: string;
   role: UserRole;
+  secondaryRoles?: UserRole[];
   roleLabel: string;
   branchId: string;
   phone: string;
@@ -437,7 +446,8 @@ export interface AuditLog {
     | "STAFF_DELETED"
     | "ROLE_CREATED"
     | "ROLE_UPDATED"
-    | "ROLE_DELETED";
+    | "ROLE_DELETED"
+    | "MAINTENANCE_ACTION";
   summary: string;
   details?: string;
   timestamp: string;

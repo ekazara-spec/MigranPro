@@ -9,6 +9,7 @@ import {
   Building2,
   ChevronDown,
   ChevronRight,
+  Database,
   FolderKanban,
   GraduationCap,
   LayoutDashboard,
@@ -43,7 +44,8 @@ export type NavKey =
   | "portal_cpmi"
   | "medical_visa"
   | "master_data"
-  | "cabang_audit";
+  | "cabang_audit"
+  | "maintenance";
 
 interface SidebarItem {
   id: NavKey;
@@ -187,6 +189,7 @@ export default function SidebarNav({
       items: [
         { id: "master_data", label: "Master Data & Mitra", icon: FolderKanban },
         { id: "whatsapp_gateway", label: "WhatsApp Gateway", icon: MessageSquarePlus },
+        { id: "maintenance", label: "Maintenance & Backup", icon: Database },
       ],
     },
   ];

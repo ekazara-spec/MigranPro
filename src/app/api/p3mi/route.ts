@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
+  DatabaseSchema,
   buildDefaultFinanceForCandidate,
   buildDefaultRegistrationFormForCandidate,
   buildDefaultTrainingForCandidate,
@@ -82,9 +83,170 @@ export async function POST(req: NextRequest) {
     } = body;
     const db = readDb();
 
+    // Helper Otorisasi Kelola Akun Staf & Maintenance (Hanya Superadmin / Role dengan canManageStaff)
+    function isSuperadminActor(): boolean {
+      if (actorRole === "DIREKTUR") return true;
+      const matchedActorRole = (db.roles || []).find((r) => r.code === actorRole);
+      return Boolean(matchedActorRole?.permissions?.canManageStaff);
+    }
+
     if (action === "RESET_DEMO_DATA") {
+      if (!isSuperadminActor()) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: "Akses Ditolak: Hanya Direktur Utama (Superadmin) yang dapat mereset database.",
+          },
+          { status: 403 }
+        );
+      }
       const fresh = resetDbToSeed();
       return NextResponse.json({ ok: true, db: fresh });
+    }
+
+    if (action === "BACKUP_DATABASE") {
+      if (!isSuperadminActor()) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: "Akses Ditolak: Hanya Superadmin yang dapat mengunduh backup database.",
+          },
+          { status: 403 }
+        );
+      }
+      const { scope = "FULL" } = body.payload || {};
+      db.auditLogs.unshift({
+        id: `aud-${Date.now()}`,
+        actorName: actorName || "Superadmin",
+        actorRole: actorRole as UserRole,
+        branchName: branchName || "Kantor Pusat Jakarta",
+        actionType: "MAINTENANCE_ACTION",
+        summary: `Melakukan Backup Database (${scope === "CORE" ? "User, Role & Master Data" : "Full Database"})`,
+        details: `CPMI: ${db.candidates.length} · Staf: ${db.staffAccounts.length} · Role: ${(db.roles || []).length}`,
+        timestamp: nowTimestamp(),
+      });
+      writeDb(db);
+
+      const snapshot: Partial<DatabaseSchema> & { exportedAt: string; scope: string } =
+        scope === "CORE"
+          ? {
+              exportedAt: nowTimestamp(),
+              scope: "CORE",
+              tenants: db.tenants,
+              branches: db.branches,
+              roles: db.roles,
+              staffAccounts: db.staffAccounts,
+              foreignAgencies: db.foreignAgencies,
+              medicalClinics: db.medicalClinics,
+              bpjsFinancingPartners: db.bpjsFinancingPartners,
+              masterImmigrationOffices: db.masterImmigrationOffices,
+              masterDisdukcapil: db.masterDisdukcapil,
+              masterMedicalClinics: db.masterMedicalClinics,
+              masterAirlines: db.masterAirlines,
+              masterBlkLn: db.masterBlkLn,
+              masterEmbassies: db.masterEmbassies,
+            }
+          : {
+              exportedAt: nowTimestamp(),
+              scope: "FULL",
+              ...db,
+            };
+
+      return NextResponse.json({ ok: true, snapshot, db });
+    }
+
+    if (action === "RESTORE_DATABASE") {
+      if (!isSuperadminActor()) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: "Akses Ditolak: Hanya Superadmin yang dapat me-restore database.",
+          },
+          { status: 403 }
+        );
+      }
+      const { snapshot } = body.payload || {};
+      if (
+        !snapshot ||
+        typeof snapshot !== "object" ||
+        !Array.isArray(snapshot.branches) ||
+        !Array.isArray(snapshot.staffAccounts)
+      ) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: "Format file backup JSON tidak valid (harus memuat branches dan staffAccounts).",
+          },
+          { status: 400 }
+        );
+      }
+
+      const restored: DatabaseSchema = {
+        ...db,
+        ...snapshot,
+        candidates: Array.isArray(snapshot.candidates) ? snapshot.candidates : [],
+        sponsors: Array.isArray(snapshot.sponsors) ? snapshot.sponsors : [],
+        cases: Array.isArray(snapshot.cases) ? snapshot.cases : [],
+        vacancies: Array.isArray(snapshot.vacancies) ? snapshot.vacancies : [],
+        renewalTasks: Array.isArray(snapshot.renewalTasks) ? snapshot.renewalTasks : [],
+        auditLogs: Array.isArray(snapshot.auditLogs) ? snapshot.auditLogs : [],
+      };
+      restored.auditLogs.unshift({
+        id: `aud-${Date.now()}`,
+        actorName: actorName || "Superadmin",
+        actorRole: actorRole as UserRole,
+        branchName: branchName || "Kantor Pusat Jakarta",
+        actionType: "MAINTENANCE_ACTION",
+        summary: "Melakukan Restore Database dari File Backup JSON",
+        details: `Dipulihkan: ${restored.candidates.length} CPMI · ${restored.staffAccounts.length} Staf · ${(restored.roles || []).length} Role`,
+        timestamp: nowTimestamp(),
+      });
+      writeDb(restored);
+      return NextResponse.json({ ok: true, db: restored });
+    }
+
+    if (action === "CLEAR_OPERATIONAL_DATA") {
+      if (!isSuperadminActor()) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: "Akses Ditolak: Hanya Superadmin yang dapat membersihkan data dummy operasional.",
+          },
+          { status: 403 }
+        );
+      }
+      const { includeMaster = false } = body.payload || {};
+      const cleared: DatabaseSchema = {
+        ...db,
+        isCleanProduction: true,
+        candidates: [],
+        sponsors: includeMaster ? [] : [],
+        cases: [],
+        vacancies: [],
+        renewalTasks: [],
+        badilRecords: [],
+        cashJournals: [],
+        cashAdvances: [],
+        syarikahInvoices: [],
+        employerInterviews: [],
+        sponsorSubmissions: [],
+        whatsAppLogs: [],
+        auditLogs: [
+          {
+            id: `aud-${Date.now()}`,
+            actorName: actorName || "Direktur Utama",
+            actorRole: actorRole as UserRole,
+            branchName: branchName || "Kantor Pusat Jakarta",
+            actionType: "MAINTENANCE_ACTION",
+            summary:
+              "Membersihkan Seluruh Data Dummy Operasional (Mode Produksi Bersih PT. Panca Banyu Ajisakti)",
+            details: `Dipertahankan: Direktur Utama, ${db.staffAccounts.length} User Staf, ${(db.roles || []).length} Role RBAC, Profil PT & Master Referensi.`,
+            timestamp: nowTimestamp(),
+          },
+        ],
+      };
+      writeDb(cleared);
+      return NextResponse.json({ ok: true, db: cleared });
     }
 
     // Aturan Otorisasi: Administrasi eksekusi seluruh proses operasional hanya dilakukan oleh Admin Pusat & Direktur
@@ -166,7 +328,7 @@ export async function POST(req: NextRequest) {
       }
       if (staff.pinCode !== String(pinCode).trim()) {
         return NextResponse.json(
-          { ok: false, error: "PIN / Kata Sandi salah. Gunakan PIN demo: 1234" },
+          { ok: false, error: "Password / PIN salah. Silakan periksa kembali atau hubungi Direktur Utama." },
           { status: 401 }
         );
       }
@@ -192,9 +354,7 @@ export async function POST(req: NextRequest) {
 
     // Helper Otorisasi Kelola Akun Staf (Hanya Superadmin / Role dengan canManageStaff)
     function actorCanManageStaff(): boolean {
-      if (actorRole === "DIREKTUR") return true;
-      const matchedActorRole = (db.roles || []).find((r) => r.code === actorRole);
-      return Boolean(matchedActorRole?.permissions?.canManageStaff);
+      return isSuperadminActor();
     }
 
     // 2. MANAJEMEN STAF BARU
@@ -209,7 +369,7 @@ export async function POST(req: NextRequest) {
           { status: 403 }
         );
       }
-      const { name, email, role, branchId, phone, pinCode = "1234" } = body.payload;
+      const { name, email, role, secondaryRoles, branchId, phone, pinCode = "1234" } = body.payload;
       const cleanName = String(name || "").trim();
       const cleanEmail = String(email || "").trim().toLowerCase();
       if (!cleanName || !cleanEmail) {
@@ -226,12 +386,23 @@ export async function POST(req: NextRequest) {
       }
       if (!db.roles) db.roles = createInitialRoles();
       const matchedRole = db.roles.find((r) => r.code === role);
-      const roleLabel = matchedRole ? matchedRole.name : String(role);
+      const cleanSecondaryRoles: UserRole[] = Array.isArray(secondaryRoles)
+        ? secondaryRoles.filter((sr) => sr && sr !== role)
+        : [];
+      const secondaryLabels = cleanSecondaryRoles
+        .map((sr) => db.roles?.find((r) => r.code === sr)?.name || String(sr))
+        .filter(Boolean);
+      const primaryLabel = matchedRole ? matchedRole.name : String(role);
+      const roleLabel =
+        secondaryLabels.length > 0
+          ? `${primaryLabel} & ${secondaryLabels.join(" & ")}`
+          : primaryLabel;
       const newStaff: StaffAccount = {
         id: `stf-${Date.now()}`,
         name: cleanName,
         email: cleanEmail,
         role: role as UserRole,
+        secondaryRoles: cleanSecondaryRoles.length > 0 ? cleanSecondaryRoles : undefined,
         roleLabel,
         branchId: branchId || "ALL",
         phone: String(phone || "-").trim() || "-",
@@ -265,7 +436,7 @@ export async function POST(req: NextRequest) {
           { status: 403 }
         );
       }
-      const { id, name, email, role, branchId, phone, pinCode, active } = body.payload || {};
+      const { id, name, email, role, secondaryRoles, branchId, phone, pinCode, active } = body.payload || {};
       const idx = db.staffAccounts.findIndex((s) => s.id === id);
       if (idx === -1) {
         return NextResponse.json(
@@ -292,6 +463,9 @@ export async function POST(req: NextRequest) {
 
       if (!db.roles) db.roles = createInitialRoles();
       const nextRole = (role ?? existing.role) as UserRole;
+      const nextSecondaryRoles: UserRole[] = Array.isArray(secondaryRoles)
+        ? secondaryRoles.filter((sr) => sr && sr !== nextRole)
+        : existing.secondaryRoles?.filter((sr) => sr !== nextRole) || [];
       const nextActive = active !== undefined ? Boolean(active) : existing.active;
 
       // Pastikan masih ada minimal 1 akun DIREKTUR aktif agar tidak mengunci akses Superadmin
@@ -314,12 +488,22 @@ export async function POST(req: NextRequest) {
       }
 
       const matchedRole = db.roles.find((r) => r.code === nextRole);
+      const primaryLabel = matchedRole ? matchedRole.name : String(nextRole);
+      const secondaryLabels = nextSecondaryRoles
+        .map((sr) => db.roles?.find((r) => r.code === sr)?.name || String(sr))
+        .filter(Boolean);
+      const nextRoleLabel =
+        secondaryLabels.length > 0
+          ? `${primaryLabel} & ${secondaryLabels.join(" & ")}`
+          : primaryLabel;
+
       const updatedStaff: StaffAccount = {
         ...existing,
         name: cleanName,
         email: cleanEmail,
         role: nextRole,
-        roleLabel: matchedRole ? matchedRole.name : String(nextRole),
+        secondaryRoles: nextSecondaryRoles.length > 0 ? nextSecondaryRoles : undefined,
+        roleLabel: nextRoleLabel,
         branchId: branchId !== undefined ? String(branchId) : existing.branchId,
         phone: phone !== undefined ? String(phone).trim() || "-" : existing.phone,
         pinCode:

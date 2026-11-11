@@ -39,6 +39,7 @@ import {
 } from "./types";
 
 export interface DatabaseSchema {
+  isCleanProduction?: boolean;
   tenants?: TenantCompany[];
   branches: Branch[];
   sponsors: Sponsor[];
@@ -360,66 +361,146 @@ function createInitialStaff(): StaffAccount[] {
       name: "H. Bambang Wijaya, S.E.",
       email: "direktur@pasmigranpro.id",
       role: "DIREKTUR",
-      roleLabel: "Direktur Utama (Akses Penuh)",
+      roleLabel: "Direktur Utama (Superadmin)",
       branchId: "ALL",
       phone: "0811-1000-2200",
       active: true,
-      pinCode: "1234",
+      pinCode: "PBAS-Dir#2026",
     },
     {
-      id: "stf-2",
-      name: "Rina Kartika, S.Psi.",
-      email: "admin.pusat@pasmigranpro.id",
-      role: "ADMIN_PUSAT",
-      roleLabel: "Admin Operasional & Keuangan Pusat",
+      id: "stf-dewi",
+      name: "Dewi",
+      email: "dewi@pasmigranpro.id",
+      role: "INTERVIEW_PENDAFTARAN",
+      secondaryRoles: ["MARKETING"],
+      roleLabel: "Interview / Pendaftaran & Marketing",
       branchId: "ALL",
-      phone: "0812-8800-1122",
+      phone: "-",
       active: true,
-      pinCode: "1234",
+      pinCode: "PBAS-Dewi#26",
     },
     {
-      id: "stf-3",
-      name: "Dimas Saputra",
-      email: "dokumen@pasmigranpro.id",
-      role: "STAF_DOKUMEN",
-      roleLabel: "Staf Dokumen, Medical & Visa",
+      id: "stf-sukma",
+      name: "Sukma",
+      email: "sukma@pasmigranpro.id",
+      role: "INTERVIEW_PENDAFTARAN",
+      roleLabel: "Interview / Pendaftaran",
       branchId: "ALL",
-      phone: "0813-7700-3344",
+      phone: "-",
       active: true,
-      pinCode: "1234",
+      pinCode: "PBAS-Sukma#26",
     },
     {
-      id: "stf-4",
-      name: "Hj. Siti Aminah",
-      email: "cabang.indramayu@pasmigranpro.id",
-      role: "KEPALA_CABANG",
-      roleLabel: "Kepala Cabang Indramayu",
-      branchId: "br-idm",
-      phone: "0812-2345-6789",
+      id: "stf-wandi",
+      name: "Wandi",
+      email: "wandi@pasmigranpro.id",
+      role: "INTERVIEW_PENDAFTARAN",
+      secondaryRoles: ["MARKETING"],
+      roleLabel: "Interview / Pendaftaran & Marketing",
+      branchId: "ALL",
+      phone: "-",
       active: true,
-      pinCode: "1234",
+      pinCode: "PBAS-Wandi#26",
     },
     {
-      id: "stf-5",
-      name: "Hendro Prasetyo",
-      email: "cabang.cilacap@pasmigranpro.id",
-      role: "KEPALA_CABANG",
-      roleLabel: "Kepala Cabang Cilacap",
-      branchId: "br-clp",
-      phone: "0813-2820-9900",
+      id: "stf-arik",
+      name: "Arik",
+      email: "arik@pasmigranpro.id",
+      role: "PENDATAAN_MEDICAL",
+      roleLabel: "Pendataan & Medical Checkup",
+      branchId: "ALL",
+      phone: "-",
       active: true,
-      pinCode: "1234",
+      pinCode: "PBAS-Arik#26",
     },
     {
-      id: "stf-6",
-      name: "Kang Dedi Kusnadi (PL)",
-      email: "sponsor.dedi@pasmigranpro.id",
-      role: "PEREKRUT_PL",
-      roleLabel: "Perekrut / Sponsor Lapangan (PL)",
-      branchId: "br-idm",
-      phone: "0812-2300-4411",
+      id: "stf-ichwan",
+      name: "Ichwan",
+      email: "ichwan@pasmigranpro.id",
+      role: "PASPOR_ENJAZ_TASHEEL",
+      roleLabel: "Pasporan / Enjaz / Tasheel",
+      branchId: "ALL",
+      phone: "-",
       active: true,
-      pinCode: "1234",
+      pinCode: "PBAS-Ichwan#26",
+    },
+    {
+      id: "stf-yusuf",
+      name: "Yusuf",
+      email: "yusuf@pasmigranpro.id",
+      role: "PASPOR_ENJAZ_TASHEEL",
+      roleLabel: "Pasporan / Enjaz / Tasheel",
+      branchId: "ALL",
+      phone: "-",
+      active: true,
+      pinCode: "PBAS-Yusuf#26",
+    },
+    {
+      id: "stf-tikfi",
+      name: "Tikfi",
+      email: "tikfi@pasmigranpro.id",
+      role: "KEUANGAN",
+      roleLabel: "Keuangan",
+      branchId: "ALL",
+      phone: "-",
+      active: true,
+      pinCode: "PBAS-Tikfi#26",
+    },
+    {
+      id: "stf-taufik",
+      name: "Taufik",
+      email: "taufik@pasmigranpro.id",
+      role: "KEUANGAN",
+      roleLabel: "Keuangan",
+      branchId: "ALL",
+      phone: "-",
+      active: true,
+      pinCode: "PBAS-Taufik#26",
+    },
+    {
+      id: "stf-ami",
+      name: "Ami",
+      email: "ami@pasmigranpro.id",
+      role: "TICKETING_HANDLE",
+      roleLabel: "Ticketing / Handle",
+      branchId: "ALL",
+      phone: "-",
+      active: true,
+      pinCode: "PBAS-Ami#26",
+    },
+    {
+      id: "stf-zaenal",
+      name: "Zaenal",
+      email: "zaenal@pasmigranpro.id",
+      role: "TICKETING_HANDLE",
+      roleLabel: "Ticketing / Handle",
+      branchId: "ALL",
+      phone: "-",
+      active: true,
+      pinCode: "PBAS-Zaenal#26",
+    },
+    {
+      id: "stf-alam",
+      name: "Alam",
+      email: "alam@pasmigranpro.id",
+      role: "MARKETING",
+      secondaryRoles: ["CASE_CARECENTER"],
+      roleLabel: "Marketing & Manajemen Case / CareCenter",
+      branchId: "ALL",
+      phone: "-",
+      active: true,
+      pinCode: "PBAS-Alam#26",
+    },
+    {
+      id: "stf-iyan",
+      name: "Iyan",
+      email: "iyan@pasmigranpro.id",
+      role: "OPP",
+      roleLabel: "OPP",
+      branchId: "ALL",
+      phone: "-",
+      active: true,
+      pinCode: "PBAS-Iyan#26",
     },
   ];
 }
@@ -816,7 +897,8 @@ export function createInitialRoles(): AppRole[] {
       id: "role-direktur",
       code: "DIREKTUR",
       name: "Direktur Utama",
-      description: "Pimpinan eksekutif tertinggi P3MI dengan hak akses penuh ke seluruh modul, keuangan, dan otorisasi strategis.",
+      description:
+        "Superadmin tertinggi PT. Panca Banyu Ajisakti dengan hak akses penuh ke seluruh modul, kelola user, keuangan, dan maintenance sistem.",
       isSystemRole: true,
       isReadOnly: false,
       allowedScope: "ALL",
@@ -837,6 +919,7 @@ export function createInitialRoles(): AppRole[] {
         "cabang_audit",
         "master_data",
         "whatsapp_gateway",
+        "maintenance",
       ],
       permissions: {
         canVerify: true,
@@ -848,46 +931,76 @@ export function createInitialRoles(): AppRole[] {
       createdAt: "2024-01-01",
     },
     {
-      id: "role-admin-pusat",
-      code: "ADMIN_PUSAT",
-      name: "Admin Operasional Pusat",
-      description: "Administrator kantor pusat dengan wewenang eksekusi seluruh tahapan penempatan PMI, cetak dokumen, dan master data.",
+      id: "role-interview-pendaftaran",
+      code: "INTERVIEW_PENDAFTARAN",
+      name: "Interview / Pendaftaran",
+      description:
+        "Tim penerimaan pendaftaran awal CPMI (Jalur Rekom & Non-Rekom), seleksi interview, pencocokan Job Order & Portal CPMI.",
       isSystemRole: true,
       isReadOnly: false,
       allowedScope: "ALL",
       allowedMenus: [
         "beranda",
-        "pengingat",
-        "cases",
-        "portal_cpmi",
         "cpmi",
         "vacancy",
         "employer_matching",
-        "pelatihan",
-        "medical_visa",
-        "doc_print",
-        "keuangan",
-        "aruskas_kasbon",
-        "saas_tenants",
-        "cabang_audit",
-        "master_data",
-        "whatsapp_gateway",
+        "portal_cpmi",
+        "pengingat",
       ],
       permissions: {
         canVerify: true,
         canViewSensitive: true,
-        canSeeFinance: true,
-        canManageStaff: true,
+        canSeeFinance: false,
+        canManageStaff: false,
         canExecuteOperation: true,
       },
-      createdAt: "2024-01-01",
+      createdAt: "2026-01-01",
+    },
+    {
+      id: "role-pendataan-medical",
+      code: "PENDATAAN_MEDICAL",
+      name: "Pendataan & Medical Checkup",
+      description:
+        "Tim pendataan berkas dasar CPMI, jadwal & verifikasi hasil Medical Checkup (Wafid/GAMCA) serta pelatihan BLK-LN.",
+      isSystemRole: true,
+      isReadOnly: false,
+      allowedScope: "ALL",
+      allowedMenus: ["beranda", "cpmi", "medical_visa", "pelatihan", "pengingat"],
+      permissions: {
+        canVerify: true,
+        canViewSensitive: true,
+        canSeeFinance: false,
+        canManageStaff: false,
+        canExecuteOperation: true,
+      },
+      createdAt: "2026-01-01",
+    },
+    {
+      id: "role-paspor-enjaz-tasheel",
+      code: "PASPOR_ENJAZ_TASHEEL",
+      name: "Pasporan / Enjaz / Tasheel",
+      description:
+        "Tim pengurusan paspor imigrasi, cetak surat rekom/PK resmi, Enjaz/Tasheel biometrik, dan penerbitan Visa kerja.",
+      isSystemRole: true,
+      isReadOnly: false,
+      allowedScope: "ALL",
+      allowedMenus: ["beranda", "cpmi", "medical_visa", "doc_print", "pengingat"],
+      permissions: {
+        canVerify: true,
+        canViewSensitive: true,
+        canSeeFinance: false,
+        canManageStaff: false,
+        canExecuteOperation: true,
+      },
+      createdAt: "2026-01-01",
     },
     {
       id: "role-keuangan",
-      code: "STAF_KEUANGAN",
-      name: "Staf Keuangan & Kasir",
-      description: "Pengelola kas operasional masuk/keluar, pencairan komisi sponsor DP1-DP3, kasbon, dan invoice Syarikah Timur Tengah.",
-      isSystemRole: false,
+      code: "KEUANGAN",
+      name: "Keuangan",
+      description:
+        "Tim keuangan P3MI pengelola Fee Sponsor DP1–Pelunasan, arus kas bank, kasbon, HPP penempatan & invoice Syarikah.",
+      isSystemRole: true,
       isReadOnly: false,
       allowedScope: "ALL",
       allowedMenus: [
@@ -905,23 +1018,69 @@ export function createInitialRoles(): AppRole[] {
         canManageStaff: false,
         canExecuteOperation: true,
       },
-      createdAt: "2024-01-01",
+      createdAt: "2026-01-01",
     },
     {
-      id: "role-staf-dokumen",
-      code: "STAF_DOKUMEN",
-      name: "Staf Dokumen & Imigrasi",
-      description: "Petugas verifikasi paspor, rekomendasi Disnaker, E-KTKLN, dan pencetakan berkas resmi penempatan.",
+      id: "role-ticketing-handle",
+      code: "TICKETING_HANDLE",
+      name: "Ticketing / Handle",
+      description:
+        "Tim reservasi tiket penerbangan keberangkatan PMI, handling bandara, validasi visa terbang & jadwal kepulangan.",
+      isSystemRole: true,
+      isReadOnly: false,
+      allowedScope: "ALL",
+      allowedMenus: ["beranda", "cpmi", "medical_visa", "doc_print", "pengingat"],
+      permissions: {
+        canVerify: true,
+        canViewSensitive: true,
+        canSeeFinance: false,
+        canManageStaff: false,
+        canExecuteOperation: true,
+      },
+      createdAt: "2026-01-01",
+    },
+    {
+      id: "role-marketing",
+      code: "MARKETING",
+      name: "Marketing",
+      description:
+        "Tim pemasaran lowongan kerja (Job Order), akusisi kandidat, pencocokan majikan/Syarikah & broadcast WhatsApp.",
+      isSystemRole: true,
+      isReadOnly: false,
+      allowedScope: "ALL",
+      allowedMenus: [
+        "beranda",
+        "vacancy",
+        "cpmi",
+        "employer_matching",
+        "whatsapp_gateway",
+        "portal_cpmi",
+      ],
+      permissions: {
+        canVerify: false,
+        canViewSensitive: false,
+        canSeeFinance: false,
+        canManageStaff: false,
+        canExecuteOperation: true,
+      },
+      createdAt: "2026-01-01",
+    },
+    {
+      id: "role-opp",
+      code: "OPP",
+      name: "OPP",
+      description:
+        "Tim pengurusan Orientasi Pra-Pemberangkatan (OPP/BP2MI), biometrik E-KTKLN / E-KPMI & kesiapan berangkat.",
       isSystemRole: true,
       isReadOnly: false,
       allowedScope: "ALL",
       allowedMenus: [
         "beranda",
         "cpmi",
-        "doc_print",
+        "pelatihan",
         "medical_visa",
+        "doc_print",
         "pengingat",
-        "cases",
       ],
       permissions: {
         canVerify: true,
@@ -930,81 +1089,33 @@ export function createInitialRoles(): AppRole[] {
         canManageStaff: false,
         canExecuteOperation: true,
       },
-      createdAt: "2024-01-01",
+      createdAt: "2026-01-01",
     },
     {
-      id: "role-instruktur-blk",
-      code: "INSTRUKTUR_BLK",
-      name: "Instruktur BLK-LN & Asrama",
-      description: "Pengelola pelatihan bahasa Arab, keterampilan tata graha / babysitter, monitoring asrama & sertifikasi uji kompetensi.",
-      isSystemRole: false,
+      id: "role-case-carecenter",
+      code: "CASE_CARECENTER",
+      name: "Manajemen Case / CareCenter",
+      description:
+        "Tim penanganan kasus pengaduan PMI, perlindungan hukum, monitoring Portal Mandiri & komunikasi darurat.",
+      isSystemRole: true,
       isReadOnly: false,
       allowedScope: "ALL",
       allowedMenus: [
         "beranda",
-        "pelatihan",
-        "cpmi",
-        "pengingat",
-      ],
-      permissions: {
-        canVerify: false,
-        canViewSensitive: false,
-        canSeeFinance: false,
-        canManageStaff: false,
-        canExecuteOperation: true,
-      },
-      createdAt: "2024-01-01",
-    },
-    {
-      id: "role-kepala-cabang",
-      code: "KEPALA_CABANG",
-      name: "Kepala Kantor Cabang Daerah",
-      description: "Pos pantau daerah (View-Only). Memantau perkembangan tahapan CPMI asal wilayah cabangnya tanpa hak eksekusi.",
-      isSystemRole: true,
-      isReadOnly: true,
-      allowedScope: "BRANCH",
-      allowedMenus: [
-        "beranda",
-        "pengingat",
         "cases",
-        "portal_cpmi",
         "cpmi",
-        "vacancy",
-        "employer_matching",
-        "pelatihan",
-        "medical_visa",
-        "doc_print",
+        "pengingat",
+        "portal_cpmi",
+        "whatsapp_gateway",
       ],
       permissions: {
         canVerify: false,
         canViewSensitive: true,
         canSeeFinance: false,
         canManageStaff: false,
-        canExecuteOperation: false,
+        canExecuteOperation: true,
       },
-      createdAt: "2024-01-01",
-    },
-    {
-      id: "role-perekrut-pl",
-      code: "PEREKRUT_PL",
-      name: "Perekrut Lapangan (PL/Sponsor)",
-      description: "Perekrut lapangan untuk memantau status pendaftaran CPMI dan transparansi portal mandiri.",
-      isSystemRole: true,
-      isReadOnly: true,
-      allowedScope: "OWN",
-      allowedMenus: [
-        "beranda",
-        "cpmi",
-        "portal_cpmi",
-      ],
-      permissions: {
-        canVerify: false,
-        canViewSensitive: false,
-        canSeeFinance: false,
-        canManageStaff: false,
-        canExecuteOperation: false,
-      },
-      createdAt: "2024-01-01",
+      createdAt: "2026-01-01",
     },
   ];
 }
@@ -3660,36 +3771,83 @@ export function syncExpirationsAndTasks(db: DatabaseSchema): void {
     if (!b.status) b.status = "ACTIVE";
   }
 
-  if (!db.roles || db.roles.length === 0) {
+  // Migrasi otomatis user & role dummy lama ke struktur divisi & user baru PT. Panca Banyu Ajisakti (sambil mempertahankan Direktur Utama)
+  const hasLegacyDummyStaff =
+    Array.isArray(db.staffAccounts) &&
+    db.staffAccounts.some(
+      (s) => s.email === "admin.pusat@pasmigranpro.id" || s.email === "dokumen@pasmigranpro.id"
+    ) &&
+    !db.staffAccounts.some((s) => s.id === "stf-dewi");
+
+  if (!db.roles || db.roles.length === 0 || hasLegacyDummyStaff) {
     db.roles = createInitialRoles();
   }
-  if (!db.staffAccounts || db.staffAccounts.length === 0) {
+  if (!db.staffAccounts || db.staffAccounts.length === 0 || hasLegacyDummyStaff) {
     db.staffAccounts = createInitialStaff();
   }
-  if (
-    !db.cases ||
-    db.cases.length === 0 ||
-    db.cases.some((cs) => legacyAsiaCountries.includes(cs.destinationCountry))
-  ) {
-    db.cases = createInitialCases();
+  // Pastikan DIREKTUR selalu memiliki akses modul maintenance
+  const directorRole = db.roles.find((r) => r.code === "DIREKTUR");
+  if (directorRole && !directorRole.allowedMenus.includes("maintenance")) {
+    directorRole.allowedMenus.push("maintenance");
   }
-  if (!db.badilRecords) {
-    db.badilRecords = createInitialBadilRecords();
-  }
-  if (!db.whatsAppLogs || db.whatsAppLogs.length === 0) {
-    db.whatsAppLogs = createInitialWhatsAppLogs();
-  }
-  if (!db.cashJournals || db.cashJournals.length === 0) {
-    db.cashJournals = createInitialCashJournals();
-  }
-  if (!db.cashAdvances || db.cashAdvances.length === 0) {
-    db.cashAdvances = createInitialCashAdvances();
-  }
-  if (!db.syarikahInvoices || db.syarikahInvoices.length === 0) {
-    db.syarikahInvoices = createInitialSyarikahInvoices();
-  }
-  if (!db.employerInterviews || db.employerInterviews.length === 0) {
-    db.employerInterviews = createInitialEmployerInterviews();
+
+  if (db.isCleanProduction) {
+    if (!db.cases) db.cases = [];
+    if (!db.badilRecords) db.badilRecords = [];
+    if (!db.whatsAppLogs) db.whatsAppLogs = [];
+    if (!db.cashJournals) db.cashJournals = [];
+    if (!db.cashAdvances) db.cashAdvances = [];
+    if (!db.syarikahInvoices) db.syarikahInvoices = [];
+    if (!db.employerInterviews) db.employerInterviews = [];
+    if (!db.sponsorSubmissions) db.sponsorSubmissions = [];
+    if (!db.vacancies) db.vacancies = [];
+  } else {
+    if (
+      !db.cases ||
+      db.cases.length === 0 ||
+      db.cases.some((cs) => legacyAsiaCountries.includes(cs.destinationCountry))
+    ) {
+      db.cases = createInitialCases();
+    }
+    if (!db.badilRecords) {
+      db.badilRecords = createInitialBadilRecords();
+    }
+    if (!db.whatsAppLogs || db.whatsAppLogs.length === 0) {
+      db.whatsAppLogs = createInitialWhatsAppLogs();
+    }
+    if (!db.cashJournals || db.cashJournals.length === 0) {
+      db.cashJournals = createInitialCashJournals();
+    }
+    if (!db.cashAdvances || db.cashAdvances.length === 0) {
+      db.cashAdvances = createInitialCashAdvances();
+    }
+    if (!db.syarikahInvoices || db.syarikahInvoices.length === 0) {
+      db.syarikahInvoices = createInitialSyarikahInvoices();
+    }
+    if (!db.employerInterviews || db.employerInterviews.length === 0) {
+      db.employerInterviews = createInitialEmployerInterviews();
+    }
+    if (
+      !db.sponsorSubmissions ||
+      db.sponsorSubmissions.length === 0 ||
+      !db.sponsorSubmissions[0]?.registrationForm?.overseasExperiences
+    ) {
+      db.sponsorSubmissions = createInitialSponsorSubmissions();
+    }
+    const initialVacancies = createInitialVacancies();
+    if (
+      !db.vacancies ||
+      db.vacancies.length === 0 ||
+      db.vacancies.some((v) => legacyAsiaCountries.includes(v.destinationCountry))
+    ) {
+      db.vacancies = initialVacancies;
+    } else {
+      for (const iv of initialVacancies) {
+        if (!db.vacancies.some((v) => v.id === iv.id)) {
+          db.vacancies.push(iv);
+        }
+      }
+    }
   }
   if (
     !db.foreignAgencies ||
@@ -3721,27 +3879,6 @@ export function syncExpirationsAndTasks(db: DatabaseSchema): void {
   }
   if (!db.masterEmbassies || db.masterEmbassies.length === 0) {
     db.masterEmbassies = createInitialMasterEmbassies();
-  }
-  if (
-    !db.sponsorSubmissions ||
-    db.sponsorSubmissions.length === 0 ||
-    !db.sponsorSubmissions[0]?.registrationForm?.overseasExperiences
-  ) {
-    db.sponsorSubmissions = createInitialSponsorSubmissions();
-  }
-  const initialVacancies = createInitialVacancies();
-  if (
-    !db.vacancies ||
-    db.vacancies.length === 0 ||
-    db.vacancies.some((v) => legacyAsiaCountries.includes(v.destinationCountry))
-  ) {
-    db.vacancies = initialVacancies;
-  } else {
-    for (const iv of initialVacancies) {
-      if (!db.vacancies.some((v) => v.id === iv.id)) {
-        db.vacancies.push(iv);
-      }
-    }
   }
 
   const activeTasksMap = new Map<string, RenewalTask>();
