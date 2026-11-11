@@ -426,26 +426,26 @@ export default function CashAndAdvancesModule({
       )}
 
       {/* Strip Status Integrasi Real-Time dengan Modul Keuangan & Fee Sponsor */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-500/30 bg-emerald-950/30 px-4 py-3 text-xs text-emerald-100">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-500/50 bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 px-4 py-3 text-xs text-slate-100 shadow-lg">
         <div className="flex flex-wrap items-center gap-3">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/20 px-2.5 py-1 text-[11px] font-bold text-emerald-300">
-            <CheckCircle2 className="h-3.5 w-3.5" />
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-600/30 px-2.5 py-1 text-[11px] font-bold text-emerald-200">
+            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-300" />
             Terintegrasi Real-Time · Keuangan & Fee Sponsor
           </span>
           <span>
             Fee Sponsor Cair: <strong className="text-white">Rp {totalSponsorFeeCair.toLocaleString("id-ID")}</strong>
           </span>
-          <span className="text-slate-400">·</span>
+          <span className="text-slate-500">·</span>
           <span>
             Sisa Fee Terutang: <strong className="text-amber-300">Rp {totalSponsorFeeTerutang.toLocaleString("id-ID")}</strong>
           </span>
-          <span className="text-slate-400">·</span>
+          <span className="text-slate-500">·</span>
           <span>
             Kasbon Sponsor Aktif: <strong className="text-rose-300">Rp {activeSponsorKasbonSisa.toLocaleString("id-ID")}</strong>{" "}
-            <span className="text-slate-400">(otomatis terpotong saat bayar termin fee)</span>
+            <span className="text-slate-300">(otomatis terpotong saat bayar termin fee)</span>
           </span>
         </div>
-        <span className="text-[11px] text-emerald-300/90">
+        <span className="text-[11px] font-medium text-emerald-200">
           DP/Pelunasan Sponsor, Biaya HPP Paid, Kasbon & Invoice Wakalah otomatis masuk Jurnal
         </span>
       </div>
