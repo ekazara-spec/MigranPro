@@ -25,7 +25,7 @@ import {
   Wallet,
   X,
 } from "lucide-react";
-import { Branch } from "@/lib/types";
+import { Branch, ProcessTrack } from "@/lib/types";
 
 export type NavKey =
   | "beranda"
@@ -77,6 +77,10 @@ interface SidebarNavProps {
     criticalDocsCount: number;
     openCasesCount: number;
   };
+  processTrackFilter: "ALL" | ProcessTrack;
+  onSelectCpmiTrack: (track: ProcessTrack) => void;
+  rekomCount: number;
+  nonRekomCount: number;
   vacanciesCount: number;
   staffName: string;
   onLogout: () => void;
@@ -96,11 +100,16 @@ export default function SidebarNav({
   branches,
   totalCandidatesCount,
   stats,
+  processTrackFilter,
+  onSelectCpmiTrack,
+  rekomCount,
+  nonRekomCount,
   vacanciesCount,
   staffName,
   onLogout,
 }: SidebarNavProps) {
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+  const [isCpmiMenuOpen, setIsCpmiMenuOpen] = useState<boolean>(true);
 
   function toggleGroup(groupKey: string) {
     setCollapsedGroups((prev) => ({
@@ -332,6 +341,130 @@ export default function SidebarNav({
                     {visibleItems.map((item) => {
                       const Icon = item.icon;
                       const isActive = activeNav === item.id;
+
+                      if (item.id === "cpmi") {
+                        const cpmiSubmenus: {
+                          track: ProcessTrack;
+                          label: string;
+                          count: number;
+                          dotClass: string;
+                        }[] = [
+                          {
+                            track: "REKOM",
+                            label: "Rekom",
+                            count: rekomCount,
+                            dotClass: "bg-teal-400",
+                          },
+                          {
+                            track: "NON_REKOM",
+                            label: "Non-Rekom",
+                            count: nonRekomCount,
+                            dotClass: "bg-amber-400",
+                          },
+                        ];
+
+                        return (
+                          <div key={item.id} className="space-y-0.5">
+                            <button
+                              type="button"
+                              title={collapsed ? `${item.label} (Rekom & Non-Rekom)` : undefined}
+                              onClick={() => {
+                                if (collapsed) {
+                                  onSelectCpmiTrack(
+                                    processTrackFilter === "NON_REKOM" ? "NON_REKOM" : "REKOM"
+                                  );
+                                  if (isMobileDrawer) onCloseMobile();
+                                } else {
+                                  setIsCpmiMenuOpen((prev) => !prev);
+                                }
+                              }}
+                              className={`group relative flex w-full items-center rounded-lg transition cursor-pointer ${
+                                collapsed
+                                  ? "justify-center px-2 py-2.5"
+                                  : "justify-between px-2.5 py-2"
+                              } ${
+                                isActive
+                                  ? collapsed
+                                    ? "bg-sky-500 text-white font-semibold shadow-sm"
+                                    : "bg-white/10 text-white font-semibold"
+                                  : "text-slate-300 hover:bg-white/8 hover:text-white font-normal"
+                              }`}
+                            >
+                              <span className="flex items-center gap-3 min-w-0">
+                                <Icon
+                                  className={`h-4 w-4 shrink-0 ${
+                                    isActive
+                                      ? "text-sky-300"
+                                      : "text-slate-400 group-hover:text-white"
+                                  }`}
+                                />
+                                {!collapsed && (
+                                  <span className="truncate whitespace-nowrap text-[13px] leading-tight">
+                                    {item.label}
+                                  </span>
+                                )}
+                              </span>
+
+                              {!collapsed && (
+                                <span className="ml-2 flex shrink-0 items-center gap-1.5">
+                                  <span className="rounded-full bg-white/15 px-1.5 py-0.5 text-[10px] font-bold leading-none text-slate-200">
+                                    {stats.totalCpmi}
+                                  </span>
+                                  {isCpmiMenuOpen ? (
+                                    <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+                                  ) : (
+                                    <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+                                  )}
+                                </span>
+                              )}
+                            </button>
+
+                            {!collapsed && isCpmiMenuOpen && (
+                              <div className="ml-4 space-y-0.5 border-l border-white/15 pl-2.5 pt-0.5">
+                                {cpmiSubmenus.map((sub) => {
+                                  const isSubActive =
+                                    isActive && processTrackFilter === sub.track;
+                                  return (
+                                    <button
+                                      key={sub.track}
+                                      type="button"
+                                      onClick={() => {
+                                        onSelectCpmiTrack(sub.track);
+                                        if (isMobileDrawer) onCloseMobile();
+                                      }}
+                                      className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left transition cursor-pointer ${
+                                        isSubActive
+                                          ? "bg-sky-500 text-white font-semibold shadow-sm"
+                                          : "text-slate-300 hover:bg-white/8 hover:text-white font-normal"
+                                      }`}
+                                    >
+                                      <span className="flex items-center gap-2.5 min-w-0">
+                                        <span
+                                          className={`h-2 w-2 shrink-0 rounded-full ${
+                                            isSubActive ? "bg-white" : sub.dotClass
+                                          }`}
+                                        />
+                                        <span className="truncate whitespace-nowrap text-[12.5px] leading-tight">
+                                          {sub.label}
+                                        </span>
+                                      </span>
+                                      <span
+                                        className={`ml-2 shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none ${
+                                          isSubActive
+                                            ? "bg-white/25 text-white"
+                                            : "bg-white/12 text-slate-300"
+                                        }`}
+                                      >
+                                        {sub.count}
+                                      </span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      }
 
                       const badgeClass =
                         item.badgeTone === "rose"

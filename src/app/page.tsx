@@ -1146,14 +1146,24 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
   ]);
 
   const selectedCandidate = useMemo(() => {
-    if (!db || !selectedCandidateId) return null;
+    if (!db) return null;
+    if (activeNav === "cpmi" && processTrackFilter !== "ALL") {
+      return (
+        (selectedCandidateId
+          ? filteredCandidates.find((c) => c.id === selectedCandidateId)
+          : null) ||
+        filteredCandidates[0] ||
+        null
+      );
+    }
+    if (!selectedCandidateId) return null;
     return (
       db.candidates.find((c) => c.id === selectedCandidateId) ||
       filteredCandidates[0] ||
       db.candidates[0] ||
       null
     );
-  }, [db, selectedCandidateId, filteredCandidates]);
+  }, [db, selectedCandidateId, filteredCandidates, activeNav, processTrackFilter]);
 
   const filteredCases = useMemo(() => {
     if (!db || !db.cases) return [];
@@ -1184,6 +1194,8 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
     if (!db) {
       return {
         totalCpmi: 0,
+        rekomCount: 0,
+        nonRekomCount: 0,
         departing30Days: 0,
         openCasesCount: 0,
         overdueCasesCount: 0,
@@ -1234,6 +1246,8 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
       ALUMNI: 0,
     };
 
+    let rekomCount = 0;
+    let nonRekomCount = 0;
     let departing30Days = 0;
     let paidCommission = 0;
     let unpaidCommission = 0;
@@ -1257,6 +1271,11 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
     }[] = [];
 
     for (const c of branchScoped) {
+      if ((c.processTrack || "REKOM") === "NON_REKOM") {
+        nonRekomCount++;
+      } else {
+        rekomCount++;
+      }
       stageCounts[c.stage] = (stageCounts[c.stage] || 0) + 1;
       if (c.departureDate) {
         const dLeft = calcDaysLeft(c.departureDate);
@@ -1304,6 +1323,8 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
 
     return {
       totalCpmi: branchScoped.length,
+      rekomCount,
+      nonRekomCount,
       departing30Days,
       openCasesCount: openCases.length,
       overdueCasesCount: overdueCases.length,
@@ -1319,6 +1340,19 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
       missingExpiryDocs,
     };
   }, [db, selectedBranchId]);
+
+  function handleSelectCpmiTrack(track: ProcessTrack) {
+    setActiveNav("cpmi");
+    setProcessTrackFilter(track);
+    if (db) {
+      const match = db.candidates.find(
+        (c) =>
+          (selectedBranchId === "ALL" || c.branchId === selectedBranchId) &&
+          (c.processTrack || "REKOM") === track
+      );
+      setSelectedCandidateId(match ? match.id : null);
+    }
+  }
 
   // Handler Buka Dokumen Sensitif (Catat Audit UU PDP)
   async function handleRevealSensitive(candidate: Candidate, doc: CpmiDocument) {
@@ -2100,6 +2134,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
     setShowAddModal(false);
     setActiveSponsorSubmissionId(null);
     setSelectedCandidateId(data.candidate.id);
+    setProcessTrackFilter(data.candidate.processTrack || "REKOM");
     setActiveNav("cpmi");
     setToast({
       type: "success",
@@ -2527,7 +2562,12 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
       {/* SIDEBAR PASMIGRANPRO (RESPONSIF & COLLAPSIBLE) */}
       <SidebarNav
         activeNav={activeNav}
-        onSelectNav={(nav: NavKey) => setActiveNav(nav)}
+        onSelectNav={(nav: NavKey) => {
+          setActiveNav(nav);
+          if (nav !== "cpmi" && processTrackFilter !== "ALL") {
+            setProcessTrackFilter("ALL");
+          }
+        }}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
         isMobileOpen={isMobileSidebarOpen}
@@ -2539,6 +2579,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
         branches={db.branches}
         totalCandidatesCount={db.candidates.length}
         stats={stats}
+        processTrackFilter={processTrackFilter}
+        onSelectCpmiTrack={handleSelectCpmiTrack}
+        rekomCount={stats.rekomCount}
+        nonRekomCount={stats.nonRekomCount}
         vacanciesCount={db.vacancies?.length || 0}
         staffName={loggedInStaff?.name || "Superadmin Utama"}
         onLogout={handleSuperAdminLogout}
@@ -2566,7 +2610,12 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                 {activeNav === "whatsapp_gateway" && "Modul 3: Integrasi WhatsApp Gateway Otomatis (Notifikasi & Direct Chat)"}
                 {activeNav === "aruskas_kasbon" && "Modul 4: Modul Akuntansi & Arus Kas Bank / Kasbon (Buku Kas & Invoice Wakalah)"}
                 {activeNav === "employer_matching" && "Modul 5: Seleksi & Wawancara Majikan (Job Matching & Video Call Syarikah)"}
-                {activeNav === "cpmi" && "Manajemen Data CPMI & Satu Berkas Digital"}
+                {activeNav === "cpmi" &&
+                  (processTrackFilter === "REKOM"
+                    ? "Lembar Kerja CPMI — Jalur Rekom (Resmi SISKOP2MI)"
+                    : processTrackFilter === "NON_REKOM"
+                    ? "Lembar Kerja CPMI — Jalur Non-Rekom (Cepat)"
+                    : "Manajemen Data CPMI & Satu Berkas Digital")}
                 {activeNav === "keuangan" &&
                   "Keuangan P3MI: Pembayaran Bertahap Fee Sponsor (DP1–DP3 & Pelunasan) & HPP"}
                 {activeNav === "pelatihan" &&
@@ -3138,12 +3187,54 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
             <div className="space-y-6">
               {/* Bar Pilihan Tampilan Berkas: Detail per Orang vs Tabel Matriks 10 Berkas (KTP, Paspor, Medical, Visa, dll.) */}
               <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <div>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-sky-600">
-                    Pusat Verifikasi Dokumen & Berkas Digital CPMI
-                  </span>
+                <div className="space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {processTrackFilter === "REKOM" ? (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-100 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-teal-800">
+                        <span className="h-2 w-2 rounded-full bg-teal-500" />
+                        Lembar Kerja Jalur Rekom (Resmi SISKOP2MI)
+                      </span>
+                    ) : processTrackFilter === "NON_REKOM" ? (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-amber-800">
+                        <span className="h-2 w-2 rounded-full bg-amber-500" />
+                        Lembar Kerja Jalur Non-Rekom (Cepat)
+                      </span>
+                    ) : (
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-sky-600">
+                        Pusat Verifikasi Dokumen & Berkas Digital CPMI
+                      </span>
+                    )}
+                    <div className="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-0.5 text-[11px] font-semibold">
+                      <button
+                        type="button"
+                        onClick={() => handleSelectCpmiTrack("REKOM")}
+                        className={`rounded-md px-2 py-0.5 transition cursor-pointer ${
+                          processTrackFilter === "REKOM"
+                            ? "bg-teal-600 text-white shadow-sm"
+                            : "text-slate-600 hover:text-slate-900"
+                        }`}
+                      >
+                        Rekom ({stats.rekomCount})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSelectCpmiTrack("NON_REKOM")}
+                        className={`rounded-md px-2 py-0.5 transition cursor-pointer ${
+                          processTrackFilter === "NON_REKOM"
+                            ? "bg-amber-600 text-white shadow-sm"
+                            : "text-slate-600 hover:text-slate-900"
+                        }`}
+                      >
+                        Non-Rekom ({stats.nonRekomCount})
+                      </button>
+                    </div>
+                  </div>
                   <h2 className="text-base font-bold text-slate-900">
-                    Cek Status Verifikasi KTP, KK, Paspor, Medical Check-Up, PK & Visa
+                    {processTrackFilter === "REKOM"
+                      ? "Kelola CPMI Jalur Rekomendasi Resmi (ID SISKOP2MI, BLK-LN/BNSP, BPJS-TK, OPP & E-KTKLN)"
+                      : processTrackFilter === "NON_REKOM"
+                      ? "Kelola CPMI Jalur Non-Rekom (Tanpa BPJS-TK, OPP & E-KTKLN — Langsung Visa, Tiket & Terbang)"
+                      : "Cek Status Verifikasi KTP, KK, Paspor, Medical Check-Up, PK & Visa"}
                   </h2>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
@@ -3188,7 +3279,13 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
                     <div>
                       <h3 className="text-sm font-bold text-slate-900">
-                        Matriks Rekapitulasi Verifikasi 10 Berkas Wajib Seluruh CPMI ({filteredCandidates.length} Kandidat)
+                        Matriks Rekapitulasi Verifikasi 10 Berkas Wajib{" "}
+                        {processTrackFilter === "REKOM"
+                          ? "CPMI Jalur Rekom"
+                          : processTrackFilter === "NON_REKOM"
+                          ? "CPMI Jalur Non-Rekom"
+                          : "Seluruh CPMI"}{" "}
+                        ({filteredCandidates.length} Kandidat)
                       </h3>
                       <p className="text-xs text-slate-500">
                         Klik langsung pada badge dokumen (misal <strong>KTP</strong>, <strong>Paspor</strong>, <strong>Medical</strong>, atau <strong>Visa</strong>) untuk langsung memverifikasi atau mengisi nomor & masa berlaku berkas.
