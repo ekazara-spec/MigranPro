@@ -2722,7 +2722,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
              ========================================================= */}
           {activeNav === "beranda" && (
             <div className="space-y-6">
-              {/* 4 KPI Utama Persis MigranPro: Total CPMI/PMI, Berangkat 30 Hari, Case Terbuka, Komisi Terutang */}
+              {/* 4 KPI Utama Dashboard Umum: Total CPMI/PMI, Berangkat 30 Hari, Case Terbuka, Lowongan Aktif */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                   <div className="flex items-center justify-between text-slate-500">
@@ -2771,22 +2771,23 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                 </button>
 
                 <button
-                  onClick={() => setActiveNav("keuangan")}
-                  className="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-5 text-left shadow-sm transition hover:border-emerald-300"
+                  onClick={() => setActiveNav("vacancy")}
+                  className="rounded-2xl border border-sky-200 bg-sky-50/40 p-5 text-left shadow-sm transition hover:border-sky-300 cursor-pointer"
                 >
-                  <div className="flex items-center justify-between text-emerald-800">
+                  <div className="flex items-center justify-between text-sky-800">
                     <span className="text-xs font-semibold uppercase tracking-wider">
-                      Fee Sponsor Terutang (DP1–Lunas)
+                      Lowongan Aktif (Job Order)
                     </span>
-                    <Wallet className="h-4 w-4 text-emerald-600" />
+                    <Briefcase className="h-4 w-4 text-sky-600" />
                   </div>
-                  <p className="mt-2 text-2xl font-bold text-rose-600">
-                    {perms.canSeeFinance
-                      ? formatRupiah(stats.unpaidCommission)
-                      : "Terbatas (RBAC)"}
+                  <p className="mt-2 text-3xl font-bold text-slate-900">
+                    {(db.vacancies || []).filter((v) => v.isPublished).length}
                   </p>
-                  <p className="mt-1 text-xs text-emerald-800 font-medium">
-                    Kelola Termin DP 1, DP 2, DP 3 & Pelunasan →
+                  <p className="mt-1 text-xs text-sky-800 font-medium">
+                    {(db.vacancies || [])
+                      .filter((v) => v.isPublished)
+                      .reduce((sum, v) => sum + Math.max(0, v.quotaTotal - v.quotaFilled), 0)}{" "}
+                    kuota penempatan tersedia →
                   </p>
                 </button>
               </div>
