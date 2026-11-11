@@ -64,6 +64,7 @@ import {
   DestinationCountry,
   DOC_TEMPLATE_CONFIG,
   DocHandoverType,
+  DocType,
   F4LangLevel,
   ForeignAgency,
   FundingScheme,
@@ -220,6 +221,55 @@ function calcDaysLeft(expiryDate?: string): number | null {
   if (parts.length !== 3 || parts.some(isNaN)) return null;
   const expUtc = Date.UTC(parts[0], parts[1] - 1, parts[2]);
   return Math.round((expUtc - todayUtc) / (1000 * 60 * 60 * 24));
+}
+
+const NON_REKOM_SKIPPED_DOC_TYPES = new Set<DocType>([
+  "SERTIFIKAT_KOMPETENSI",
+  "PERJANJIAN_PENEMPATAN",
+  "EKTKLN_OPP",
+]);
+
+const SHORT_DOC_LABEL_MAP: Record<DocType, string> = {
+  KTP: "KTP",
+  KK: "KK",
+  AKTA_IJAZAH: "Akta/Ijazah",
+  IZIN_KELUARGA: "Izin Kel.",
+  SERTIFIKAT_KOMPETENSI: "LSP/BNSP",
+  MEDICAL: "Medical",
+  PERJANJIAN_PENEMPATAN: "PK Penempatan",
+  PASPOR: "Paspor",
+  VISA: "Visa",
+  EKTKLN_OPP: "OPP/e-KPMI",
+  TIKET_EKTKLN: "Tiket Pesawat",
+};
+
+/** Evaluates passport & required-document completeness while respecting REKOM vs NON_REKOM track rules. */
+function evaluateCandidateRequirements(candidate: Candidate) {
+  const isNonRekom = (candidate.processTrack || "REKOM") === "NON_REKOM";
+  const requiredDocs = (candidate.documents || []).filter(
+    (d) => !(isNonRekom && NON_REKOM_SKIPPED_DOC_TYPES.has(d.docType))
+  );
+  const pasporDoc = (candidate.documents || []).find((d) => d.docType === "PASPOR");
+  const isPassportMissing = !pasporDoc || pasporDoc.status === "MISSING";
+  const isPassportUnverified = Boolean(pasporDoc && pasporDoc.status === "UPLOADED");
+  const missingDocs = requiredDocs.filter((d) => d.status === "MISSING");
+  const unverifiedDocs = requiredDocs.filter((d) => d.status === "UPLOADED");
+  const verifiedCount = requiredDocs.filter((d) => d.status === "VERIFIED").length;
+  const hasExpired = requiredDocs.some((d) => {
+    const dl = calcDaysLeft(d.expiryDate);
+    return d.status === "EXPIRED" || (dl !== null && dl < 0);
+  });
+
+  return {
+    requiredDocs,
+    pasporDoc,
+    isPassportMissing,
+    isPassportUnverified,
+    missingDocs,
+    unverifiedDocs,
+    verifiedCount,
+    hasExpired,
+  };
 }
 
 function formatRupiah(amount: number): string {
@@ -1184,15 +1234,26 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
         return false;
       }
       if (docStatusFilter !== "ALL") {
-        const verifiedCount = c.documents.filter((d) => d.status === "VERIFIED").length;
-        const hasExpired = c.documents.some((d) => {
-          const dl = calcDaysLeft(d.expiryDate);
-          return d.status === "EXPIRED" || (dl !== null && dl < 0);
-        });
-        if (docStatusFilter === "COMPLETE_10" && (verifiedCount < c.documents.length || hasExpired)) {
+        const {
+          requiredDocs,
+          isPassportMissing,
+          verifiedCount,
+          hasExpired,
+        } = evaluateCandidateRequirements(c);
+        if (docStatusFilter === "NO_PASSPORT" && !isPassportMissing) {
           return false;
         }
-        if (docStatusFilter === "INCOMPLETE" && verifiedCount === c.documents.length && !hasExpired) {
+        if (
+          docStatusFilter === "COMPLETE_10" &&
+          (verifiedCount < requiredDocs.length || hasExpired)
+        ) {
+          return false;
+        }
+        if (
+          docStatusFilter === "INCOMPLETE" &&
+          verifiedCount === requiredDocs.length &&
+          !hasExpired
+        ) {
           return false;
         }
         if (docStatusFilter === "HAS_EXPIRED" && !hasExpired) {
@@ -1293,6 +1354,16 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
           candidate: Candidate;
           doc: CpmiDocument;
         }[],
+        noPassportCount: 0,
+        missingDocsWarnings: [] as {
+          candidate: Candidate;
+          isPassportMissing: boolean;
+          isPassportUnverified: boolean;
+          missingDocs: CpmiDocument[];
+          unverifiedCount: number;
+          verifiedCount: number;
+          requiredTotal: number;
+        }[],
       };
     }
 
@@ -1343,6 +1414,15 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
       candidate: Candidate;
       doc: CpmiDocument;
     }[] = [];
+    const missingDocsWarnings: {
+      candidate: Candidate;
+      isPassportMissing: boolean;
+      isPassportUnverified: boolean;
+      missingDocs: CpmiDocument[];
+      unverifiedCount: number;
+      verifiedCount: number;
+      requiredTotal: number;
+    }[] = [];
 
     for (const c of branchScoped) {
       if ((c.processTrack || "REKOM") === "NON_REKOM") {
@@ -1391,9 +1471,34 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
           }
         }
       }
+
+      if (!["RETURNED", "ALUMNI"].includes(c.stage)) {
+        const reqEval = evaluateCandidateRequirements(c);
+        if (
+          reqEval.isPassportMissing ||
+          reqEval.isPassportUnverified ||
+          reqEval.missingDocs.length > 0
+        ) {
+          missingDocsWarnings.push({
+            candidate: c,
+            isPassportMissing: reqEval.isPassportMissing,
+            isPassportUnverified: reqEval.isPassportUnverified,
+            missingDocs: reqEval.missingDocs,
+            unverifiedCount: reqEval.unverifiedDocs.length,
+            verifiedCount: reqEval.verifiedCount,
+            requiredTotal: reqEval.requiredDocs.length,
+          });
+        }
+      }
     }
 
     expiringDocsList.sort((a, b) => (a.daysLeft ?? 999) - (b.daysLeft ?? 999));
+    missingDocsWarnings.sort((a, b) => {
+      if (a.isPassportMissing !== b.isPassportMissing) {
+        return a.isPassportMissing ? -1 : 1;
+      }
+      return b.missingDocs.length - a.missingDocs.length;
+    });
 
     return {
       totalCpmi: branchScoped.length,
@@ -1412,6 +1517,8 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
       stageCounts,
       expiringDocsList,
       missingExpiryDocs,
+      noPassportCount: missingDocsWarnings.filter((w) => w.isPassportMissing).length,
+      missingDocsWarnings,
     };
   }, [db, selectedBranchId]);
 
@@ -3255,6 +3362,156 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   </div>
                 </div>
               </div>
+
+              {/* Kartu Warning Persyaratan CPMI: Belum Ada Paspor & Dokumen Wajib Kurang */}
+              <div className="rounded-2xl border border-amber-200 bg-white p-6 shadow-sm">
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
+                      <AlertTriangle className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="text-base font-bold text-slate-900">
+                          Warning Persyaratan CPMI: Belum Ada Paspor &amp; Berkas Kurang
+                        </h3>
+                        {stats.noPassportCount > 0 && (
+                          <span className="rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-bold text-rose-700">
+                            {stats.noPassportCount} Belum Ada Paspor
+                          </span>
+                        )}
+                        <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-800">
+                          {stats.missingDocsWarnings.length} CPMI Perlu Dilengkapi
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500">
+                        Daftar CPMI terdaftar (di luar Purna/Alumni) yang paspor atau dokumen wajib persyaratannya masih kosong (MISSING) atau menunggu verifikasi.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDocStatusFilter("NO_PASSPORT");
+                        setCpmiViewMode("MATRIKS_BERKAS");
+                        setActiveNav("cpmi");
+                      }}
+                      className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition cursor-pointer"
+                    >
+                      Filter Belum Ada Paspor →
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDocStatusFilter("INCOMPLETE");
+                        setCpmiViewMode("MATRIKS_BERKAS");
+                        setActiveNav("cpmi");
+                      }}
+                      className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-100 transition cursor-pointer"
+                    >
+                      Lihat Matriks Berkas →
+                    </button>
+                  </div>
+                </div>
+
+                {stats.missingDocsWarnings.length === 0 ? (
+                  <div className="flex items-center gap-2.5 rounded-xl border border-teal-200 bg-teal-50/70 px-4 py-3 text-xs font-semibold text-teal-800">
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-teal-600" />
+                    Semua CPMI aktif sudah memiliki Paspor RI dan persyaratan dokumen wajib telah terpenuhi.
+                  </div>
+                ) : (
+                  <div className="max-h-96 space-y-2.5 overflow-y-auto pr-1">
+                    {stats.missingDocsWarnings.map((item) => (
+                      <div
+                        key={item.candidate.id}
+                        className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3.5 ${
+                          item.isPassportMissing
+                            ? "border-rose-200 bg-rose-50/60"
+                            : "border-amber-200 bg-amber-50/50"
+                        }`}
+                      >
+                        <div className="min-w-0 flex-1 space-y-1.5">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span
+                              className={`h-2.5 w-2.5 shrink-0 rounded-full ${
+                                item.isPassportMissing ? "bg-rose-600" : "bg-amber-500"
+                              }`}
+                            />
+                            <span className="text-xs font-bold text-slate-900">
+                              {item.candidate.fullName}
+                            </span>
+                            <span className="font-mono text-[11px] text-slate-500">
+                              {item.candidate.regNumber}
+                            </span>
+                            <span className="rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-semibold text-slate-600">
+                              {(item.candidate.processTrack || "REKOM") === "NON_REKOM"
+                                ? "NON-REKOM"
+                                : "REKOM"}{" "}
+                              · {item.candidate.destinationCountry} · {item.candidate.stage}
+                            </span>
+                            {item.isPassportMissing ? (
+                              <span className="rounded-full bg-rose-600 px-2 py-0.5 text-[10px] font-bold text-white">
+                                BELUM ADA PASPOR
+                              </span>
+                            ) : item.isPassportUnverified ? (
+                              <span className="rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white">
+                                PASPOR BELUM VERIFIED
+                              </span>
+                            ) : null}
+                            <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-slate-700 border border-slate-200">
+                              Terverifikasi {item.verifiedCount}/{item.requiredTotal}
+                            </span>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-1.5 pl-4 text-[11px]">
+                            {item.missingDocs.length > 0 && (
+                              <>
+                                <span className="font-semibold text-slate-600">
+                                  Berkas belum ada ({item.missingDocs.length}):
+                                </span>
+                                {item.missingDocs.map((md) => (
+                                  <span
+                                    key={md.id}
+                                    className={`rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
+                                      md.docType === "PASPOR"
+                                        ? "bg-rose-100 text-rose-800 border border-rose-300"
+                                        : "bg-white text-slate-700 border border-slate-200"
+                                    }`}
+                                  >
+                                    {SHORT_DOC_LABEL_MAP[md.docType] || md.docType}
+                                  </span>
+                                ))}
+                              </>
+                            )}
+                            {item.unverifiedCount > 0 && (
+                              <span className="text-[11px] font-medium text-sky-700">
+                                ({item.unverifiedCount} berkas menunggu verifikasi admin)
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedCandidateId(item.candidate.id);
+                            setCpmiViewMode("DETAIL_ORANG");
+                            setActiveNav("cpmi");
+                          }}
+                          className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition cursor-pointer ${
+                            item.isPassportMissing
+                              ? "bg-rose-600 hover:bg-rose-700"
+                              : "bg-amber-600 hover:bg-amber-700"
+                          }`}
+                        >
+                          Lengkapi Berkas →
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -3408,6 +3665,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                     className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-800"
                   >
                     <option value="ALL">Filter Berkas: Semua Status ({db.candidates.length} CPMI)</option>
+                    <option value="NO_PASSPORT">Belum Ada Paspor (Missing)</option>
                     <option value="INCOMPLETE">Belum Lengkap / Belum Verified</option>
                     <option value="COMPLETE_10">Sudah Lengkap 10/10 Verified</option>
                     <option value="HAS_EXPIRED">Ada Dokumen Kedaluwarsa (Expired)</option>
