@@ -13,6 +13,12 @@ import {
   writeDb,
 } from "@/lib/db";
 import {
+  applyCustomSponsorInstallmentPayment,
+  checkCandidateTerminEligibility,
+  computeBatchSponsorDistribution,
+  getTerminShortTitle,
+} from "@/lib/sponsor-installment-utils";
+import {
   AppRole,
   BadilReason,
   BadilRecord,
@@ -20,6 +26,7 @@ import {
   BpjsFinancingPartner,
   Branch,
   Candidate,
+  CommissionTerminKey,
   CaseCategory,
   CasePriority,
   CaseStatus,
@@ -754,7 +761,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, db });
     }
 
-    // 3. MODUL KEUANGAN: PEMBAYARAN FEE SPONSOR BERTAHAP (DP1, DP2, DP3, PELUNASAN)
+    // 3. MODUL KEUANGAN: PEMBAYARAN FEE SPONSOR BERTAHAP (DP1, DP2, DP3, PELUNASAN) - DUKUNG NOMINAL CUSTOM
     if (action === "PAY_SPONSOR_TERMIN") {
       const {
         candidateId,
@@ -762,6 +769,8 @@ export async function POST(req: NextRequest) {
         paymentMethod = "Transfer Bank BRI",
         notes = "",
         forceOverride = false,
+        customAmount,
+        autoAdjustCommissionIfExceeded = false,
       } = body.payload;
 
       const candidate = db.candidates.find((c) => c.id === candidateId);
@@ -782,18 +791,13 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      const stageOrder: JourneyStage[] = [
-        "LEAD",
-        "PROSPECT",
-        "CPMI",
-        "READY",
-        "DEPLOYED",
-        "ACTIVE_WORKER",
-        "RETURNED",
-        "ALUMNI",
-      ];
-      const curIdx = stageOrder.indexOf(candidate.stage);
-      const reqIdx = stageOrder.indexOf(inst.requiredStage);
+      const elig = checkCandidateTerminEligibility(candidate, terminKey);
+      if (!elig.eligible && !inst) {
+        return NextResponse.json(
+          { ok: false, error: elig.reason || "Termin tidak valid." },
+          { status: 400 }
+        );
+      }
 
       // Validasi urutan termin sebelumnya
       const terminOrder = ["DP1", "DP2", "DP3", "PELUNASAN"];
@@ -811,7 +815,7 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      if (curIdx < reqIdx && !forceOverride) {
+      if (elig.needsStageOverride && !forceOverride) {
         return NextResponse.json(
           {
             ok: false,
@@ -824,12 +828,31 @@ export async function POST(req: NextRequest) {
 
       const today = nowTimestamp().split(" ")[0];
       const receiptNo = `KW-PAS/${terminKey}/2026/${String(Date.now()).slice(-4)}`;
-      inst.status = "PAID";
-      inst.paidAt = today;
-      inst.paymentMethod = paymentMethod;
-      inst.receiptNumber = receiptNo;
-      inst.approvedBy = actorName;
-      inst.notes = notes;
+      const amountToPay =
+        customAmount !== undefined && customAmount !== null
+          ? Number(customAmount)
+          : inst.amount;
+
+      const applyRes = applyCustomSponsorInstallmentPayment(
+        candidate,
+        terminKey,
+        amountToPay,
+        {
+          paidAt: today,
+          paymentMethod,
+          receiptNumber: receiptNo,
+          approvedBy: actorName,
+          notes,
+          autoAdjustCommissionIfExceeded: Boolean(autoAdjustCommissionIfExceeded),
+        }
+      );
+
+      if (!applyRes.ok) {
+        return NextResponse.json(
+          { ok: false, error: applyRes.error },
+          { status: 400 }
+        );
+      }
 
       const sponsorName =
         db.sponsors.find((s) => s.id === candidate.sponsorId)?.name || "Sponsor PL";
@@ -842,7 +865,7 @@ export async function POST(req: NextRequest) {
         actorRole: actorRole as UserRole,
         branchName,
         actionType: "FINANCE_PAYMENT",
-        summary: `Mencairkan Komisi Sponsor ${inst.terminKey} (Rp ${inst.amount.toLocaleString("id-ID")}) kepada ${sponsorName} untuk CPMI ${candidate.fullName}`,
+        summary: `Mencairkan Komisi Sponsor ${applyRes.installment.terminKey} (Rp ${applyRes.installment.amount.toLocaleString("id-ID")}) kepada ${sponsorName} untuk CPMI ${candidate.fullName}`,
         details: `No Kwitansi: ${receiptNo} · Metode: ${paymentMethod}${
           forceOverride ? " [Otorisasi Khusus Sebelum Tahap]" : ""
         }`,
@@ -850,7 +873,175 @@ export async function POST(req: NextRequest) {
       });
 
       writeDb(db);
-      return NextResponse.json({ ok: true, installment: inst, candidate, db });
+      return NextResponse.json({
+        ok: true,
+        installment: applyRes.installment,
+        candidate,
+        db,
+      });
+    }
+
+    // 3B. MODUL KEUANGAN: PEMBAYARAN DP CUSTOM / KOLEKTIF FEE SPONSOR (AUTO-HITUNG PER CPMI)
+    if (action === "PAY_SPONSOR_TERMIN_CUSTOM_BATCH") {
+      const {
+        sponsorId,
+        terminKey,
+        candidateIds,
+        totalAmount,
+        distributionMode = "EQUAL_SPLIT",
+        paymentMethod = "TRANSFER_BANK",
+        notes = "",
+        forceOverride = false,
+        autoAdjustCommissionIfExceeded = false,
+      } = body.payload as {
+        sponsorId: string;
+        terminKey: CommissionTerminKey;
+        candidateIds: string[];
+        totalAmount: number;
+        distributionMode?: "EQUAL_SPLIT" | "PROPORTIONAL_CAP";
+        paymentMethod?: string;
+        notes?: string;
+        forceOverride?: boolean;
+        autoAdjustCommissionIfExceeded?: boolean;
+      };
+
+      const sponsor = db.sponsors.find((s) => s.id === sponsorId);
+      if (!sponsor) {
+        return NextResponse.json(
+          { ok: false, error: "Data sponsor tidak ditemukan." },
+          { status: 404 }
+        );
+      }
+
+      if (!Array.isArray(candidateIds) || candidateIds.length === 0) {
+        return NextResponse.json(
+          { ok: false, error: "Pilih minimal 1 CPMI untuk pembayaran kolektif." },
+          { status: 400 }
+        );
+      }
+
+      const cleanTotal = Math.round(Number(totalAmount || 0));
+      if (!Number.isFinite(cleanTotal) || cleanTotal <= 0) {
+        return NextResponse.json(
+          { ok: false, error: "Total nominal pembayaran custom harus lebih dari Rp 0." },
+          { status: 400 }
+        );
+      }
+
+      const selectedCandidates: Candidate[] = [];
+      for (const cid of candidateIds) {
+        const c = db.candidates.find((cand) => cand.id === cid);
+        if (!c || c.sponsorId !== sponsorId || !c.finance) {
+          return NextResponse.json(
+            { ok: false, error: `Data CPMI (${cid}) tidak valid atau bukan binaan sponsor ${sponsor.name}.` },
+            { status: 400 }
+          );
+        }
+        const elig = checkCandidateTerminEligibility(c, terminKey);
+        if (!elig.eligible) {
+          return NextResponse.json(
+            { ok: false, error: `${c.fullName}: ${elig.reason}` },
+            { status: 400 }
+          );
+        }
+        selectedCandidates.push(c);
+      }
+
+      const distribution = computeBatchSponsorDistribution(
+        selectedCandidates,
+        cleanTotal,
+        terminKey,
+        distributionMode,
+        Boolean(autoAdjustCommissionIfExceeded)
+      );
+
+      const stageNeeders = distribution.filter((d) => d.needsStageOverride);
+      if (stageNeeders.length > 0 && !forceOverride) {
+        return NextResponse.json(
+          {
+            ok: false,
+            stageWarning: true,
+            error: `Peringatan Kendali Keuangan: ${stageNeeders.length} CPMI (${stageNeeders
+              .slice(0, 3)
+              .map((d) => `${d.candidate.fullName} [${d.candidate.stage}]`)
+              .join(", ")}${
+              stageNeeders.length > 3 ? ", dll." : ""
+            }) belum mencapai tahap syarat "${stageNeeders[0].requiredStage}". Centang otorisasi pencairan lebih awal jika tetap ingin membayar DP sekarang.`,
+          },
+          { status: 422 }
+        );
+      }
+
+      const exceededRows = distribution.filter((d) => d.exceedsRemaining);
+      if (exceededRows.length > 0 && !autoAdjustCommissionIfExceeded) {
+        return NextResponse.json(
+          {
+            ok: false,
+            exceedsRemaining: true,
+            error: `Nominal pembagian melebihi sisa hak fee pada ${exceededRows.length} CPMI (contoh: ${exceededRows[0].candidate.fullName}, sisa Rp ${exceededRows[0].remainingBefore.toLocaleString("id-ID")}, dibayar Rp ${exceededRows[0].assignedAmount.toLocaleString("id-ID")}). Aktifkan "Sesuaikan Total Fee CPMI otomatis" atau kurangi total bayar.`,
+          },
+          { status: 400 }
+        );
+      }
+
+      const today = nowTimestamp().split(" ")[0];
+      const batchSuffix = String(Date.now()).slice(-4);
+      const receipts: string[] = [];
+
+      for (let i = 0; i < distribution.length; i++) {
+        const row = distribution[i];
+        const receiptNo = `KW-PAS/${terminKey}/BATCH/${batchSuffix}-${String(i + 1).padStart(2, "0")}`;
+        const applyRes = applyCustomSponsorInstallmentPayment(
+          row.candidate,
+          terminKey,
+          row.assignedAmount,
+          {
+            paidAt: today,
+            paymentMethod,
+            receiptNumber: receiptNo,
+            approvedBy: actorName,
+            notes:
+              notes ||
+              `Pembayaran Kolektif Custom ${getTerminShortTitle(terminKey)} (${distribution.length} CPMI · Total Rp ${cleanTotal.toLocaleString("id-ID")})`,
+            autoAdjustCommissionIfExceeded: Boolean(autoAdjustCommissionIfExceeded),
+          }
+        );
+        if (!applyRes.ok) {
+          return NextResponse.json(
+            { ok: false, error: applyRes.error },
+            { status: 400 }
+          );
+        }
+        receipts.push(receiptNo);
+      }
+
+      const perCpmiSample = distribution[0]?.assignedAmount || 0;
+      db.auditLogs.unshift({
+        id: `aud-${Date.now()}`,
+        candidateId: selectedCandidates[0].id,
+        candidateName: `${sponsor.name} (${selectedCandidates.length} CPMI)`,
+        actorName,
+        actorRole: actorRole as UserRole,
+        branchName,
+        actionType: "FINANCE_PAYMENT",
+        summary: `Pembayaran Kolektif Custom ${getTerminShortTitle(terminKey)} sebesar Rp ${cleanTotal.toLocaleString("id-ID")} untuk ${selectedCandidates.length} CPMI milik ${sponsor.name} (~Rp ${perCpmiSample.toLocaleString("id-ID")}/CPMI)`,
+        details: `Batch No: KW-PAS/${terminKey}/BATCH/${batchSuffix} · Metode: ${paymentMethod}${
+          forceOverride ? " [Otorisasi Khusus Sebelum Tahap]" : ""
+        }${autoAdjustCommissionIfExceeded ? " [Auto-Adjust Plafon Fee]" : ""}`,
+        timestamp: nowTimestamp(),
+      });
+
+      writeDb(db);
+      return NextResponse.json({
+        ok: true,
+        sponsorName: sponsor.name,
+        terminKey,
+        count: selectedCandidates.length,
+        totalAmount: cleanTotal,
+        perCpmiAmount: perCpmiSample,
+        receipts,
+        db,
+      });
     }
 
     // 4. MODUL KEUANGAN: UPDATE KOMPONEN BIAYA PENEMPATAN (HPP) & PENDAPATAN/KUR PMI

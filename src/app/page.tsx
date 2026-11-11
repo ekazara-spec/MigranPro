@@ -96,6 +96,12 @@ import {
   MasterImmigrationOffice,
   MasterMedicalClinic,
 } from "@/lib/types";
+import {
+  checkCandidateTerminEligibility,
+  computeBatchSponsorDistribution,
+  getCandidateSponsorTotals,
+  getTerminShortTitle,
+} from "@/lib/sponsor-installment-utils";
 
 import TenantBranchModule from "@/components/TenantBranchModule";
 import DocumentPrintModule from "@/components/DocumentPrintModule";
@@ -376,6 +382,31 @@ export default function PASMigranProCommandCenter() {
     paymentMethod: "TRANSFER_BANK" as "TRANSFER_BANK" | "TUNAI_KAS",
     notes: "",
     forceOverride: false,
+    customAmount: 0,
+    autoAdjustCommissionIfExceeded: false,
+  });
+  const [batchSponsorPayOpen, setBatchSponsorPayOpen] = useState(false);
+  const [batchSponsorPayForm, setBatchSponsorPayForm] = useState<{
+    sponsorId: string;
+    terminKey: CommissionTerminKey;
+    totalAmount: number;
+    selectedCandidateIds: string[];
+    distributionMode: "EQUAL_SPLIT" | "PROPORTIONAL_CAP";
+    paymentMethod: "TRANSFER_BANK" | "TUNAI_KAS";
+    notes: string;
+    forceOverride: boolean;
+    autoAdjustCommissionIfExceeded: boolean;
+    stageWarningMsg?: string;
+  }>({
+    sponsorId: "",
+    terminKey: "DP1",
+    totalAmount: 0,
+    selectedCandidateIds: [],
+    distributionMode: "EQUAL_SPLIT",
+    paymentMethod: "TRANSFER_BANK",
+    notes: "",
+    forceOverride: false,
+    autoAdjustCommissionIfExceeded: false,
   });
   const [receiptPreviewModal, setReceiptPreviewModal] = useState<{
     candidate: Candidate;
@@ -2352,7 +2383,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
     );
   }, [db, selectedFinanceCandidateId]);
 
-  // Handler Bayar Termin Fee Sponsor (DP1 -> DP2 -> DP3 -> Pelunasan)
+  // Handler Bayar Termin Fee Sponsor (DP1 -> DP2 -> DP3 -> Pelunasan) - Dukung Nominal Custom
   async function handlePaySponsorTermin(e: React.FormEvent) {
     e.preventDefault();
     if (!payingTerminModal) return;
@@ -2363,6 +2394,8 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
       paymentMethod: payTerminForm.paymentMethod,
       notes: payTerminForm.notes,
       forceOverride: payTerminForm.forceOverride,
+      customAmount: payTerminForm.customAmount,
+      autoAdjustCommissionIfExceeded: payTerminForm.autoAdjustCommissionIfExceeded,
     });
 
     if (status === 422 && data.stageWarning) {
@@ -2395,6 +2428,8 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
       paymentMethod: "TRANSFER_BANK",
       notes: "",
       forceOverride: false,
+      customAmount: 0,
+      autoAdjustCommissionIfExceeded: false,
     });
     setToast({
       type: "success",
@@ -2409,6 +2444,97 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
       installment: paidInst,
       sponsorName: spObj?.name || "Sponsor Lapangan",
       sponsorArea: spObj?.area || "-",
+    });
+  }
+
+  function getEligibleSponsorCandidates(
+    sponsorId: string,
+    terminKey: CommissionTerminKey
+  ): Candidate[] {
+    if (!db || !sponsorId) return [];
+    return db.candidates.filter(
+      (c) =>
+        c.sponsorId === sponsorId &&
+        checkCandidateTerminEligibility(c, terminKey).eligible
+    );
+  }
+
+  function openBatchSponsorPayModal(preferredSponsorId?: string) {
+    if (!db) return;
+    const defaultSponsorId =
+      preferredSponsorId && preferredSponsorId !== "ALL"
+        ? preferredSponsorId
+        : financeSponsorFilter !== "ALL"
+        ? financeSponsorFilter
+        : db.sponsors.find((s) =>
+            db.candidates.some((c) => c.sponsorId === s.id && c.sponsorCommission > 0)
+          )?.id ||
+          db.sponsors[0]?.id ||
+          "";
+
+    const terminKey: CommissionTerminKey = "DP1";
+    const eligible = getEligibleSponsorCandidates(defaultSponsorId, terminKey);
+    const defaultTotal = eligible.reduce((sum, c) => {
+      const inst = c.finance?.sponsorInstallments.find((i) => i.terminKey === terminKey);
+      return sum + (inst?.amount || 0);
+    }, 0);
+
+    setBatchSponsorPayForm({
+      sponsorId: defaultSponsorId,
+      terminKey,
+      totalAmount: defaultTotal,
+      selectedCandidateIds: eligible.map((c) => c.id),
+      distributionMode: "EQUAL_SPLIT",
+      paymentMethod: "TRANSFER_BANK",
+      notes: "",
+      forceOverride: false,
+      autoAdjustCommissionIfExceeded: false,
+      stageWarningMsg: undefined,
+    });
+    setBatchSponsorPayOpen(true);
+  }
+
+  async function handlePaySponsorBatchCustom(e: React.FormEvent) {
+    e.preventDefault();
+    if (!batchSponsorPayOpen) return;
+
+    const { status, data } = await callApi("PAY_SPONSOR_TERMIN_CUSTOM_BATCH", {
+      sponsorId: batchSponsorPayForm.sponsorId,
+      terminKey: batchSponsorPayForm.terminKey,
+      candidateIds: batchSponsorPayForm.selectedCandidateIds,
+      totalAmount: batchSponsorPayForm.totalAmount,
+      distributionMode: batchSponsorPayForm.distributionMode,
+      paymentMethod: batchSponsorPayForm.paymentMethod,
+      notes: batchSponsorPayForm.notes,
+      forceOverride: batchSponsorPayForm.forceOverride,
+      autoAdjustCommissionIfExceeded: batchSponsorPayForm.autoAdjustCommissionIfExceeded,
+    });
+
+    if (status === 422 && data.stageWarning) {
+      setBatchSponsorPayForm((prev) => ({
+        ...prev,
+        stageWarningMsg: data.error,
+      }));
+      return;
+    }
+
+    if (!data.ok) {
+      setToast({
+        type: "error",
+        title: "Pembayaran Kolektif Custom Ditolak",
+        details: [data.error],
+      });
+      return;
+    }
+
+    setBatchSponsorPayOpen(false);
+    setToast({
+      type: "success",
+      title: `Pembayaran Kolektif ${getTerminShortTitle(data.terminKey)} Berhasil (${formatRupiah(data.totalAmount)})`,
+      details: [
+        `Sponsor: ${data.sponsorName} · ${data.count} CPMI dibayarkan`,
+        `Rata-rata / CPMI: ${formatRupiah(data.perCpmiAmount)} · No. Batch: ${data.receipts?.[0] || "-"}`,
+      ],
     });
   }
 
@@ -5708,30 +5834,41 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                         </p>
                       </div>
 
-                      {/* Toggle Tampilan Tabel Ringkas vs Kartu Detail */}
-                      <div className="inline-flex rounded-xl border border-slate-200 bg-slate-100 p-1 text-xs">
+                      <div className="flex flex-wrap items-center gap-2">
                         <button
                           type="button"
-                          onClick={() => setFinanceViewMode("TABEL_RINGKAS")}
-                          className={`rounded-lg px-3 py-1.5 font-bold transition ${
-                            financeViewMode === "TABEL_RINGKAS"
-                              ? "bg-slate-900 text-white shadow-xs"
-                              : "text-slate-600 hover:text-slate-900"
-                          }`}
+                          onClick={() => openBatchSponsorPayModal()}
+                          className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700 cursor-pointer"
                         >
-                          📋 Tabel Ringkas (Skala Besar)
+                          <CreditCard className="h-3.5 w-3.5" />
+                          Bayar DP Custom / Kolektif Sponsor
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => setFinanceViewMode("KARTU_DETAIL")}
-                          className={`rounded-lg px-3 py-1.5 font-bold transition ${
-                            financeViewMode === "KARTU_DETAIL"
-                              ? "bg-slate-900 text-white shadow-xs"
-                              : "text-slate-600 hover:text-slate-900"
-                          }`}
-                        >
-                          🗂️ Kartu Detail
-                        </button>
+
+                        {/* Toggle Tampilan Tabel Ringkas vs Kartu Detail */}
+                        <div className="inline-flex rounded-xl border border-slate-200 bg-slate-100 p-1 text-xs">
+                          <button
+                            type="button"
+                            onClick={() => setFinanceViewMode("TABEL_RINGKAS")}
+                            className={`rounded-lg px-3 py-1.5 font-bold transition ${
+                              financeViewMode === "TABEL_RINGKAS"
+                                ? "bg-slate-900 text-white shadow-xs"
+                                : "text-slate-600 hover:text-slate-900"
+                            }`}
+                          >
+                            📋 Tabel Ringkas (Skala Besar)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setFinanceViewMode("KARTU_DETAIL")}
+                            className={`rounded-lg px-3 py-1.5 font-bold transition ${
+                              financeViewMode === "KARTU_DETAIL"
+                                ? "bg-slate-900 text-white shadow-xs"
+                                : "text-slate-600 hover:text-slate-900"
+                            }`}
+                          >
+                            🗂️ Kartu Detail
+                          </button>
+                        </div>
                       </div>
                     </div>
 
@@ -6019,10 +6156,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                                 <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-bold uppercase text-slate-500">
                                   <th className="py-3 px-3">Kandidat CPMI & Tahap</th>
                                   <th className="py-3 px-3">Sponsor & Total Fee</th>
-                                  <th className="py-3 px-2.5 text-center">DP 1 (20%)</th>
-                                  <th className="py-3 px-2.5 text-center">DP 2 (25%)</th>
-                                  <th className="py-3 px-2.5 text-center">DP 3 (25%)</th>
-                                  <th className="py-3 px-2.5 text-center">Pelunasan (30%)</th>
+                                  <th className="py-3 px-2.5 text-center">DP 1 (Std 20%)</th>
+                                  <th className="py-3 px-2.5 text-center">DP 2 (Std 25%)</th>
+                                  <th className="py-3 px-2.5 text-center">DP 3 (Std 25%)</th>
+                                  <th className="py-3 px-2.5 text-center">Pelunasan (Std 30%)</th>
                                   <th className="py-3 px-3 text-right">Terbayar / Sisa</th>
                                   <th className="py-3 px-3 text-right">HPP</th>
                                 </tr>
@@ -6099,7 +6236,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                                           >
                                             <div className="inline-flex flex-col items-center gap-1">
                                               <span className="font-mono text-[11px] font-bold text-slate-800">
-                                                {formatRupiah(inst.amount)}
+                                                {formatRupiah(inst.amount)}{" "}
+                                                <span className="text-[10px] font-normal text-slate-400">
+                                                  ({inst.percentage}%)
+                                                </span>
                                               </span>
                                               {isPaid ? (
                                                 <button
@@ -6130,6 +6270,8 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                                                       paymentMethod: "TRANSFER_BANK",
                                                       notes: `Pencairan ${inst.label} a.n ${c.fullName}`,
                                                       forceOverride: false,
+                                                      customAmount: inst.amount,
+                                                      autoAdjustCommissionIfExceeded: false,
                                                     });
                                                     setPayingTerminModal({
                                                       candidate: c,
@@ -6338,6 +6480,8 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                                                   paymentMethod: "TRANSFER_BANK",
                                                   notes: `Pencairan ${inst.label} a.n ${c.fullName}`,
                                                   forceOverride: false,
+                                                  customAmount: inst.amount,
+                                                  autoAdjustCommissionIfExceeded: false,
                                                 });
                                                 setPayingTerminModal({
                                                   candidate: c,
@@ -7134,130 +7278,698 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
       </div>
 
       {/* =========================================================
-          MODAL PENCAIRAN TERMIN FEE SPONSOR (DP 1, DP 2, DP 3, PELUNASAN)
+          MODAL PENCAIRAN TERMIN FEE SPONSOR (DP 1, DP 2, DP 3, PELUNASAN) - DUKUNG NOMINAL CUSTOM
          ========================================================= */}
-      {payingTerminModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div>
-                <span className="rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
-                  Pencairan Bertahap Fee Sponsor
-                </span>
-                <h3 className="mt-1 text-base font-bold text-slate-900">
-                  {payingTerminModal.installment.label} (
-                  {payingTerminModal.installment.percentage}%)
-                </h3>
-              </div>
-              <button
-                onClick={() => setPayingTerminModal(null)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
+      {payingTerminModal && (() => {
+        const totals = getCandidateSponsorTotals(payingTerminModal.candidate);
+        const customAmt = Math.max(0, Math.round(payTerminForm.customAmount || 0));
+        const exceedsRemaining = customAmt > totals.remainingAmount;
+        const effectiveTotal =
+          exceedsRemaining && payTerminForm.autoAdjustCommissionIfExceeded
+            ? totals.paidAmount + customAmt
+            : totals.totalFee;
+        const sisaAfter = Math.max(0, effectiveTotal - (totals.paidAmount + customAmt));
 
-            <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-xs space-y-1.5">
-              <div className="flex justify-between">
-                <span className="text-slate-500">Nama CPMI:</span>
-                <strong className="text-slate-900">
-                  {payingTerminModal.candidate.fullName} ({payingTerminModal.candidate.stage})
-                </strong>
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
+            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                  <span className="rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
+                    Pencairan Fee Sponsor (Standar / Custom)
+                  </span>
+                  <h3 className="mt-1 text-base font-bold text-slate-900">
+                    {payingTerminModal.installment.label}
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setPayingTerminModal(null)}
+                  className="rounded-lg p-1 text-slate-400 hover:bg-slate-100"
+                >
+                  <X className="h-5 w-5" />
+                </button>
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Sponsor / PL Penerima:</span>
-                <strong className="text-slate-900">{payingTerminModal.sponsorName}</strong>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Syarat Pencairan:</span>
-                <strong className="text-sky-700">
-                  {payingTerminModal.installment.label} (Min. {payingTerminModal.installment.requiredStage})
-                </strong>
-              </div>
-              <div className="flex justify-between border-t border-slate-200 pt-2 text-sm">
-                <span className="font-bold text-slate-700">Nominal Termin:</span>
-                <span className="font-extrabold text-emerald-700">
-                  {formatRupiah(payingTerminModal.installment.amount)}
-                </span>
-              </div>
-            </div>
 
-            {payingTerminModal.stageWarningMsg && (
-              <div className="mt-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
-                <p className="font-bold flex items-center gap-1.5">
-                  <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
-                  Peringatan Gatekeeper Tahapan CPMI
-                </p>
-                <p className="mt-1 leading-relaxed">{payingTerminModal.stageWarningMsg}</p>
-                <label className="mt-2.5 flex items-center gap-2 font-bold text-amber-950 cursor-pointer">
+              <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-xs space-y-1.5">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Nama CPMI:</span>
+                  <strong className="text-slate-900">
+                    {payingTerminModal.candidate.fullName} ({payingTerminModal.candidate.stage})
+                  </strong>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Sponsor / PL Penerima:</span>
+                  <strong className="text-slate-900">{payingTerminModal.sponsorName}</strong>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Total Fee / Sisa Saat Ini:</span>
+                  <strong className="text-slate-900">
+                    {formatRupiah(totals.totalFee)} ·{" "}
+                    <span className="text-rose-700">Sisa {formatRupiah(totals.remainingAmount)}</span>
+                  </strong>
+                </div>
+                <div className="flex justify-between border-t border-slate-200 pt-2 text-sm">
+                  <span className="font-bold text-slate-700">Nominal Dibayar (Custom):</span>
+                  <span className="font-extrabold text-emerald-700">
+                    {formatRupiah(customAmt)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-[11px]">
+                  <span className="text-slate-500">Sisa Fee Setelah Bayar (Otomatis Disesuaikan):</span>
+                  <strong className="text-rose-700">{formatRupiah(sisaAfter)}</strong>
+                </div>
+              </div>
+
+              {payingTerminModal.stageWarningMsg && (
+                <div className="mt-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
+                  <p className="font-bold flex items-center gap-1.5">
+                    <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
+                    Peringatan Gatekeeper Tahapan CPMI
+                  </p>
+                  <p className="mt-1 leading-relaxed">{payingTerminModal.stageWarningMsg}</p>
+                  <label className="mt-2.5 flex items-center gap-2 font-bold text-amber-950 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={payTerminForm.forceOverride}
+                      onChange={(e) =>
+                        setPayTerminForm({
+                          ...payTerminForm,
+                          forceOverride: e.target.checked,
+                        })
+                      }
+                      className="h-4 w-4 rounded border-amber-400"
+                    />
+                    Setujui Pencairan Lebih Awal (Otorisasi Kasbon Direktur/Admin)
+                  </label>
+                </div>
+              )}
+
+              <form onSubmit={handlePaySponsorTermin} className="mt-4 space-y-3 text-xs">
+                <div>
+                  <div className="mb-1 flex items-center justify-between">
+                    <label className="font-bold text-slate-700">
+                      Nominal Pencairan Termin (Bisa Custom Rp)
+                    </label>
+                    <span className="font-mono text-[11px] font-bold text-emerald-700">
+                      {effectiveTotal > 0
+                        ? `${Math.round((customAmt / effectiveTotal) * 1000) / 10}% dari Fee`
+                        : "0%"}
+                    </span>
+                  </div>
                   <input
-                    type="checkbox"
-                    checked={payTerminForm.forceOverride}
+                    type="number"
+                    min={0}
+                    step={50000}
+                    required
+                    value={payTerminForm.customAmount}
                     onChange={(e) =>
                       setPayTerminForm({
                         ...payTerminForm,
-                        forceOverride: e.target.checked,
+                        customAmount: Number(e.target.value || 0),
                       })
                     }
-                    className="h-4 w-4 rounded border-amber-400"
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 font-mono font-bold text-slate-900 focus:border-emerald-500 focus:outline-none"
                   />
-                  Setujui Pencairan Lebih Awal (Otorisasi Kasbon Direktur/Admin)
-                </label>
-              </div>
-            )}
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setPayTerminForm({
+                          ...payTerminForm,
+                          customAmount: payingTerminModal.installment.amount,
+                        })
+                      }
+                      className="rounded border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-700 hover:bg-slate-100"
+                    >
+                      Standar ({formatRupiah(payingTerminModal.installment.amount)})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setPayTerminForm({
+                          ...payTerminForm,
+                          customAmount: Math.round(totals.totalFee * 0.5),
+                        })
+                      }
+                      className="rounded border border-sky-200 bg-sky-50 px-2 py-0.5 text-[10px] font-semibold text-sky-700 hover:bg-sky-100"
+                    >
+                      50% Fee ({formatRupiah(Math.round(totals.totalFee * 0.5))})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setPayTerminForm({
+                          ...payTerminForm,
+                          customAmount: totals.remainingAmount,
+                        })
+                      }
+                      className="rounded border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 hover:bg-emerald-100"
+                    >
+                      Lunasi Sisa ({formatRupiah(totals.remainingAmount)})
+                    </button>
+                  </div>
+                  {exceedsRemaining && (
+                    <div className="mt-2 rounded-lg border border-rose-200 bg-rose-50 p-2 text-[11px] text-rose-800">
+                      <p className="font-bold">
+                        Nominal melebihi sisa hak fee ({formatRupiah(totals.remainingAmount)}).
+                      </p>
+                      <label className="mt-1 flex items-center gap-1.5 font-semibold cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={payTerminForm.autoAdjustCommissionIfExceeded}
+                          onChange={(e) =>
+                            setPayTerminForm({
+                              ...payTerminForm,
+                              autoAdjustCommissionIfExceeded: e.target.checked,
+                            })
+                          }
+                          className="h-3.5 w-3.5 rounded border-rose-400"
+                        />
+                        Naikkan Total Fee CPMI otomatis menjadi {formatRupiah(totals.paidAmount + customAmt)}
+                      </label>
+                    </div>
+                  )}
+                </div>
 
-            <form onSubmit={handlePaySponsorTermin} className="mt-4 space-y-3 text-xs">
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Metode Pembayaran</label>
-                <select
-                  value={payTerminForm.paymentMethod}
-                  onChange={(e) =>
-                    setPayTerminForm({
-                      ...payTerminForm,
-                      paymentMethod: e.target.value as "TRANSFER_BANK" | "TUNAI_KAS",
-                    })
-                  }
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 font-semibold"
-                >
-                  <option value="TRANSFER_BANK">Transfer Bank Perusahaan (Rekening P3MI)</option>
-                  <option value="TUNAI_KAS">Tunai Kas Operasional Kantor</option>
-                </select>
-              </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Metode Pembayaran</label>
+                  <select
+                    value={payTerminForm.paymentMethod}
+                    onChange={(e) =>
+                      setPayTerminForm({
+                        ...payTerminForm,
+                        paymentMethod: e.target.value as "TRANSFER_BANK" | "TUNAI_KAS",
+                      })
+                    }
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 font-semibold"
+                  >
+                    <option value="TRANSFER_BANK">Transfer Bank Perusahaan (Rekening P3MI)</option>
+                    <option value="TUNAI_KAS">Tunai Kas Operasional Kantor</option>
+                  </select>
+                </div>
 
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">
-                  Catatan / Referensi Bukti Transfer
-                </label>
-                <input
-                  type="text"
-                  value={payTerminForm.notes}
-                  onChange={(e) =>
-                    setPayTerminForm({ ...payTerminForm, notes: e.target.value })
-                  }
-                  placeholder="Contoh: Transfer Mandiri ref #882910"
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2"
-                />
-              </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    Catatan / Referensi Bukti Transfer
+                  </label>
+                  <input
+                    type="text"
+                    value={payTerminForm.notes}
+                    onChange={(e) =>
+                      setPayTerminForm({ ...payTerminForm, notes: e.target.value })
+                    }
+                    placeholder="Contoh: Transfer Mandiri ref #882910"
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                  />
+                </div>
 
-              <div className="flex justify-end gap-2 pt-2">
+                <div className="flex justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setPayingTerminModal(null)}
+                    className="rounded-lg border border-slate-200 px-4 py-2 font-semibold text-slate-600"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={exceedsRemaining && !payTerminForm.autoAdjustCommissionIfExceeded}
+                    className="rounded-lg bg-emerald-600 px-5 py-2 font-bold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Konfirmasi Bayar & Terbitkan Kwitansi
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* =========================================================
+          MODAL PEMBAYARAN DP CUSTOM / KOLEKTIF FEE SPONSOR (AUTO-HITUNG PER CPMI)
+         ========================================================= */}
+      {batchSponsorPayOpen && db && (() => {
+        const sponsorCandidatesAll = db.candidates.filter(
+          (c) => c.sponsorId === batchSponsorPayForm.sponsorId
+        );
+        const eligibleCandidates = sponsorCandidatesAll.filter(
+          (c) =>
+            checkCandidateTerminEligibility(c, batchSponsorPayForm.terminKey).eligible
+        );
+        const selectedCandidates = eligibleCandidates.filter((c) =>
+          batchSponsorPayForm.selectedCandidateIds.includes(c.id)
+        );
+        const distribution = computeBatchSponsorDistribution(
+          selectedCandidates,
+          batchSponsorPayForm.totalAmount,
+          batchSponsorPayForm.terminKey,
+          batchSponsorPayForm.distributionMode,
+          batchSponsorPayForm.autoAdjustCommissionIfExceeded
+        );
+        const hasAnyExceeded = distribution.some((r) => r.exceedsRemaining);
+        const stageNeedCount = distribution.filter((r) => r.needsStageOverride).length;
+        const avgPerCpmi =
+          selectedCandidates.length > 0
+            ? Math.round(batchSponsorPayForm.totalAmount / selectedCandidates.length)
+            : 0;
+        const selectedSponsorObj = db.sponsors.find(
+          (s) => s.id === batchSponsorPayForm.sponsorId
+        );
+
+        const handleSponsorOrTerminChange = (
+          nextSponsorId: string,
+          nextTerminKey: CommissionTerminKey
+        ) => {
+          const nextEligible = getEligibleSponsorCandidates(nextSponsorId, nextTerminKey);
+          const suggestedTotal = nextEligible.reduce((sum, c) => {
+            const inst = c.finance?.sponsorInstallments.find(
+              (i) => i.terminKey === nextTerminKey
+            );
+            return sum + (inst?.amount || 0);
+          }, 0);
+          setBatchSponsorPayForm((prev) => ({
+            ...prev,
+            sponsorId: nextSponsorId,
+            terminKey: nextTerminKey,
+            selectedCandidateIds: nextEligible.map((c) => c.id),
+            totalAmount: prev.totalAmount > 0 ? prev.totalAmount : suggestedTotal,
+            stageWarningMsg: undefined,
+            forceOverride: false,
+          }));
+        };
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
+            <div className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                  <span className="rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
+                    Pembayaran Custom &amp; Kolektif Sponsor (Auto-Hitung Per CPMI)
+                  </span>
+                  <h3 className="mt-1 text-base font-bold text-slate-900">
+                    Bayar DP Custom Sponsor untuk Banyak CPMI Sekaligus
+                  </h3>
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    Masukkan total uang DP yang dibayarkan ke sponsor, sistem otomatis membagi &amp; menghitung nominal per CPMI beserta sisa termin berikutnya.
+                  </p>
+                </div>
                 <button
                   type="button"
-                  onClick={() => setPayingTerminModal(null)}
-                  className="rounded-lg border border-slate-200 px-4 py-2 font-semibold text-slate-600"
+                  onClick={() => setBatchSponsorPayOpen(false)}
+                  className="rounded-lg p-1 text-slate-400 hover:bg-slate-100"
                 >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  className="rounded-lg bg-emerald-600 px-5 py-2 font-bold text-white hover:bg-emerald-700"
-                >
-                  Konfirmasi Bayar & Terbitkan Kwitansi
+                  <X className="h-5 w-5" />
                 </button>
               </div>
-            </form>
+
+              <form onSubmit={handlePaySponsorBatchCustom} className="mt-4 space-y-4 text-xs">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-12">
+                  <div className="sm:col-span-5">
+                    <label className="mb-1 block font-bold text-slate-700">
+                      Pilih Sponsor / PL Penerima
+                    </label>
+                    <select
+                      value={batchSponsorPayForm.sponsorId}
+                      onChange={(e) =>
+                        handleSponsorOrTerminChange(
+                          e.target.value,
+                          batchSponsorPayForm.terminKey
+                        )
+                      }
+                      className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 font-semibold text-slate-900"
+                    >
+                      {[...db.sponsors]
+                        .sort((a, b) => {
+                          const aCnt = db.candidates.filter((c) => c.sponsorId === a.id).length;
+                          const bCnt = db.candidates.filter((c) => c.sponsorId === b.id).length;
+                          if (bCnt !== aCnt) return bCnt - aCnt;
+                          return b.payableAmount - a.payableAmount;
+                        })
+                        .map((sp) => {
+                          const cnt = db.candidates.filter((c) => c.sponsorId === sp.id).length;
+                          return (
+                            <option key={sp.id} value={sp.id}>
+                              {sp.name} ({cnt} CPMI · Sisa: {formatRupiah(sp.payableAmount)})
+                            </option>
+                          );
+                        })}
+                    </select>
+                  </div>
+
+                  <div className="sm:col-span-3">
+                    <label className="mb-1 block font-bold text-slate-700">
+                      Termin Pembayaran
+                    </label>
+                    <select
+                      value={batchSponsorPayForm.terminKey}
+                      onChange={(e) =>
+                        handleSponsorOrTerminChange(
+                          batchSponsorPayForm.sponsorId,
+                          e.target.value as CommissionTerminKey
+                        )
+                      }
+                      className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 font-semibold text-slate-900"
+                    >
+                      <option value="DP1">DP 1</option>
+                      <option value="DP2">DP 2</option>
+                      <option value="DP3">DP 3</option>
+                      <option value="PELUNASAN">Pelunasan</option>
+                    </select>
+                  </div>
+
+                  <div className="sm:col-span-4">
+                    <label className="mb-1 block font-bold text-slate-700">
+                      Total Nominal Bayar Custom (Rp)
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      step={50000}
+                      required
+                      value={batchSponsorPayForm.totalAmount || ""}
+                      onChange={(e) =>
+                        setBatchSponsorPayForm((prev) => ({
+                          ...prev,
+                          totalAmount: Number(e.target.value || 0),
+                        }))
+                      }
+                      placeholder="Contoh: 50000000"
+                      className="w-full rounded-xl border border-emerald-400 bg-white px-3 py-2 font-mono text-sm font-extrabold text-emerald-800 focus:border-emerald-600 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Ringkasan Kalkulasi Otomatis */}
+                <div className="grid grid-cols-1 gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50/70 p-3.5 sm:grid-cols-3">
+                  <div>
+                    <span className="text-[11px] font-semibold text-emerald-800">
+                      Total Dibayar ke {selectedSponsorObj?.name || "Sponsor"}
+                    </span>
+                    <p className="mt-0.5 font-mono text-base font-extrabold text-emerald-950">
+                      {formatRupiah(batchSponsorPayForm.totalAmount || 0)}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-[11px] font-semibold text-emerald-800">
+                      Jumlah CPMI Dipilih
+                    </span>
+                    <p className="mt-0.5 text-base font-extrabold text-slate-900">
+                      {selectedCandidates.length} CPMI{" "}
+                      <span className="text-xs font-normal text-slate-500">
+                        (dari {eligibleCandidates.length} siap {getTerminShortTitle(batchSponsorPayForm.terminKey)})
+                      </span>
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-[11px] font-semibold text-emerald-800">
+                      Nominal {getTerminShortTitle(batchSponsorPayForm.terminKey)} Otomatis / CPMI
+                    </span>
+                    <p className="mt-0.5 font-mono text-base font-extrabold text-sky-800">
+                      {formatRupiah(avgPerCpmi)}{" "}
+                      <span className="text-[11px] font-semibold text-slate-600">/ CPMI</span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Kontrol Pilihan CPMI & Mode Pembagian */}
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-bold text-slate-700">Mode Pembagian:</span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setBatchSponsorPayForm((prev) => ({
+                          ...prev,
+                          distributionMode: "EQUAL_SPLIT",
+                        }))
+                      }
+                      className={`rounded-lg border px-2.5 py-1 text-[11px] font-bold transition ${
+                        batchSponsorPayForm.distributionMode === "EQUAL_SPLIT"
+                          ? "border-slate-900 bg-slate-900 text-white"
+                          : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                      }`}
+                    >
+                      Bagi Rata Sama Besar (Total ÷ CPMI)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setBatchSponsorPayForm((prev) => ({
+                          ...prev,
+                          distributionMode: "PROPORTIONAL_CAP",
+                        }))
+                      }
+                      className={`rounded-lg border px-2.5 py-1 text-[11px] font-bold transition ${
+                        batchSponsorPayForm.distributionMode === "PROPORTIONAL_CAP"
+                          ? "border-slate-900 bg-slate-900 text-white"
+                          : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                      }`}
+                    >
+                      Proporsional Sisa Fee
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setBatchSponsorPayForm((prev) => ({
+                          ...prev,
+                          selectedCandidateIds: eligibleCandidates.map((c) => c.id),
+                        }))
+                      }
+                      className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 hover:bg-slate-100"
+                    >
+                      Pilih Semua ({eligibleCandidates.length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setBatchSponsorPayForm((prev) => ({
+                          ...prev,
+                          selectedCandidateIds: [],
+                        }))
+                      }
+                      className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50"
+                    >
+                      Kosongkan
+                    </button>
+                  </div>
+                </div>
+
+                {/* Tabel Checklist & Pratinjau Hitung Otomatis Per CPMI */}
+                <div className="max-h-64 overflow-y-auto rounded-xl border border-slate-200">
+                  <table className="w-full text-left text-xs">
+                    <thead className="sticky top-0 border-b border-slate-200 bg-slate-50 text-[11px] font-bold text-slate-600">
+                      <tr>
+                        <th className="py-2 px-3 w-8">Pilih</th>
+                        <th className="py-2 px-3">Nama CPMI &amp; Tahap</th>
+                        <th className="py-2 px-3 text-right">Total Fee</th>
+                        <th className="py-2 px-3 text-right">Sudah Bayar</th>
+                        <th className="py-2 px-3 text-right">
+                          {getTerminShortTitle(batchSponsorPayForm.terminKey)} Otomatis
+                        </th>
+                        <th className="py-2 px-3 text-right">Sisa Setelah Bayar</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {sponsorCandidatesAll.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="py-6 text-center text-slate-400">
+                            Belum ada CPMI yang terdaftar di bawah sponsor ini.
+                          </td>
+                        </tr>
+                      ) : (
+                        sponsorCandidatesAll.map((c) => {
+                          const elig = checkCandidateTerminEligibility(
+                            c,
+                            batchSponsorPayForm.terminKey
+                          );
+                          const isChecked = batchSponsorPayForm.selectedCandidateIds.includes(c.id);
+                          const distRow = distribution.find((r) => r.candidate.id === c.id);
+                          const totals = getCandidateSponsorTotals(c);
+
+                          return (
+                            <tr
+                              key={c.id}
+                              className={
+                                !elig.eligible
+                                  ? "bg-slate-50/70 text-slate-400"
+                                  : isChecked
+                                  ? "bg-emerald-50/30 hover:bg-emerald-50/60"
+                                  : "hover:bg-slate-50"
+                              }
+                            >
+                              <td className="py-2 px-3">
+                                <input
+                                  type="checkbox"
+                                  disabled={!elig.eligible}
+                                  checked={isChecked}
+                                  onChange={(e) => {
+                                    const checked = e.target.checked;
+                                    setBatchSponsorPayForm((prev) => ({
+                                      ...prev,
+                                      selectedCandidateIds: checked
+                                        ? [...prev.selectedCandidateIds, c.id]
+                                        : prev.selectedCandidateIds.filter((id) => id !== c.id),
+                                      stageWarningMsg: undefined,
+                                    }));
+                                  }}
+                                  className="h-4 w-4 rounded border-slate-300"
+                                />
+                              </td>
+                              <td className="py-2 px-3">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-bold text-slate-900">{c.fullName}</span>
+                                  <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[9px] font-bold text-white">
+                                    {c.stage}
+                                  </span>
+                                  {distRow?.needsStageOverride && (
+                                    <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-800">
+                                      Belum {distRow.requiredStage}
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-[10px] text-slate-500">
+                                  {c.regNumber} ·{" "}
+                                  {elig.eligible ? c.destinationCountry : elig.reason}
+                                </p>
+                              </td>
+                              <td className="py-2 px-3 text-right font-mono">
+                                {formatRupiah(distRow ? distRow.effectiveTotalFee : totals.totalFee)}
+                              </td>
+                              <td className="py-2 px-3 text-right font-mono text-emerald-700">
+                                {formatRupiah(totals.paidAmount)}
+                              </td>
+                              <td className="py-2 px-3 text-right font-mono font-extrabold text-sky-700">
+                                {distRow ? (
+                                  <>
+                                    {formatRupiah(distRow.assignedAmount)}{" "}
+                                    <span className="text-[10px] font-normal text-slate-500">
+                                      ({distRow.percentageOfFee}%)
+                                    </span>
+                                  </>
+                                ) : (
+                                  "-"
+                                )}
+                              </td>
+                              <td className="py-2 px-3 text-right font-mono font-bold text-rose-700">
+                                {distRow
+                                  ? formatRupiah(distRow.remainingAfter)
+                                  : formatRupiah(totals.remainingAmount)}
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                {hasAnyExceeded && (
+                  <div className="rounded-xl border border-rose-300 bg-rose-50 p-3 text-xs text-rose-900">
+                    <p className="font-bold">
+                      Perhatian: Nilai per CPMI melebihi sisa hak fee pada sebagian CPMI terpilih.
+                    </p>
+                    <label className="mt-1.5 flex items-center gap-2 font-bold cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={batchSponsorPayForm.autoAdjustCommissionIfExceeded}
+                        onChange={(e) =>
+                          setBatchSponsorPayForm((prev) => ({
+                            ...prev,
+                            autoAdjustCommissionIfExceeded: e.target.checked,
+                          }))
+                        }
+                        className="h-4 w-4 rounded border-rose-400"
+                      />
+                      Sesuaikan / naikkan Total Fee CPMI secara otomatis mengikuti nominal DP custom ini
+                    </label>
+                  </div>
+                )}
+
+                {(stageNeedCount > 0 || batchSponsorPayForm.stageWarningMsg) && (
+                  <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
+                    <p className="font-bold flex items-center gap-1.5">
+                      <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
+                      {batchSponsorPayForm.stageWarningMsg ||
+                        `${stageNeedCount} CPMI terpilih belum mencapai tahap syarat pencairan termin.`}
+                    </p>
+                    <label className="mt-2 flex items-center gap-2 font-bold text-amber-950 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={batchSponsorPayForm.forceOverride}
+                        onChange={(e) =>
+                          setBatchSponsorPayForm((prev) => ({
+                            ...prev,
+                            forceOverride: e.target.checked,
+                          }))
+                        }
+                        className="h-4 w-4 rounded border-amber-400"
+                      />
+                      Otorisasi Pencairan DP Lebih Awal (Direktur / Admin Keuangan)
+                    </label>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block font-bold text-slate-700">Metode Pembayaran</label>
+                    <select
+                      value={batchSponsorPayForm.paymentMethod}
+                      onChange={(e) =>
+                        setBatchSponsorPayForm((prev) => ({
+                          ...prev,
+                          paymentMethod: e.target.value as "TRANSFER_BANK" | "TUNAI_KAS",
+                        }))
+                      }
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 font-semibold"
+                    >
+                      <option value="TRANSFER_BANK">Transfer Bank Perusahaan (Rekening P3MI)</option>
+                      <option value="TUNAI_KAS">Tunai Kas Operasional Kantor</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-1 block font-bold text-slate-700">
+                      Catatan / No. Referensi Transfer Batch
+                    </label>
+                    <input
+                      type="text"
+                      value={batchSponsorPayForm.notes}
+                      onChange={(e) =>
+                        setBatchSponsorPayForm((prev) => ({ ...prev, notes: e.target.value }))
+                      }
+                      placeholder="Contoh: Transfer BCA 50jt DP1 10 CPMI"
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-2 border-t border-slate-100 pt-3">
+                  <button
+                    type="button"
+                    onClick={() => setBatchSponsorPayOpen(false)}
+                    className="rounded-lg border border-slate-200 px-4 py-2 font-semibold text-slate-600 hover:bg-slate-50"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={
+                      selectedCandidates.length === 0 ||
+                      batchSponsorPayForm.totalAmount <= 0 ||
+                      (hasAnyExceeded && !batchSponsorPayForm.autoAdjustCommissionIfExceeded)
+                    }
+                    className="rounded-lg bg-emerald-600 px-5 py-2 font-bold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Bayar {getTerminShortTitle(batchSponsorPayForm.terminKey)} ke {selectedCandidates.length} CPMI ({formatRupiah(batchSponsorPayForm.totalAmount || 0)})
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* =========================================================
           MODAL KWITANSI RESMI PEMBAYARAN TERMIN FEE SPONSOR
