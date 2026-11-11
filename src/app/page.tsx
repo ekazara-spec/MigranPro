@@ -12506,15 +12506,15 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                     />
                   </div>
 
-                  {/* 5. Seluruh Field Teks Bahasa Inggris pada Koordinat Presisi contoh_printout_biodata.pdf */}
+                  {/* 5. Seluruh Field Teks Bahasa Inggris pada Koordinat Presisi contoh_printout_biodata.pdf (baseTop + translateY(-80%)) */}
                   {/* REFERENCE NO. */}
                   <span
                     style={{
                       left: "25.84%",
-                      top: "15.85%",
-                      transform: "translateY(-82%)",
+                      top: "16.68%",
+                      transform: "translateY(-80%)",
                     }}
-                    className="absolute font-sans text-[11px] font-bold leading-none tracking-tight text-black uppercase"
+                    className="absolute font-sans text-[10.5px] print:text-[8pt] font-bold leading-none tracking-tight text-black uppercase"
                   >
                     {syarikahBiodataForm.referenceNo}
                   </span>
@@ -12523,10 +12523,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   <span
                     style={{
                       left: "25.84%",
-                      top: "17.95%",
-                      transform: "translateY(-82%)",
+                      top: "18.73%",
+                      transform: "translateY(-80%)",
                     }}
-                    className="absolute font-sans text-[11px] font-bold leading-none tracking-tight text-black uppercase"
+                    className="absolute font-sans text-[10.5px] print:text-[8pt] font-bold leading-none tracking-tight text-black uppercase"
                   >
                     {syarikahBiodataForm.employmentIn}
                   </span>
@@ -12535,10 +12535,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   <span
                     style={{
                       left: "22.36%",
-                      top: "20.97%",
-                      transform: "translateY(-82%)",
+                      top: "21.79%",
+                      transform: "translateY(-80%)",
                     }}
-                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                    className="absolute font-sans text-[10.5px] print:text-[8pt] font-normal leading-none text-black uppercase"
                   >
                     {syarikahBiodataForm.postApply}
                   </span>
@@ -12547,10 +12547,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   <span
                     style={{
                       left: "22.36%",
-                      top: "22.95%",
-                      transform: "translateY(-82%)",
+                      top: "23.77%",
+                      transform: "translateY(-80%)",
                     }}
-                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                    className="absolute font-sans text-[10.5px] print:text-[8pt] font-normal leading-none text-black uppercase"
                   >
                     {syarikahBiodataForm.monthlySalary}
                   </span>
@@ -12559,10 +12559,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   <span
                     style={{
                       left: "22.36%",
-                      top: "24.80%",
-                      transform: "translateY(-82%)",
+                      top: "25.62%",
+                      transform: "translateY(-80%)",
                     }}
-                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                    className="absolute font-sans text-[10.5px] print:text-[8pt] font-normal leading-none text-black uppercase"
                   >
                     {syarikahBiodataForm.contractPeriod}
                   </span>
@@ -12571,23 +12571,23 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   <span
                     style={{
                       left: "48.84%",
-                      top: "24.74%",
-                      transform: "translateY(-82%)",
+                      top: "25.56%",
+                      transform: "translateY(-80%)",
                     }}
-                    className="absolute font-sans text-[10.5px] font-normal leading-none text-black"
+                    className="absolute font-sans text-[10.5px] print:text-[8pt] font-normal leading-none text-black"
                   >
                     {syarikahBiodataForm.phone}
                   </span>
 
-                  {/* Full Name (Bold Blue #0033FF, 11pt in PDF) */}
+                  {/* Full Name (Bold Blue #0033FF, 9.5pt in PDF) */}
                   <span
                     style={{
                       left: "34.03%",
-                      top: "27.94%",
-                      transform: "translateY(-82%)",
+                      top: "28.92%",
+                      transform: "translateY(-80%)",
                       color: "#0033FF",
                     }}
-                    className="absolute font-sans text-[13.5px] font-bold leading-none tracking-wide uppercase"
+                    className="absolute font-sans text-[12.5px] print:text-[9.5pt] font-bold leading-none tracking-wide uppercase"
                   >
                     {syarikahBiodataForm.fullName}
                   </span>
@@ -12597,10 +12597,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   <span
                     style={{
                       left: "18.96%",
-                      top: "33.29%",
-                      transform: "translateY(-82%)",
+                      top: "34.11%",
+                      transform: "translateY(-80%)",
                     }}
-                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                    className="absolute font-sans text-[10.5px] print:text-[8pt] font-normal leading-none text-black uppercase"
                   >
                     {syarikahBiodataForm.nationality}
                   </span>
@@ -12609,10 +12609,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   <span
                     style={{
                       left: "18.96%",
-                      top: "35.27%",
-                      transform: "translateY(-82%)",
+                      top: "36.09%",
+                      transform: "translateY(-80%)",
                     }}
-                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                    className="absolute font-sans text-[10.5px] print:text-[8pt] font-normal leading-none text-black uppercase"
                   >
                     {syarikahBiodataForm.religion}
                   </span>
@@ -12621,10 +12621,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   <span
                     style={{
                       left: "18.96%",
-                      top: "37.25%",
-                      transform: "translateY(-82%)",
+                      top: "38.07%",
+                      transform: "translateY(-80%)",
                     }}
-                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                    className="absolute font-sans text-[10.5px] print:text-[8pt] font-normal leading-none text-black uppercase"
                   >
                     {syarikahBiodataForm.dateOfBirth}
                   </span>
@@ -12633,10 +12633,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   <span
                     style={{
                       left: "18.96%",
-                      top: "39.11%",
-                      transform: "translateY(-82%)",
+                      top: "39.93%",
+                      transform: "translateY(-80%)",
                     }}
-                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                    className="absolute font-sans text-[10.5px] print:text-[8pt] font-normal leading-none text-black uppercase"
                   >
                     {syarikahBiodataForm.age}
                   </span>
@@ -12645,10 +12645,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   <span
                     style={{
                       left: "18.96%",
-                      top: "41.20%",
-                      transform: "translateY(-82%)",
+                      top: "42.02%",
+                      transform: "translateY(-80%)",
                     }}
-                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                    className="absolute font-sans text-[10.5px] print:text-[8pt] font-normal leading-none text-black uppercase"
                   >
                     {syarikahBiodataForm.placeOfBirth}
                   </span>
@@ -12657,10 +12657,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   <span
                     style={{
                       left: "18.96%",
-                      top: "43.41%",
-                      transform: "translateY(-82%)",
+                      top: "44.23%",
+                      transform: "translateY(-80%)",
                     }}
-                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                    className="absolute font-sans text-[10.5px] print:text-[8pt] font-normal leading-none text-black uppercase"
                   >
                     {syarikahBiodataForm.livingTown}
                   </span>
@@ -12669,10 +12669,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   <span
                     style={{
                       left: "18.96%",
-                      top: "45.56%",
-                      transform: "translateY(-82%)",
+                      top: "46.15%",
+                      transform: "translateY(-80%)",
                     }}
-                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                    className="absolute font-sans text-[10.5px] print:text-[8pt] font-normal leading-none text-black uppercase"
                   >
                     {syarikahBiodataForm.maritalStatus}
                   </span>
@@ -12681,10 +12681,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   <span
                     style={{
                       left: "18.96%",
-                      top: "47.65%",
-                      transform: "translateY(-82%)",
+                      top: "48.28%",
+                      transform: "translateY(-80%)",
                     }}
-                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                    className="absolute font-sans text-[10.5px] print:text-[8pt] font-normal leading-none text-black uppercase"
                   >
                     {syarikahBiodataForm.noOfChildren}
                   </span>
@@ -12693,10 +12693,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   <span
                     style={{
                       left: "18.96%",
-                      top: "49.58%",
-                      transform: "translateY(-82%)",
+                      top: "50.40%",
+                      transform: "translateY(-80%)",
                     }}
-                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                    className="absolute font-sans text-[10.5px] print:text-[8pt] font-normal leading-none text-black uppercase"
                   >
                     {syarikahBiodataForm.weight}
                   </span>
@@ -12705,10 +12705,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   <span
                     style={{
                       left: "18.96%",
-                      top: "51.36%",
-                      transform: "translateY(-82%)",
+                      top: "52.18%",
+                      transform: "translateY(-80%)",
                     }}
-                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                    className="absolute font-sans text-[10.5px] print:text-[8pt] font-normal leading-none text-black uppercase"
                   >
                     {syarikahBiodataForm.height}
                   </span>
@@ -12717,10 +12717,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   <span
                     style={{
                       left: "18.96%",
-                      top: "53.28%",
-                      transform: "translateY(-82%)",
+                      top: "54.10%",
+                      transform: "translateY(-80%)",
                     }}
-                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                    className="absolute font-sans text-[10.5px] print:text-[8pt] font-normal leading-none text-black uppercase"
                   >
                     {syarikahBiodataForm.complexion}
                   </span>
@@ -12729,10 +12729,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   <span
                     style={{
                       left: "18.96%",
-                      top: "55.06%",
-                      transform: "translateY(-82%)",
+                      top: "55.88%",
+                      transform: "translateY(-80%)",
                     }}
-                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                    className="absolute font-sans text-[10.5px] print:text-[8pt] font-normal leading-none text-black uppercase"
                   >
                     {syarikahBiodataForm.educational}
                   </span>
@@ -12742,10 +12742,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   <span
                     style={{
                       left: "64.71%",
-                      top: "33.29%",
-                      transform: "translateY(-82%)",
+                      top: "34.11%",
+                      transform: "translateY(-80%)",
                     }}
-                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                    className="absolute font-sans text-[10.5px] print:text-[8pt] font-normal leading-none text-black uppercase"
                   >
                     {syarikahBiodataForm.passportNumber}
                   </span>
@@ -12754,10 +12754,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   <span
                     style={{
                       left: "64.71%",
-                      top: "35.27%",
-                      transform: "translateY(-82%)",
+                      top: "36.09%",
+                      transform: "translateY(-80%)",
                     }}
-                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                    className="absolute font-sans text-[10.5px] print:text-[8pt] font-normal leading-none text-black uppercase"
                   >
                     {syarikahBiodataForm.passportIssueDate}
                   </span>
@@ -12766,10 +12766,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   <span
                     style={{
                       left: "64.71%",
-                      top: "37.25%",
-                      transform: "translateY(-82%)",
+                      top: "38.07%",
+                      transform: "translateY(-80%)",
                     }}
-                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                    className="absolute font-sans text-[10.5px] print:text-[8pt] font-normal leading-none text-black uppercase"
                   >
                     {syarikahBiodataForm.passportIssuePlace}
                   </span>
@@ -12778,10 +12778,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   <span
                     style={{
                       left: "64.71%",
-                      top: "39.11%",
-                      transform: "translateY(-82%)",
+                      top: "39.93%",
+                      transform: "translateY(-80%)",
                     }}
-                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                    className="absolute font-sans text-[10.5px] print:text-[8pt] font-normal leading-none text-black uppercase"
                   >
                     {syarikahBiodataForm.passportExpiryDate}
                   </span>
@@ -12791,10 +12791,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   <span
                     style={{
                       left: "18.90%",
-                      top: "62.34%",
-                      transform: "translateY(-82%)",
+                      top: "63.16%",
+                      transform: "translateY(-80%)",
                     }}
-                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                    className="absolute font-sans text-[10.5px] print:text-[8pt] font-normal leading-none text-black uppercase"
                   >
                     {syarikahBiodataForm.arabicSpeak}
                   </span>
@@ -12803,10 +12803,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   <span
                     style={{
                       left: "32.44%",
-                      top: "62.34%",
-                      transform: "translateY(-82%)",
+                      top: "63.16%",
+                      transform: "translateY(-80%)",
                     }}
-                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                    className="absolute font-sans text-[10.5px] print:text-[8pt] font-normal leading-none text-black uppercase"
                   >
                     {syarikahBiodataForm.arabicRead}
                   </span>
@@ -12815,10 +12815,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   <span
                     style={{
                       left: "18.90%",
-                      top: "64.14%",
-                      transform: "translateY(-82%)",
+                      top: "64.96%",
+                      transform: "translateY(-80%)",
                     }}
-                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                    className="absolute font-sans text-[10.5px] print:text-[8pt] font-normal leading-none text-black uppercase"
                   >
                     {syarikahBiodataForm.englishSpeak}
                   </span>
@@ -12827,10 +12827,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   <span
                     style={{
                       left: "32.44%",
-                      top: "64.14%",
-                      transform: "translateY(-82%)",
+                      top: "64.96%",
+                      transform: "translateY(-80%)",
                     }}
-                    className="absolute font-sans text-[11px] font-normal leading-none text-black uppercase"
+                    className="absolute font-sans text-[10.5px] print:text-[8pt] font-normal leading-none text-black uppercase"
                   >
                     {syarikahBiodataForm.englishRead}
                   </span>
@@ -12840,10 +12840,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   <span
                     style={{
                       left: "13.62%",
-                      top: "68.33%",
-                      transform: "translateY(-82%)",
+                      top: "69.15%",
+                      transform: "translateY(-80%)",
                     }}
-                    className="absolute max-w-[36%] truncate font-sans text-[10.5px] font-normal leading-none text-black uppercase"
+                    className="absolute max-w-[36%] truncate font-sans text-[10px] print:text-[7.5pt] font-normal leading-none text-black uppercase"
                   >
                     {syarikahBiodataForm.prevEmploymentCountry}
                   </span>
@@ -12851,11 +12851,11 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   {/* Period */}
                   <span
                     style={{
-                      left: "13.62%",
-                      top: "71.83%",
-                      transform: "translateY(-82%)",
+                      left: "13.10%",
+                      top: "72.65%",
+                      transform: "translateY(-80%)",
                     }}
-                    className="absolute max-w-[36%] truncate font-sans text-[10.5px] font-normal leading-none text-black uppercase"
+                    className="absolute max-w-[36%] truncate font-sans text-[10px] print:text-[7.5pt] font-normal leading-none text-black uppercase"
                   >
                     {syarikahBiodataForm.prevEmploymentPeriod}
                   </span>
@@ -12865,10 +12865,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   <span
                     style={{
                       left: "17.99%",
-                      top: "77.55%",
-                      transform: "translateY(-82%)",
+                      top: "78.37%",
+                      transform: "translateY(-80%)",
                     }}
-                    className="absolute font-sans text-[10.5px] font-normal leading-none text-black uppercase"
+                    className="absolute font-sans text-[10.5px] print:text-[8pt] font-normal leading-none text-black uppercase"
                   >
                     {syarikahBiodataForm.driving}
                   </span>
@@ -12877,10 +12877,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   <span
                     style={{
                       left: "18.02%",
-                      top: "79.05%",
-                      transform: "translateY(-82%)",
+                      top: "79.87%",
+                      transform: "translateY(-80%)",
                     }}
-                    className="absolute font-sans text-[10.5px] font-normal leading-none text-black uppercase"
+                    className="absolute font-sans text-[10.5px] print:text-[8pt] font-normal leading-none text-black uppercase"
                   >
                     {syarikahBiodataForm.cooking}
                   </span>
@@ -12889,10 +12889,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   <span
                     style={{
                       left: "17.95%",
-                      top: "80.80%",
-                      transform: "translateY(-82%)",
+                      top: "81.62%",
+                      transform: "translateY(-80%)",
                     }}
-                    className="absolute font-sans text-[10.5px] font-normal leading-none text-black uppercase"
+                    className="absolute font-sans text-[10.5px] print:text-[8pt] font-normal leading-none text-black uppercase"
                   >
                     {syarikahBiodataForm.cleaning}
                   </span>
@@ -12901,10 +12901,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   <span
                     style={{
                       left: "17.95%",
-                      top: "82.46%",
-                      transform: "translateY(-82%)",
+                      top: "83.29%",
+                      transform: "translateY(-80%)",
                     }}
-                    className="absolute font-sans text-[10.5px] font-normal leading-none text-black uppercase"
+                    className="absolute font-sans text-[10.5px] print:text-[8pt] font-normal leading-none text-black uppercase"
                   >
                     {syarikahBiodataForm.washing}
                   </span>
@@ -12913,10 +12913,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   <span
                     style={{
                       left: "17.95%",
-                      top: "84.13%",
-                      transform: "translateY(-82%)",
+                      top: "84.95%",
+                      transform: "translateY(-80%)",
                     }}
-                    className="absolute font-sans text-[10.5px] font-normal leading-none text-black uppercase"
+                    className="absolute font-sans text-[10.5px] print:text-[8pt] font-normal leading-none text-black uppercase"
                   >
                     {syarikahBiodataForm.babySitting}
                   </span>
@@ -12925,10 +12925,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   <span
                     style={{
                       left: "17.95%",
-                      top: "85.80%",
-                      transform: "translateY(-82%)",
+                      top: "86.62%",
+                      transform: "translateY(-80%)",
                     }}
-                    className="absolute font-sans text-[10.5px] font-normal leading-none text-black uppercase"
+                    className="absolute font-sans text-[10.5px] print:text-[8pt] font-normal leading-none text-black uppercase"
                   >
                     {syarikahBiodataForm.ironing}
                   </span>
@@ -12937,10 +12937,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   <span
                     style={{
                       left: "17.95%",
-                      top: "87.46%",
-                      transform: "translateY(-82%)",
+                      top: "88.28%",
+                      transform: "translateY(-80%)",
                     }}
-                    className="absolute font-sans text-[10.5px] font-normal leading-none text-black uppercase"
+                    className="absolute font-sans text-[10.5px] print:text-[8pt] font-normal leading-none text-black uppercase"
                   >
                     {syarikahBiodataForm.careOfOlder}
                   </span>
@@ -12950,7 +12950,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                     <div
                       style={{
                         left: "6.0%",
-                        top: "92.5%",
+                        top: "93.2%",
                         width: "86%",
                       }}
                       className="absolute font-sans text-[9.5px] font-semibold leading-tight text-blue-950 uppercase"
