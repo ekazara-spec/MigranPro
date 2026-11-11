@@ -10,6 +10,7 @@ import {
   Building2,
   CheckCircle2,
   ChevronDown,
+  Coins,
   CreditCard,
   Eye,
   FileCheck2,
@@ -105,6 +106,10 @@ import {
   getCandidateSponsorTotals,
   getTerminShortTitle,
 } from "@/lib/sponsor-installment-utils";
+import {
+  computeKasbonDeductionPreview,
+  getOpenSponsorKasbonTotal,
+} from "@/lib/cashflow-sync-utils";
 
 import TenantBranchModule from "@/components/TenantBranchModule";
 import DocumentPrintModule from "@/components/DocumentPrintModule";
@@ -436,6 +441,7 @@ export default function PASMigranProCommandCenter() {
     forceOverride: false,
     customAmount: 0,
     autoAdjustCommissionIfExceeded: false,
+    deductKasbon: true,
   });
   const [batchSponsorPayOpen, setBatchSponsorPayOpen] = useState(false);
   const [batchSponsorPayForm, setBatchSponsorPayForm] = useState<{
@@ -448,6 +454,7 @@ export default function PASMigranProCommandCenter() {
     notes: string;
     forceOverride: boolean;
     autoAdjustCommissionIfExceeded: boolean;
+    deductKasbon: boolean;
     stageWarningMsg?: string;
   }>({
     sponsorId: "",
@@ -459,6 +466,7 @@ export default function PASMigranProCommandCenter() {
     notes: "",
     forceOverride: false,
     autoAdjustCommissionIfExceeded: false,
+    deductKasbon: true,
   });
   const [receiptPreviewModal, setReceiptPreviewModal] = useState<{
     candidate: Candidate;
@@ -2595,6 +2603,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
       forceOverride: payTerminForm.forceOverride,
       customAmount: payTerminForm.customAmount,
       autoAdjustCommissionIfExceeded: payTerminForm.autoAdjustCommissionIfExceeded,
+      deductKasbon: payTerminForm.deductKasbon,
     });
 
     if (status === 422 && data.stageWarning) {
@@ -2621,6 +2630,8 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
     const updatedCandidate: Candidate = data.candidate;
     const paidInst: SponsorInstallment = data.installment;
     const spObj = db?.sponsors.find((s) => s.id === updatedCandidate.sponsorId);
+    const kasbonDeducted = Number(data.kasbonDeducted || 0);
+    const netCashPaid = Number(data.netCashPaid ?? paidInst.amount);
 
     setPayingTerminModal(null);
     setPayTerminForm({
@@ -2629,6 +2640,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
       forceOverride: false,
       customAmount: 0,
       autoAdjustCommissionIfExceeded: false,
+      deductKasbon: true,
     });
     setToast({
       type: "success",
@@ -2636,6 +2648,9 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
       details: [
         `No. Kwitansi: ${paidInst.receiptNumber} · Penerima: ${spObj?.name || "-"}`,
         `CPMI: ${updatedCandidate.fullName} (${updatedCandidate.regNumber})`,
+        kasbonDeducted > 0
+          ? `Potong Kasbon: ${formatRupiah(kasbonDeducted)} · Kas Keluar Netto ke Jurnal: ${formatRupiah(netCashPaid)}`
+          : `Otomatis tercatat di Buku Jurnal Arus Kas KELUAR: ${formatRupiah(netCashPaid)}`,
       ],
     });
     setReceiptPreviewModal({
@@ -2688,6 +2703,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
       notes: "",
       forceOverride: false,
       autoAdjustCommissionIfExceeded: false,
+      deductKasbon: true,
       stageWarningMsg: undefined,
     });
     setBatchSponsorPayOpen(true);
@@ -2707,6 +2723,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
       notes: batchSponsorPayForm.notes,
       forceOverride: batchSponsorPayForm.forceOverride,
       autoAdjustCommissionIfExceeded: batchSponsorPayForm.autoAdjustCommissionIfExceeded,
+      deductKasbon: batchSponsorPayForm.deductKasbon,
     });
 
     if (status === 422 && data.stageWarning) {
@@ -2726,6 +2743,9 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
       return;
     }
 
+    const kasbonDeducted = Number(data.kasbonDeducted || 0);
+    const netCashPaid = Number(data.netCashPaid ?? data.totalAmount);
+
     setBatchSponsorPayOpen(false);
     setToast({
       type: "success",
@@ -2733,6 +2753,9 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
       details: [
         `Sponsor: ${data.sponsorName} · ${data.count} CPMI dibayarkan`,
         `Rata-rata / CPMI: ${formatRupiah(data.perCpmiAmount)} · No. Batch: ${data.receipts?.[0] || "-"}`,
+        kasbonDeducted > 0
+          ? `Potong Kasbon: ${formatRupiah(kasbonDeducted)} · Kas Keluar Netto ke Jurnal: ${formatRupiah(netCashPaid)}`
+          : `Otomatis tercatat di Buku Jurnal Arus Kas KELUAR: ${formatRupiah(netCashPaid)}`,
       ],
     });
   }
@@ -6224,6 +6247,68 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                     </div>
                   </div>
 
+                  {/* Banner Integrasi Real-Time dengan Modul 4: Arus Kas & Kasbon */}
+                  {(() => {
+                    const totalMasuk = (db.cashJournals || [])
+                      .filter((j) => j.type === "MASUK")
+                      .reduce((s, j) => s + j.amount, 0);
+                    const totalKeluar = (db.cashJournals || [])
+                      .filter((j) => j.type === "KELUAR")
+                      .reduce((s, j) => s + j.amount, 0);
+                    const saldoBersih = totalMasuk - totalKeluar;
+                    const activeSponsorAdvances = (db.cashAdvances || []).filter(
+                      (a) =>
+                        a.borrowerType === "SPONSOR" &&
+                        a.status !== "LUNAS" &&
+                        a.remainingAmount > 0
+                    );
+                    const totalSponsorKasbonAktif = activeSponsorAdvances.reduce(
+                      (s, a) => s + a.remainingAmount,
+                      0
+                    );
+
+                    return (
+                      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50/70 px-5 py-3.5 shadow-xs">
+                        <div className="flex flex-wrap items-center gap-4 text-xs">
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-800">
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            Terintegrasi Real-Time ke Arus Kas & Kasbon
+                          </span>
+                          <div className="text-slate-700">
+                            Saldo Kas Bersih:{" "}
+                            <strong className="text-slate-950">
+                              {formatRupiah(saldoBersih)}
+                            </strong>{" "}
+                            <span className="text-slate-500">
+                              ({(db.cashJournals || []).length} jurnal)
+                            </span>
+                          </div>
+                          <div className="text-slate-700">
+                            Kasbon Sponsor Belum Lunas:{" "}
+                            <strong
+                              className={
+                                totalSponsorKasbonAktif > 0 ? "text-amber-800" : "text-slate-900"
+                              }
+                            >
+                              {formatRupiah(totalSponsorKasbonAktif)}
+                            </strong>{" "}
+                            <span className="text-slate-500">
+                              ({activeSponsorAdvances.length} kasbon aktif · otomatis terpotong saat bayar fee)
+                            </span>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setActiveNav("aruskas_kasbon")}
+                          className="inline-flex items-center gap-1.5 rounded-xl border border-amber-300 bg-white px-3.5 py-1.5 text-xs font-bold text-amber-900 shadow-xs transition hover:bg-amber-100 cursor-pointer"
+                        >
+                          <Coins className="h-3.5 w-3.5 text-amber-600" />
+                          Buka Modul Arus Kas & Kasbon →
+                        </button>
+                      </div>
+                    );
+                  })()}
+
                   {/* BAGIAN 1: TABEL RINGKAS PEMBAYARAN FEE SPONSOR BERTAHAP (DP 1, DP 2, DP 3, PELUNASAN) */}
                   <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
@@ -6677,6 +6762,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                                                       forceOverride: false,
                                                       customAmount: inst.amount,
                                                       autoAdjustCommissionIfExceeded: false,
+                                                      deductKasbon: true,
                                                     });
                                                     setPayingTerminModal({
                                                       candidate: c,
@@ -6887,6 +6973,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                                                   forceOverride: false,
                                                   customAmount: inst.amount,
                                                   autoAdjustCommissionIfExceeded: false,
+                                                  deductKasbon: true,
                                                 });
                                                 setPayingTerminModal({
                                                   candidate: c,
@@ -7694,6 +7781,16 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
             ? totals.paidAmount + customAmt
             : totals.totalFee;
         const sisaAfter = Math.max(0, effectiveTotal - (totals.paidAmount + customAmt));
+        const openSponsorKasbon = getOpenSponsorKasbonTotal(
+          db?.cashAdvances,
+          payingTerminModal.candidate.sponsorId,
+          payingTerminModal.sponsorName
+        );
+        const kasbonPreview = computeKasbonDeductionPreview(
+          customAmt,
+          openSponsorKasbon,
+          payTerminForm.deductKasbon
+        );
 
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
@@ -7873,6 +7970,44 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                   </select>
                 </div>
 
+                {openSponsorKasbon > 0 ? (
+                  <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-950 space-y-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-bold">
+                        Sponsor ini punya Kasbon Belum Lunas:
+                      </span>
+                      <strong className="text-amber-800">
+                        {formatRupiah(openSponsorKasbon)}
+                      </strong>
+                    </div>
+                    <label className="flex items-center gap-2 font-semibold cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={payTerminForm.deductKasbon}
+                        onChange={(e) =>
+                          setPayTerminForm({
+                            ...payTerminForm,
+                            deductKasbon: e.target.checked,
+                          })
+                        }
+                        className="h-3.5 w-3.5 rounded border-amber-500"
+                      />
+                      Potong otomatis dari sisa Kasbon Sponsor ({formatRupiah(kasbonPreview.kasbonDeducted)})
+                    </label>
+                    <div className="flex items-center justify-between border-t border-amber-200 pt-1.5 text-[11px]">
+                      <span>Kas Keluar Netto (dicatat ke Jurnal Arus Kas):</span>
+                      <strong className="text-emerald-800 text-xs">
+                        {formatRupiah(kasbonPreview.netCashPaid)}
+                      </strong>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 px-3 py-2 text-[11px] text-emerald-900">
+                    Pembayaran ini otomatis tercatat sebagai <strong>KAS KELUAR</strong> sebesar{" "}
+                    <strong>{formatRupiah(customAmt)}</strong> di Buku Jurnal Arus Kas.
+                  </div>
+                )}
+
                 <div>
                   <label className="block font-bold text-slate-700 mb-1">
                     Catatan / Referensi Bukti Transfer
@@ -7939,6 +8074,16 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
             : 0;
         const selectedSponsorObj = db.sponsors.find(
           (s) => s.id === batchSponsorPayForm.sponsorId
+        );
+        const openBatchKasbon = getOpenSponsorKasbonTotal(
+          db.cashAdvances,
+          batchSponsorPayForm.sponsorId,
+          selectedSponsorObj?.name
+        );
+        const batchKasbonPreview = computeKasbonDeductionPreview(
+          batchSponsorPayForm.totalAmount || 0,
+          openBatchKasbon,
+          batchSponsorPayForm.deductKasbon
         );
 
         const handleSponsorOrTerminChange = (
@@ -8349,6 +8494,42 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                     />
                   </div>
                 </div>
+
+                {openBatchKasbon > 0 ? (
+                  <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-950 space-y-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-bold">
+                        Sponsor ({selectedSponsorObj?.name || "-"}) punya Kasbon Belum Lunas:
+                      </span>
+                      <strong className="text-amber-800">{formatRupiah(openBatchKasbon)}</strong>
+                    </div>
+                    <label className="flex items-center gap-2 font-semibold cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={batchSponsorPayForm.deductKasbon}
+                        onChange={(e) =>
+                          setBatchSponsorPayForm((prev) => ({
+                            ...prev,
+                            deductKasbon: e.target.checked,
+                          }))
+                        }
+                        className="h-3.5 w-3.5 rounded border-amber-500"
+                      />
+                      Potong otomatis dari sisa Kasbon Sponsor ({formatRupiah(batchKasbonPreview.kasbonDeducted)})
+                    </label>
+                    <div className="flex items-center justify-between border-t border-amber-200 pt-1.5 text-[11px]">
+                      <span>Total Transfer / Kas Keluar Netto ke Jurnal Arus Kas:</span>
+                      <strong className="text-emerald-800 text-xs">
+                        {formatRupiah(batchKasbonPreview.netCashPaid)}
+                      </strong>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 px-3 py-2 text-[11px] text-emerald-900">
+                    Pembayaran kolektif ini otomatis tercatat sebagai <strong>KAS KELUAR</strong> sebesar{" "}
+                    <strong>{formatRupiah(batchSponsorPayForm.totalAmount || 0)}</strong> di Buku Jurnal Arus Kas.
+                  </div>
+                )}
 
                 <div className="flex justify-end gap-2 border-t border-slate-100 pt-3">
                   <button

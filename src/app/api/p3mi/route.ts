@@ -19,6 +19,11 @@ import {
   getTerminShortTitle,
 } from "@/lib/sponsor-installment-utils";
 import {
+  appendCashJournalEntry,
+  applySponsorKasbonDeduction,
+  mapCostCategoryToCashCategory,
+} from "@/lib/cashflow-sync-utils";
+import {
   AppRole,
   BadilReason,
   BadilRecord,
@@ -775,6 +780,7 @@ export async function POST(req: NextRequest) {
         forceOverride = false,
         customAmount,
         autoAdjustCommissionIfExceeded = false,
+        deductKasbon = true,
       } = body.payload;
 
       const candidate = db.candidates.find((c) => c.id === candidateId);
@@ -861,6 +867,44 @@ export async function POST(req: NextRequest) {
       const sponsorName =
         db.sponsors.find((s) => s.id === candidate.sponsorId)?.name || "Sponsor PL";
 
+      const { totalDeducted: kasbonDeducted, netCashPaid } =
+        applySponsorKasbonDeduction(db, {
+          sponsorId: candidate.sponsorId,
+          sponsorName,
+          maxDeductAmount: applyRes.installment.amount,
+          referenceNo: receiptNo,
+          date: today,
+          deductEnabled: Boolean(deductKasbon),
+        });
+
+      if (kasbonDeducted > 0) {
+        const kasbonNote = `Potong Kasbon: Rp ${kasbonDeducted.toLocaleString("id-ID")} · Transfer Netto: Rp ${netCashPaid.toLocaleString("id-ID")}`;
+        applyRes.installment.notes = applyRes.installment.notes
+          ? `${applyRes.installment.notes} (${kasbonNote})`
+          : kasbonNote;
+      }
+
+      if (netCashPaid > 0) {
+        appendCashJournalEntry(db, {
+          branchId: candidate.branchId || "br-jkt",
+          transactionDate: today,
+          type: "KELUAR",
+          category: terminKey === "PELUNASAN" ? "PELUNASAN_SPONSOR" : "DP_SPONSOR",
+          amount: netCashPaid,
+          recipientOrPayer: sponsorName,
+          description: `Pembayaran ${applyRes.installment.terminKey} Fee Sponsor CPMI ${candidate.fullName} (Kwitansi ${receiptNo})${
+            kasbonDeducted > 0
+              ? ` · Potong Kasbon Rp ${kasbonDeducted.toLocaleString("id-ID")}`
+              : ""
+          }`,
+          paymentMethod,
+          referenceNumber: receiptNo,
+          candidateId: candidate.id,
+          createdBy: actorName,
+          createdAt: nowTimestamp(),
+        });
+      }
+
       db.auditLogs.unshift({
         id: `aud-${Date.now()}`,
         candidateId: candidate.id,
@@ -871,8 +915,10 @@ export async function POST(req: NextRequest) {
         actionType: "FINANCE_PAYMENT",
         summary: `Mencairkan Komisi Sponsor ${applyRes.installment.terminKey} (Rp ${applyRes.installment.amount.toLocaleString("id-ID")}) kepada ${sponsorName} untuk CPMI ${candidate.fullName}`,
         details: `No Kwitansi: ${receiptNo} · Metode: ${paymentMethod}${
-          forceOverride ? " [Otorisasi Khusus Sebelum Tahap]" : ""
-        }`,
+          kasbonDeducted > 0
+            ? ` · Potong Kasbon: Rp ${kasbonDeducted.toLocaleString("id-ID")} · Kas Keluar Netto: Rp ${netCashPaid.toLocaleString("id-ID")}`
+            : ""
+        }${forceOverride ? " [Otorisasi Khusus Sebelum Tahap]" : ""}`,
         timestamp: nowTimestamp(),
       });
 
@@ -881,6 +927,8 @@ export async function POST(req: NextRequest) {
         ok: true,
         installment: applyRes.installment,
         candidate,
+        kasbonDeducted,
+        netCashPaid,
         db,
       });
     }
@@ -897,6 +945,7 @@ export async function POST(req: NextRequest) {
         notes = "",
         forceOverride = false,
         autoAdjustCommissionIfExceeded = false,
+        deductKasbon = true,
       } = body.payload as {
         sponsorId: string;
         terminKey: CommissionTerminKey;
@@ -907,6 +956,7 @@ export async function POST(req: NextRequest) {
         notes?: string;
         forceOverride?: boolean;
         autoAdjustCommissionIfExceeded?: boolean;
+        deductKasbon?: boolean;
       };
 
       const sponsor = db.sponsors.find((s) => s.id === sponsorId);
@@ -1020,6 +1070,37 @@ export async function POST(req: NextRequest) {
       }
 
       const perCpmiSample = distribution[0]?.assignedAmount || 0;
+      const batchRef = `KW-PAS/${terminKey}/BATCH/${batchSuffix}`;
+      const { totalDeducted: kasbonDeducted, netCashPaid } =
+        applySponsorKasbonDeduction(db, {
+          sponsorId,
+          sponsorName: sponsor.name,
+          maxDeductAmount: cleanTotal,
+          referenceNo: batchRef,
+          date: today,
+          deductEnabled: Boolean(deductKasbon),
+        });
+
+      if (netCashPaid > 0) {
+        appendCashJournalEntry(db, {
+          branchId: selectedCandidates[0]?.branchId || "br-jkt",
+          transactionDate: today,
+          type: "KELUAR",
+          category: terminKey === "PELUNASAN" ? "PELUNASAN_SPONSOR" : "DP_SPONSOR",
+          amount: netCashPaid,
+          recipientOrPayer: sponsor.name,
+          description: `Pembayaran Kolektif ${getTerminShortTitle(terminKey)} (${selectedCandidates.length} CPMI · Total Hak Fee Rp ${cleanTotal.toLocaleString("id-ID")})${
+            kasbonDeducted > 0
+              ? ` · Potong Kasbon Rp ${kasbonDeducted.toLocaleString("id-ID")}`
+              : ""
+          }`,
+          paymentMethod,
+          referenceNumber: batchRef,
+          createdBy: actorName,
+          createdAt: nowTimestamp(),
+        });
+      }
+
       db.auditLogs.unshift({
         id: `aud-${Date.now()}`,
         candidateId: selectedCandidates[0].id,
@@ -1029,9 +1110,13 @@ export async function POST(req: NextRequest) {
         branchName,
         actionType: "FINANCE_PAYMENT",
         summary: `Pembayaran Kolektif Custom ${getTerminShortTitle(terminKey)} sebesar Rp ${cleanTotal.toLocaleString("id-ID")} untuk ${selectedCandidates.length} CPMI milik ${sponsor.name} (~Rp ${perCpmiSample.toLocaleString("id-ID")}/CPMI)`,
-        details: `Batch No: KW-PAS/${terminKey}/BATCH/${batchSuffix} · Metode: ${paymentMethod}${
-          forceOverride ? " [Otorisasi Khusus Sebelum Tahap]" : ""
-        }${autoAdjustCommissionIfExceeded ? " [Auto-Adjust Plafon Fee]" : ""}`,
+        details: `Batch No: ${batchRef} · Metode: ${paymentMethod}${
+          kasbonDeducted > 0
+            ? ` · Potong Kasbon: Rp ${kasbonDeducted.toLocaleString("id-ID")} · Kas Keluar Netto: Rp ${netCashPaid.toLocaleString("id-ID")}`
+            : ""
+        }${forceOverride ? " [Otorisasi Khusus Sebelum Tahap]" : ""}${
+          autoAdjustCommissionIfExceeded ? " [Auto-Adjust Plafon Fee]" : ""
+        }`,
         timestamp: nowTimestamp(),
       });
 
@@ -1042,6 +1127,8 @@ export async function POST(req: NextRequest) {
         terminKey,
         count: selectedCandidates.length,
         totalAmount: cleanTotal,
+        kasbonDeducted,
+        netCashPaid,
         perCpmiAmount: perCpmiSample,
         receipts,
         db,
@@ -1060,12 +1147,30 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ ok: false, error: "Komponen biaya tidak ditemukan." }, { status: 404 });
       }
 
+      const prevStatus = item.status;
       if (status !== undefined) {
         item.status = status;
         item.paidDate = status === "PAID" ? nowTimestamp().split(" ")[0] : undefined;
       }
       if (amount !== undefined) item.amount = Number(amount);
       if (vendorName !== undefined) item.vendorName = vendorName;
+
+      if (prevStatus !== "PAID" && item.status === "PAID" && item.amount > 0) {
+        appendCashJournalEntry(db, {
+          branchId: candidate.branchId || "br-jkt",
+          transactionDate: item.paidDate || nowTimestamp().split(" ")[0],
+          type: "KELUAR",
+          category: mapCostCategoryToCashCategory(item.category),
+          amount: item.amount,
+          recipientOrPayer: item.vendorName || "Vendor Rekanan",
+          description: `HPP ${candidate.fullName} (${candidate.regNumber}): ${item.title}`,
+          paymentMethod: "BANK_TRANSFER",
+          referenceNumber: item.id,
+          candidateId: candidate.id,
+          createdBy: actorName,
+          createdAt: nowTimestamp(),
+        });
+      }
 
       db.auditLogs.unshift({
         id: `aud-${Date.now()}`,
@@ -1090,15 +1195,38 @@ export async function POST(req: NextRequest) {
       if (!candidate || !candidate.finance) {
         return NextResponse.json({ ok: false, error: "Kandidat tidak ditemukan." }, { status: 404 });
       }
+      const costItemId = `cost-${Date.now()}`;
+      const todayCost = nowTimestamp().split(" ")[0];
+      const costAmount = Number(amount) || 0;
+      const costVendor = vendorName || "Vendor Rekanan";
+      const costTitle = String(title).trim();
+
       candidate.finance.costItems.push({
-        id: `cost-${Date.now()}`,
+        id: costItemId,
         category: category as CostCategory,
-        title: String(title).trim(),
-        amount: Number(amount) || 0,
+        title: costTitle,
+        amount: costAmount,
         status: status as "PAID" | "PENDING",
-        paidDate: status === "PAID" ? nowTimestamp().split(" ")[0] : undefined,
-        vendorName: vendorName || "Vendor Rekanan",
+        paidDate: status === "PAID" ? todayCost : undefined,
+        vendorName: costVendor,
       });
+
+      if (status === "PAID" && costAmount > 0) {
+        appendCashJournalEntry(db, {
+          branchId: candidate.branchId || "br-jkt",
+          transactionDate: todayCost,
+          type: "KELUAR",
+          category: mapCostCategoryToCashCategory(category as CostCategory),
+          amount: costAmount,
+          recipientOrPayer: costVendor,
+          description: `HPP ${candidate.fullName} (${candidate.regNumber}): ${costTitle}`,
+          paymentMethod: "BANK_TRANSFER",
+          referenceNumber: costItemId,
+          candidateId: candidate.id,
+          createdBy: actorName,
+          createdAt: nowTimestamp(),
+        });
+      }
       writeDb(db);
       return NextResponse.json({ ok: true, candidate, db });
     }
@@ -2987,6 +3115,21 @@ export async function POST(req: NextRequest) {
 
       db.cashAdvances.unshift(newAdvance);
 
+      const nowTime = nowTimestamp();
+      appendCashJournalEntry(db, {
+        branchId: db.branches?.[0]?.id || "br-1",
+        transactionDate: dateGiven,
+        type: "KELUAR",
+        category: borrowerType === "STAF" ? "KASBON_STAF" : "KASBON_SPONSOR",
+        amount: Number(amount),
+        recipientOrPayer: `${borrowerName} (${borrowerType === "STAF" ? "Staf" : "Sponsor"})`,
+        description: `Pencairan Kasbon ${newAdvance.id}: ${reason || "Kasbon operasional lapangan"}`,
+        paymentMethod: "TUNAI_KAS",
+        referenceNumber: newAdvance.id,
+        createdBy: `${actorName} (${actorRole})`,
+        createdAt: nowTime,
+      });
+
       db.auditLogs.unshift({
         id: `aud-${Date.now()}`,
         actorName,
@@ -2994,8 +3137,8 @@ export async function POST(req: NextRequest) {
         branchName,
         actionType: "FINANCE_PAYMENT",
         summary: `Pengajuan Kasbon Disetujui: ${borrowerName} (${borrowerType}) Rp ${Number(amount).toLocaleString("id-ID")}`,
-        details: `Alasan: ${reason}`,
-        timestamp: nowTimestamp(),
+        details: `Alasan: ${reason}. Otomatis tercatat KELUAR di Buku Jurnal Arus Kas.`,
+        timestamp: nowTime,
       });
 
       writeDb(db);
@@ -3011,9 +3154,10 @@ export async function POST(req: NextRequest) {
 
       const repayAmt = Math.min(Number(amount), adv.remainingAmount);
       adv.remainingAmount -= repayAmt;
+      const todayStr = nowTimestamp().split(" ")[0];
       adv.deductions.push({
         id: `ded-${Date.now()}`,
-        date: nowTimestamp().split(" ")[0],
+        date: todayStr,
         amount: repayAmt,
         note,
       });
@@ -3023,6 +3167,23 @@ export async function POST(req: NextRequest) {
         adv.remainingAmount = 0;
       }
 
+      const isCommissionDeduction = String(note).toLowerCase().includes("potong");
+      if (repayAmt > 0 && !isCommissionDeduction) {
+        appendCashJournalEntry(db, {
+          branchId: db.branches?.[0]?.id || "br-1",
+          transactionDate: todayStr,
+          type: "MASUK",
+          category: adv.borrowerType === "STAF" ? "KASBON_STAF" : "KASBON_SPONSOR",
+          amount: repayAmt,
+          recipientOrPayer: `${adv.borrowerName} (${adv.borrowerType === "STAF" ? "Staf" : "Sponsor"})`,
+          description: `Pengembalian / Pelunasan Kasbon ${adv.id}: ${note}`,
+          paymentMethod: "TUNAI_KAS",
+          referenceNumber: adv.id,
+          createdBy: `${actorName} (${actorRole})`,
+          createdAt: nowTimestamp(),
+        });
+      }
+
       db.auditLogs.unshift({
         id: `aud-${Date.now()}`,
         actorName,
@@ -3030,7 +3191,7 @@ export async function POST(req: NextRequest) {
         branchName,
         actionType: "FINANCE_PAYMENT",
         summary: `Pembayaran Kasbon ${adv.borrowerName}: Rp ${repayAmt.toLocaleString("id-ID")}`,
-        details: `Sisa Kasbon: Rp ${adv.remainingAmount.toLocaleString("id-ID")} (Status: ${adv.status})`,
+        details: `Sisa Kasbon: Rp ${adv.remainingAmount.toLocaleString("id-ID")} (Status: ${adv.status})${!isCommissionDeduction && repayAmt > 0 ? " | Tercatat MASUK di Buku Jurnal Arus Kas" : ""}`,
         timestamp: nowTimestamp(),
       });
 
@@ -3092,19 +3253,46 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === "UPDATE_SYARIKAH_INVOICE") {
-      const { invoiceId, paidAmountDelta = 0, status, notes } = body.payload;
+      const { invoiceId, paidAmountDelta = 0, idrAmount, status, notes } = body.payload;
       const inv = db.syarikahInvoices?.find((i) => i.id === invoiceId);
       if (!inv) {
         return NextResponse.json({ ok: false, error: "Invoice tidak ditemukan." }, { status: 404 });
       }
 
-      if (paidAmountDelta) {
-        inv.paidAmount = Math.min(inv.totalAmount, inv.paidAmount + Number(paidAmountDelta));
+      const deltaRaw = Number(paidAmountDelta) || 0;
+      const actualDelta = deltaRaw > 0 ? Math.min(deltaRaw, Math.max(0, inv.totalAmount - inv.paidAmount)) : 0;
+      if (deltaRaw) {
+        inv.paidAmount = Math.min(inv.totalAmount, inv.paidAmount + deltaRaw);
       }
       if (status) inv.status = status;
       if (inv.paidAmount >= inv.totalAmount) inv.status = "PAID";
       else if (inv.paidAmount > 0) inv.status = "PARTIAL";
       if (notes) inv.notes = notes;
+
+      if (actualDelta > 0) {
+        const cashInIdr = idrAmount
+          ? Number(idrAmount)
+          : inv.currency === "IDR"
+            ? actualDelta
+            : Math.round(actualDelta * (inv.currency === "USD" ? 15800 : 4200));
+
+        if (cashInIdr > 0) {
+          const nowTime = nowTimestamp();
+          appendCashJournalEntry(db, {
+            branchId: db.branches?.[0]?.id || "br-1",
+            transactionDate: nowTime.split(" ")[0],
+            type: "MASUK",
+            category: "INVOICE_WAKALAH",
+            amount: cashInIdr,
+            recipientOrPayer: inv.syarikahName,
+            description: `Penerimaan Pelunasan Invoice ${inv.invoiceNumber} (${inv.currency} ${actualDelta.toLocaleString("id-ID")})`,
+            paymentMethod: "TRANSFER_BANK",
+            referenceNumber: inv.invoiceNumber,
+            createdBy: `${actorName} (${actorRole})`,
+            createdAt: nowTime,
+          });
+        }
+      }
 
       db.auditLogs.unshift({
         id: `aud-${Date.now()}`,
@@ -3113,7 +3301,7 @@ export async function POST(req: NextRequest) {
         branchName,
         actionType: "FINANCE_PAYMENT",
         summary: `Update Status/Pembayaran Invoice Wakalah: ${inv.invoiceNumber}`,
-        details: `Status: ${inv.status} · Terbayar: ${inv.currency} ${inv.paidAmount.toLocaleString("id-ID")} / ${inv.totalAmount.toLocaleString("id-ID")}`,
+        details: `Status: ${inv.status} · Terbayar: ${inv.currency} ${inv.paidAmount.toLocaleString("id-ID")} / ${inv.totalAmount.toLocaleString("id-ID")}${actualDelta > 0 ? " | Otomatis tercatat MASUK di Buku Jurnal Arus Kas" : ""}`,
         timestamp: nowTimestamp(),
       });
 

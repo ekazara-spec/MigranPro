@@ -135,6 +135,27 @@ export default function CashAndAdvancesModule({
   const totalKasbonDiberikan = cashAdvances.reduce((acc, curr) => acc + curr.amount, 0);
   const totalKasbonSisa = cashAdvances.reduce((acc, curr) => acc + curr.remainingAmount, 0);
   const totalKasbonTerlunaskan = totalKasbonDiberikan - totalKasbonSisa;
+  const activeSponsorKasbonSisa = cashAdvances
+    .filter((a) => a.borrowerType === "SPONSOR" && a.status !== "LUNAS")
+    .reduce((acc, curr) => acc + curr.remainingAmount, 0);
+
+  // Ringkasan Sinkronisasi Real-Time dengan Modul Keuangan & Fee Sponsor
+  const totalSponsorFeeCair = candidates.reduce((acc, c) => {
+    const paid = (c.finance?.sponsorInstallments || [])
+      .filter((i) => i.status === "PAID")
+      .reduce((sum, i) => sum + i.amount, 0);
+    return acc + paid;
+  }, 0);
+  const totalSponsorFeeTerutang = candidates.reduce((acc, c) => {
+    const totalFee = Math.max(
+      c.sponsorCommission || 0,
+      (c.finance?.sponsorInstallments || []).reduce((sum, i) => sum + i.amount, 0)
+    );
+    const paid = (c.finance?.sponsorInstallments || [])
+      .filter((i) => i.status === "PAID")
+      .reduce((sum, i) => sum + i.amount, 0);
+    return acc + Math.max(0, totalFee - paid);
+  }, 0);
 
   // Perhitungan Ringkasan Invoice Syarikah (SAR)
   const totalTagihanSyarikahSar = syarikahInvoices
@@ -403,6 +424,31 @@ export default function CashAndAdvancesModule({
           </div>
         </div>
       )}
+
+      {/* Strip Status Integrasi Real-Time dengan Modul Keuangan & Fee Sponsor */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-500/30 bg-emerald-950/30 px-4 py-3 text-xs text-emerald-100">
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/20 px-2.5 py-1 text-[11px] font-bold text-emerald-300">
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            Terintegrasi Real-Time · Keuangan & Fee Sponsor
+          </span>
+          <span>
+            Fee Sponsor Cair: <strong className="text-white">Rp {totalSponsorFeeCair.toLocaleString("id-ID")}</strong>
+          </span>
+          <span className="text-slate-400">·</span>
+          <span>
+            Sisa Fee Terutang: <strong className="text-amber-300">Rp {totalSponsorFeeTerutang.toLocaleString("id-ID")}</strong>
+          </span>
+          <span className="text-slate-400">·</span>
+          <span>
+            Kasbon Sponsor Aktif: <strong className="text-rose-300">Rp {activeSponsorKasbonSisa.toLocaleString("id-ID")}</strong>{" "}
+            <span className="text-slate-400">(otomatis terpotong saat bayar termin fee)</span>
+          </span>
+        </div>
+        <span className="text-[11px] text-emerald-300/90">
+          DP/Pelunasan Sponsor, Biaya HPP Paid, Kasbon & Invoice Wakalah otomatis masuk Jurnal
+        </span>
+      </div>
 
       {/* --- SUB-TAB 1: BUKU KAS & BANK (JURNAL) --- */}
       {activeSubTab === "jurnal" && (
