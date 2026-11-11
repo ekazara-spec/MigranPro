@@ -8568,7 +8568,11 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
           MODAL KWITANSI RESMI PEMBAYARAN TERMIN FEE SPONSOR
          ========================================================= */}
       {receiptPreviewModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm print:static print:inset-auto print:block print:bg-white print:p-0">
+        <div
+          className={`fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm print:static print:inset-auto print:block print:bg-white print:p-0 ${
+            printingRegFormCandidate || printingSyarikahBiodataCandidate ? "print:hidden" : ""
+          }`}
+        >
           <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl print:max-w-none print:rounded-none print:shadow-none">
             <div className="flex items-center justify-between border-b border-slate-200 pb-4">
               <div className="flex items-center gap-3">
@@ -9451,7 +9455,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
           (MENCAKUP IDE 1: SPLIT-SCREEN AI OCR & WA PARSER, IDE 2: INBOX SERAH-TERIMA SPONSOR, IDE 3: FORMULIR LENGKAP & CETAK FISIK)
          ========================================================= */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-3 sm:p-5 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-3 sm:p-5 backdrop-blur-sm print:hidden">
           <div className="flex max-h-[94vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
             {/* HEADER RESMI PT PANCA BANYU AJISAKTI */}
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-slate-900 px-6 py-4 text-white">
@@ -11607,7 +11611,11 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
           PT PANCA BANYU AJISAKTI (100% IDENTIK DENGAN FORMULIR BARU F4s.pdf)
          ========================================================= */}
       {printingRegFormCandidate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-3 sm:p-6 backdrop-blur-sm print:static print:inset-auto print:block print:bg-white print:p-0">
+        <div
+          className={`fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-3 sm:p-6 backdrop-blur-sm print:static print:inset-auto print:block print:bg-white print:p-0 print:m-0 ${
+            printingSyarikahBiodataCandidate ? "print:hidden" : ""
+          }`}
+        >
           <div className="flex max-h-[95vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-slate-200 shadow-2xl print:block print:max-h-none print:max-w-none print:w-full print:overflow-visible print:rounded-none print:bg-white print:shadow-none">
             {/* Toolbar Cetak */}
             <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900 px-6 py-3.5 text-white print:hidden">
@@ -11759,7 +11767,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                 );
 
                 return (
-                  <div className="mx-auto max-w-[850px] rounded-xs border border-slate-400 bg-white px-7 py-6 font-serif text-[11.5px] leading-[1.38] text-slate-950 shadow-2xl">
+                  <div className="f4-print-sheet mx-auto max-w-[850px] rounded-xs border border-slate-400 bg-white px-7 py-6 font-serif text-[11.5px] leading-[1.38] text-slate-950 shadow-2xl print:max-w-none print:rounded-none print:border-none print:shadow-none">
                     {/* KOP SURAT FORMULIR BARU F4s.pdf: LOGO KIRI + NAMA PT TENGAH + KOTAK No. Reg. & Tgl KANAN */}
                     <div className="grid grid-cols-12 items-center gap-2 border-b-2 border-slate-900 pb-2.5">
                       {/* Logo Resmi PT Panca Banyu Ajisakti */}
@@ -12448,7 +12456,11 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
           (100% IDENTIK DENGAN CONTOH_PRINTOUT_BIODATA.PDF — BAHASA INGGRIS & ARAB)
          ========================================================= */}
       {printingSyarikahBiodataCandidate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 p-2 sm:p-5 backdrop-blur-sm print:static print:inset-auto print:block print:bg-white print:p-0 print:m-0">
+        <div
+          className={`fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 p-2 sm:p-5 backdrop-blur-sm print:static print:inset-auto print:block print:bg-white print:p-0 print:m-0 ${
+            printingRegFormCandidate ? "print:hidden" : ""
+          }`}
+        >
           <div className="flex max-h-[96vh] w-full max-w-7xl flex-col overflow-hidden rounded-2xl bg-slate-100 shadow-2xl print:block print:max-h-none print:max-w-none print:w-full print:overflow-visible print:rounded-none print:bg-white print:shadow-none">
             {/* Toolbar Atas (Disembunyikan saat Print) */}
             <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900 px-5 py-3.5 text-white print:hidden">
@@ -13679,7 +13691,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
           MODAL EDIT / VERIFIKASI / PERPANJANG DOKUMEN CPMI + UPLOAD FISIK
          ========================================================= */}
       {editingDoc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm print:hidden">
           <div className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
@@ -14027,7 +14039,11 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
           MODAL PRATINJAU FISIK / SCAN DOKUMEN DIGITAL (KTP, PASPOR, MEDICAL, VISA, DLL.)
          ========================================================= */}
       {viewingPhysicalDoc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-sm print:static print:inset-auto print:block print:bg-white print:p-0">
+        <div
+          className={`fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-sm print:static print:inset-auto print:block print:bg-white print:p-0 ${
+            printingRegFormCandidate || printingSyarikahBiodataCandidate ? "print:hidden" : ""
+          }`}
+        >
           <div className="flex max-h-[94vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl print:block print:max-h-none print:max-w-none print:overflow-visible print:rounded-none print:shadow-none">
             {/* Header Bar Viewer Fisik */}
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-slate-900 px-6 py-4 text-white print:hidden">
