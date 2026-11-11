@@ -785,11 +785,11 @@ export default function RoleAndPermissionModule({
     <div className="space-y-6">
       {/* Banner View-Only Cabang */}
       {isBranchViewOnly && (
-        <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-amber-200">
+        <div className="rounded-xl border border-amber-500/50 bg-slate-900 p-4 text-amber-100 shadow-lg">
           <div className="flex items-center gap-3">
             <Lock className="h-5 w-5 shrink-0 text-amber-400" />
             <div className="text-sm">
-              <span className="font-bold">Mode Pantau Cabang (View-Only): </span>
+              <span className="font-bold text-amber-300">Mode Pantau Cabang (View-Only): </span>
               Pengaturan akun staf, pembuatan role baru, dan konfigurasi hak akses modul hanya dapat diubah oleh Admin Pusat / Direktur Utama.
             </div>
           </div>
@@ -799,10 +799,10 @@ export default function RoleAndPermissionModule({
       {/* Alert Feedback Pesan */}
       {feedbackMsg && (
         <div
-          className={`rounded-xl border p-4 text-sm ${
+          className={`rounded-xl border p-4 text-sm shadow-lg bg-slate-900 ${
             feedbackMsg.type === "success"
-              ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
-              : "border-rose-500/40 bg-rose-500/10 text-rose-200"
+              ? "border-emerald-500/50 text-emerald-200"
+              : "border-rose-500/50 text-rose-200"
           }`}
         >
           <div className="flex items-center justify-between">
@@ -1140,8 +1140,8 @@ export default function RoleAndPermissionModule({
             </table>
           </div>
 
-          <div className="rounded-xl border border-sky-500/20 bg-sky-500/10 p-3 text-[11px] text-sky-200">
-            💡 <strong>Prinsip Kerja Matrix RBAC:</strong> Menu yang dicentang hijau akan otomatis tampil di sidebar saat staf dengan role bersangkutan login. Menu yang disilang merah otomatis disembunyikan dan diisolasi demi kepatuhan operasional P3MI.
+          <div className="rounded-xl border border-sky-500/40 bg-gradient-to-r from-slate-900 via-sky-950 to-slate-900 p-3.5 text-xs text-slate-100 shadow-lg">
+            💡 <strong className="text-sky-300">Prinsip Kerja Matrix RBAC:</strong> Menu yang dicentang hijau akan otomatis tampil di sidebar saat staf dengan role bersangkutan login. Menu yang disilang merah otomatis disembunyikan dan diisolasi demi kepatuhan operasional P3MI.
           </div>
         </div>
       )}
