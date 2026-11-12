@@ -90,11 +90,76 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const {
       action,
+      actorId = "",
       actorName = "Admin Pusat (Rina)",
       actorRole = "ADMIN_PUSAT",
       branchName = "Kantor Pusat Jakarta",
     } = body;
     const db = readDb();
+
+    function resolveStaffAccount(staffIdOrName?: string) {
+      let raw = String(staffIdOrName || "").trim();
+      if (!raw) return undefined;
+      if (raw === "superadmin-master") raw = "stf-1";
+      return db.staffAccounts.find(
+        (s) =>
+          s.id === raw ||
+          s.email.toLowerCase() === raw.toLowerCase() ||
+          s.name.toLowerCase() === raw.toLowerCase()
+      );
+    }
+
+    function getStaffPresenceSummary() {
+      return db.staffAccounts.map((s) => ({
+        id: s.id,
+        lastActiveAt: s.lastActiveAt,
+        lastLogoutAt: s.lastLogoutAt,
+      }));
+    }
+
+    const requestIsoNow = new Date().toISOString();
+    if (
+      action !== "HEARTBEAT_STAFF" &&
+      action !== "LOGOUT_STAFF" &&
+      action !== "LOGIN_STAFF" &&
+      action !== "RESET_DEMO_DATA"
+    ) {
+      const actorAccount =
+        resolveStaffAccount(actorId) || resolveStaffAccount(actorName);
+      if (actorAccount && actorAccount.active) {
+        actorAccount.lastActiveAt = requestIsoNow;
+        actorAccount.lastLogoutAt = undefined;
+      }
+    }
+
+    if (action === "HEARTBEAT_STAFF") {
+      const targetId = String(body.payload?.staffId || actorId || "").trim();
+      const staff =
+        resolveStaffAccount(targetId) || resolveStaffAccount(actorName);
+      if (staff && staff.active) {
+        staff.lastActiveAt = new Date().toISOString();
+        staff.lastLogoutAt = undefined;
+        writeDb(db);
+      }
+      return NextResponse.json({
+        ok: true,
+        staffPresence: getStaffPresenceSummary(),
+      });
+    }
+
+    if (action === "LOGOUT_STAFF") {
+      const targetId = String(body.payload?.staffId || actorId || "").trim();
+      const staff =
+        resolveStaffAccount(targetId) || resolveStaffAccount(actorName);
+      if (staff) {
+        staff.lastLogoutAt = new Date().toISOString();
+        writeDb(db);
+      }
+      return NextResponse.json({
+        ok: true,
+        staffPresence: getStaffPresenceSummary(),
+      });
+    }
 
     // Helper Otorisasi Kelola Akun Staf, Cabang & Maintenance (Hanya Superadmin / Role dengan canManageStaff)
     function isSuperadminActor(): boolean {
@@ -339,7 +404,7 @@ export async function POST(req: NextRequest) {
 
     // 1. AUTENTIKASI LOGIN MULTI-USER STAF
     if (action === "LOGIN_STAFF") {
-      const { email, pinCode } = body.payload;
+      const { email, pinCode, previousStaffId } = body.payload;
       const staff = db.staffAccounts.find(
         (s) => s.email.toLowerCase() === String(email).toLowerCase().trim()
       );
@@ -361,6 +426,16 @@ export async function POST(req: NextRequest) {
           { status: 401 }
         );
       }
+
+      const loginIsoNow = new Date().toISOString();
+      if (previousStaffId) {
+        const prevStaff = resolveStaffAccount(String(previousStaffId));
+        if (prevStaff && prevStaff.id !== staff.id) {
+          prevStaff.lastLogoutAt = loginIsoNow;
+        }
+      }
+      staff.lastActiveAt = loginIsoNow;
+      staff.lastLogoutAt = undefined;
 
       const staffBranch =
         staff.branchId === "ALL"

@@ -987,6 +987,8 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
     }
   }
 
+  const [presenceNow, setPresenceNow] = useState<number>(() => Date.now());
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       const savedAuth = window.sessionStorage.getItem("pasmigranpro_superadmin_auth");
@@ -996,6 +998,77 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
     }
     fetchDb();
   }, []);
+
+  // Ticker lokal agar timestamp "X menit lalu" di widget Online User tetap akurat real-time
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setPresenceNow(Date.now());
+    }, 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  // Heartbeat ke server agar status Online staf di widget tetap sinkron secara nyata
+  useEffect(() => {
+    if (!isAuthenticated || !loggedInStaff?.id) return;
+    let cancelled = false;
+
+    const sendHeartbeat = async () => {
+      try {
+        const effectiveId =
+          loggedInStaff.id === "superadmin-master" ? "stf-1" : loggedInStaff.id;
+        const res = await fetch("/api/p3mi", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "HEARTBEAT_STAFF",
+            actorId: effectiveId,
+            actorName: loggedInStaff.name,
+            actorRole: loggedInStaff.role,
+            payload: { staffId: effectiveId },
+          }),
+        });
+        const data = await res.json();
+        if (!cancelled && res.ok && data.ok && Array.isArray(data.staffPresence)) {
+          const presenceMap = new Map<
+            string,
+            { lastActiveAt?: string; lastLogoutAt?: string }
+          >(
+            data.staffPresence.map(
+              (p: { id: string; lastActiveAt?: string; lastLogoutAt?: string }) => [
+                p.id,
+                p,
+              ]
+            )
+          );
+          setDb((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              staffAccounts: prev.staffAccounts.map((st) => {
+                const p = presenceMap.get(st.id);
+                if (!p) return st;
+                return {
+                  ...st,
+                  lastActiveAt: p.lastActiveAt,
+                  lastLogoutAt: p.lastLogoutAt,
+                };
+              }),
+            };
+          });
+          setPresenceNow(Date.now());
+        }
+      } catch {
+        // Abaikan error jaringan sementara pada heartbeat latar belakang
+      }
+    };
+
+    sendHeartbeat();
+    const interval = window.setInterval(sendHeartbeat, 45_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [isAuthenticated, loggedInStaff?.id, loggedInStaff?.name, loggedInStaff?.role]);
 
   function handleSuperAdminLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -1049,6 +1122,21 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
   }
 
   function handleSuperAdminLogout() {
+    if (loggedInStaff?.id) {
+      const effectiveId =
+        loggedInStaff.id === "superadmin-master" ? "stf-1" : loggedInStaff.id;
+      void fetch("/api/p3mi", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "LOGOUT_STAFF",
+          actorId: effectiveId,
+          actorName: loggedInStaff.name,
+          actorRole: loggedInStaff.role,
+          payload: { staffId: effectiveId },
+        }),
+      }).catch(() => {});
+    }
     setIsAuthenticated(false);
     if (typeof window !== "undefined") {
       window.sessionStorage.removeItem("pasmigranpro_superadmin_auth");
@@ -1203,6 +1291,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action,
+        actorId:
+          loggedInStaff?.id === "superadmin-master"
+            ? "stf-1"
+            : loggedInStaff?.id || "",
         actorName: loggedInStaff?.name || "Ahmad Sarkoni",
         actorRole: currentRole,
         branchName: branchObj ? branchObj.name : "Kantor Pusat Jakarta",
@@ -1230,6 +1322,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
     const { data } = await callApi("LOGIN_STAFF", {
       email: loginEmail,
       pinCode: loginPin,
+      previousStaffId:
+        loggedInStaff?.id === "superadmin-master"
+          ? "stf-1"
+          : loggedInStaff?.id || undefined,
     });
     if (!data.ok) {
       setLoginError(data.error || "Gagal login.");
@@ -1263,6 +1359,77 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
     if (!db?.tenants || db.tenants.length === 0) return null;
     return db.tenants.find((t) => t.id === selectedTenantId) || db.tenants[0] || null;
   }, [db, selectedTenantId]);
+
+  const onlineUsersSummary = useMemo(() => {
+    const accounts = (db?.staffAccounts || []).filter((s) => s.active);
+    const effectiveCurrentId =
+      loggedInStaff?.id === "superadmin-master" ? "stf-1" : loggedInStaff?.id;
+
+    const formatRelativeTime = (refMs: number): string => {
+      const diffSec = Math.max(0, Math.floor((presenceNow - refMs) / 1000));
+      if (diffSec < 60) return "Baru saja";
+      const diffMin = Math.floor(diffSec / 60);
+      if (diffMin < 60) return `${diffMin} menit lalu`;
+      const diffHours = Math.floor(diffMin / 60);
+      if (diffHours < 24) return `${diffHours} jam lalu`;
+      const diffDays = Math.floor(diffHours / 24);
+      return `${diffDays} hari lalu`;
+    };
+
+    const items = accounts.map((st) => {
+      const isSelf = isAuthenticated && effectiveCurrentId === st.id;
+      const activeMs = st.lastActiveAt ? Date.parse(st.lastActiveAt) : NaN;
+      const logoutMs = st.lastLogoutAt ? Date.parse(st.lastLogoutAt) : NaN;
+      const loggedOutAfterActive =
+        !Number.isNaN(logoutMs) && (Number.isNaN(activeMs) || logoutMs >= activeMs);
+      const isOnline =
+        isSelf ||
+        (!loggedOutAfterActive &&
+          !Number.isNaN(activeMs) &&
+          presenceNow - activeMs <= 3 * 60 * 1000);
+
+      let statusLabel = "Online";
+      let sortGroup = 0;
+      let sortTime = Number.isNaN(activeMs) ? presenceNow : activeMs;
+
+      if (!isOnline) {
+        const refMs = !Number.isNaN(logoutMs) ? logoutMs : activeMs;
+        if (Number.isNaN(refMs)) {
+          statusLabel = "Belum login";
+          sortGroup = 2;
+          sortTime = 0;
+        } else {
+          statusLabel = formatRelativeTime(refMs);
+          sortGroup = 1;
+          sortTime = refMs;
+        }
+      }
+
+      return {
+        id: st.id,
+        name: st.name,
+        roleLabel: st.roleLabel,
+        isSelf,
+        isOnline,
+        statusLabel,
+        sortGroup,
+        sortTime,
+      };
+    });
+
+    items.sort((a, b) => {
+      if (a.sortGroup !== b.sortGroup) return a.sortGroup - b.sortGroup;
+      if (a.isSelf !== b.isSelf) return a.isSelf ? -1 : 1;
+      if (a.sortTime !== b.sortTime) return b.sortTime - a.sortTime;
+      return a.name.localeCompare(b.name, "id");
+    });
+
+    return {
+      items,
+      onlineCount: items.filter((i) => i.isOnline).length,
+      totalCount: items.length,
+    };
+  }, [db?.staffAccounts, loggedInStaff?.id, isAuthenticated, presenceNow]);
 
   const tenantBranches = useMemo(() => {
     if (!db) return [];
@@ -3734,6 +3901,59 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                           <p className="mt-0.5 text-[11px] text-slate-600 truncate">{v.title}</p>
                         </li>
                       ))}
+                    </ul>
+                  </div>
+
+                  {/* Widget Online User (Log Status Online/Terakhir Aktif Staf Aplikasi) */}
+                  <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                    <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3.5">
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4 text-slate-700" />
+                        <h3 className="text-sm font-bold text-slate-900">Online User</h3>
+                      </div>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-200">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                        {onlineUsersSummary.onlineCount} Online
+                      </span>
+                    </div>
+                    <ul className="max-h-72 overflow-y-auto divide-y divide-slate-50 px-5 py-1.5">
+                      {onlineUsersSummary.items.map((u) => (
+                        <li
+                          key={u.id}
+                          title={`${u.name} · ${u.roleLabel}`}
+                          className="flex items-center justify-between gap-3 py-2 text-xs"
+                        >
+                          <div className="flex min-w-0 items-center gap-2.5">
+                            <span
+                              className={`h-2 w-2 shrink-0 rounded-full ${
+                                u.isOnline ? "bg-emerald-500" : "bg-slate-300"
+                              }`}
+                            />
+                            <span className="truncate font-medium text-slate-700">
+                              {u.name}
+                            </span>
+                            {u.isSelf && (
+                              <span className="shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500">
+                                Anda
+                              </span>
+                            )}
+                          </div>
+                          <span
+                            className={`shrink-0 text-[11px] ${
+                              u.isOnline
+                                ? "font-medium text-slate-400"
+                                : "text-slate-400"
+                            }`}
+                          >
+                            {u.statusLabel}
+                          </span>
+                        </li>
+                      ))}
+                      {onlineUsersSummary.totalCount === 0 && (
+                        <li className="py-4 text-center text-xs text-slate-400">
+                          Belum ada data akun user aktif.
+                        </li>
+                      )}
                     </ul>
                   </div>
                 </div>
@@ -6388,6 +6608,10 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
                 const { data } = await callApi("LOGIN_STAFF", {
                   email: st.email,
                   pinCode: st.pinCode,
+                  previousStaffId:
+                    loggedInStaff?.id === "superadmin-master"
+                      ? "stf-1"
+                      : loggedInStaff?.id || undefined,
                 });
                 if (data.ok) {
                   setLoggedInStaff(data.staff);

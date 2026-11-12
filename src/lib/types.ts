@@ -198,6 +198,8 @@ export interface StaffAccount {
   phone: string;
   active: boolean;
   pinCode: string;
+  lastActiveAt?: string;
+  lastLogoutAt?: string;
 }
 
 export type CasePriority = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
