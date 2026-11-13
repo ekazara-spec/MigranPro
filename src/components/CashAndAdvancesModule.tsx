@@ -21,6 +21,8 @@ import {
   CreditCard,
   Banknote,
   FileText,
+  Printer,
+  X,
 } from "lucide-react";
 import {
   Branch,
@@ -117,6 +119,29 @@ export default function CashAndAdvancesModule({
   const [selectedInvoice, setSelectedInvoice] = useState<SyarikahInvoice | null>(null);
   const [payInvoiceAmount, setPayInvoiceAmount] = useState(0);
 
+  // Modal Cetak Laporan Harian Petty Cash (F4/A4) Format Excel PT Panca
+  const [showPettyCashModal, setShowPettyCashModal] = useState(false);
+  const [pettyCashDate, setPettyCashDate] = useState(() => new Date().toISOString().split("T")[0]);
+  const [pettyCashDataSource, setPettyCashDataSource] = useState<"LIVE" | "EXCEL_DEMO">("LIVE");
+  const [pettyCashDateFilter, setPettyCashDateFilter] = useState<"SELECTED_DATE" | "ALL">("ALL");
+  const [pettyCashOpeningBalance, setPettyCashOpeningBalance] = useState<number>(15000000.87);
+  const [pettyCashPaperSize, setPettyCashPaperSize] = useState<"F4" | "A4">("F4");
+
+  // Nama Pembuat Laporan (Dinamis Berdasarkan Login: TIKFI & TAUFIK pada role Keuangan)
+  const defaultPettyCashCreator = React.useMemo(() => {
+    const raw = String(actorName || "").trim().toUpperCase();
+    if (raw.includes("TAUFIK")) return "TAUFIK";
+    if (raw.includes("TIKFI") || raw.includes("TIFKI")) return "TIKFI";
+    return raw || "TIKFI";
+  }, [actorName]);
+
+  const [pettyCashCreator, setPettyCashCreator] = useState(defaultPettyCashCreator);
+  const [pettyCashApprover, setPettyCashApprover] = useState("MOH. KOSIM");
+
+  React.useEffect(() => {
+    setPettyCashCreator(defaultPettyCashCreator);
+  }, [defaultPettyCashCreator]);
+
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -167,6 +192,159 @@ export default function CashAndAdvancesModule({
     .reduce((acc, curr) => acc + curr.paidAmount, 0);
 
   const sisaPiutangSyarikahSar = totalTagihanSyarikahSar - totalTerbayarSyarikahSar;
+
+  // Helper Format Tanggal & Angka Sesuai Template Excel PT Panca
+  const formatIndonesianDateHeader = (dateStr: string) => {
+    if (!dateStr) return "00 OKTOBER 2026";
+    try {
+      const d = new Date(dateStr);
+      if (Number.isNaN(d.getTime())) return dateStr.toUpperCase();
+      const day = String(d.getDate()).padStart(2, "0");
+      const months = [
+        "JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI",
+        "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER"
+      ];
+      const month = months[d.getMonth()] || "OKTOBER";
+      const year = d.getFullYear() || 2026;
+      return `${day} ${month} ${year}`;
+    } catch {
+      return dateStr.toUpperCase();
+    }
+  };
+
+  const formatExcelCurrency = (val: number): string => {
+    if (!val || val === 0) return "";
+    return val.toLocaleString("id-ID", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
+
+  // Data Contoh Riil Sesuai Screenshot Excel PT Panca
+  const demoExcelPettyCash = React.useMemo(() => {
+    return {
+      incomes: [
+        {
+          id: "demo-in-1",
+          desc: "PANCA BANYU",
+          code: "",
+          debet: 0,
+          kredit: 50000000,
+          saldo: 65000000.87,
+        },
+      ],
+      expenses: [
+        {
+          id: "demo-ex-1",
+          desc: "Ahmad A / Sidik Jari Kuningan 3 Org (Siti,Zaenab,Fatimah)",
+          code: "",
+          debet: 900000,
+          kredit: 0,
+          saldo: 64100000.87,
+        },
+        {
+          id: "demo-ex-2",
+          desc: "Aminah / Dp 3 Org Saudi (Dina, Sahni, Supiati)",
+          code: "",
+          debet: 15000000,
+          kredit: 0,
+          saldo: 49100000.87,
+        },
+        {
+          id: "demo-ex-3",
+          desc: "Hidayat / Trans Antar Sidik Jari",
+          code: "",
+          debet: 200000,
+          kredit: 0,
+          saldo: 48900000.87,
+        },
+        {
+          id: "demo-ex-4",
+          desc: "Fira / Kopi+Gula+The",
+          code: "",
+          debet: 150000,
+          kredit: 0,
+          saldo: 48750000.87,
+        },
+        {
+          id: "demo-ex-5",
+          desc: "Andi / Pelunasan Terbang Saudi 00/00 untuk 2 Org (Nanda, Septi)",
+          code: "",
+          debet: 18000000,
+          kredit: 0,
+          saldo: 30750000.87,
+        },
+      ],
+      totalDebet: 34250000,
+      totalKredit: 50000000,
+      finalSaldo: 30750000.87,
+    };
+  }, []);
+
+  // Perhitungan Transaksi Petty Cash (Live atau Demo)
+  const pettyCashReportData = React.useMemo(() => {
+    if (pettyCashDataSource === "EXCEL_DEMO") {
+      return {
+        incomes: demoExcelPettyCash.incomes,
+        expenses: demoExcelPettyCash.expenses,
+        totalDebet: demoExcelPettyCash.totalDebet,
+        totalKredit: demoExcelPettyCash.totalKredit,
+        finalSaldo: demoExcelPettyCash.finalSaldo,
+        itemCount: 6,
+      };
+    }
+
+    let journals = [...cashJournals];
+    if (pettyCashDateFilter === "SELECTED_DATE" && pettyCashDate) {
+      journals = journals.filter((j) => {
+        const d = (j.transactionDate || "").split("T")[0];
+        return d === pettyCashDate;
+      });
+    }
+
+    let running = pettyCashOpeningBalance;
+
+    const incomes = journals
+      .filter((j) => j.type === "MASUK")
+      .map((j) => {
+        running += j.amount;
+        return {
+          id: j.id,
+          desc: j.description || j.recipientOrPayer,
+          code: j.referenceNumber || (j.category === "INVOICE_WAKALAH" ? "WAKALAH" : ""),
+          debet: 0,
+          kredit: j.amount,
+          saldo: running,
+        };
+      });
+
+    const expenses = journals
+      .filter((j) => j.type === "KELUAR")
+      .map((j) => {
+        running -= j.amount;
+        return {
+          id: j.id,
+          desc: j.description || j.recipientOrPayer,
+          code: j.referenceNumber || (j.category === "DP_SPONSOR" ? "DP-SPS" : j.category === "PELUNASAN_SPONSOR" ? "LNS-SPS" : j.category === "MEDICAL_PAYMENT" ? "MED" : ""),
+          debet: j.amount,
+          kredit: 0,
+          saldo: running,
+        };
+      });
+
+    const totalDebet = expenses.reduce((sum, item) => sum + item.debet, 0);
+    const totalKredit = incomes.reduce((sum, item) => sum + item.kredit, 0);
+    const finalSaldo = running;
+
+    return {
+      incomes,
+      expenses,
+      totalDebet,
+      totalKredit,
+      finalSaldo,
+      itemCount: journals.length,
+    };
+  }, [pettyCashDataSource, cashJournals, pettyCashDateFilter, pettyCashDate, pettyCashOpeningBalance, demoExcelPettyCash]);
 
   async function handleSaveJournal(e: React.FormEvent) {
     e.preventDefault();
@@ -508,15 +686,26 @@ export default function CashAndAdvancesModule({
                 </p>
               </div>
 
-              {!isBranchViewOnly && (
+              <div className="flex flex-wrap items-center gap-2">
                 <button
-                  onClick={() => setShowAddJournalModal(true)}
-                  className="flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-amber-400 transition"
+                  type="button"
+                  onClick={() => setShowPettyCashModal(true)}
+                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-md hover:from-teal-400 hover:to-emerald-500 transition cursor-pointer"
                 >
-                  <Plus className="h-4 w-4" />
-                  Catat Transaksi Kas Masuk / Keluar
+                  <Printer className="h-4 w-4" />
+                  Cetak Format Laporan Harian Petty Cash (F4/A4)
                 </button>
-              )}
+
+                {!isBranchViewOnly && (
+                  <button
+                    onClick={() => setShowAddJournalModal(true)}
+                    className="flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-amber-400 transition"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Catat Transaksi Kas Masuk / Keluar
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="overflow-x-auto">
@@ -1331,6 +1520,359 @@ export default function CashAndAdvancesModule({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- MODAL CETAK FORMAT LAPORAN HARIAN PETTY CASH (F4/A4) FORMAT EXCEL PT PANCA --- */}
+      {showPettyCashModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-2 sm:p-4 backdrop-blur-sm overflow-y-auto print:static print:bg-white print:p-0 print:backdrop-blur-none print:overflow-visible">
+          <div className="relative w-full max-w-5xl rounded-2xl border border-slate-700 bg-slate-900 p-4 sm:p-6 shadow-2xl text-white print:border-none print:bg-white print:p-0 print:shadow-none print:text-black">
+            {/* Header Kontrol Modal (Disembunyikan Saat Dicetak) */}
+            <div className="flex flex-col gap-3 border-b border-slate-700 pb-4 print:hidden">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                    <Printer className="h-5 w-5 text-teal-400" />
+                    Cetak Format Laporan Harian Petty Cash (F4/A4)
+                  </h3>
+                  <p className="text-xs text-slate-300">
+                    Format resmi operasional kas kecil PT. Panca Banyu Ajisakti (identik format Excel pembukuan manual).
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowPettyCashModal(false)}
+                  className="rounded-lg bg-slate-800 p-1.5 text-slate-400 hover:bg-slate-700 hover:text-white"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Panel Kontrol & Filter Pengaturan Laporan */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 rounded-xl border border-slate-700/80 bg-slate-800/90 p-3.5 text-xs">
+                {/* 1. Sumber Data */}
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                    Sumber Data Transaksi:
+                  </label>
+                  <select
+                    value={pettyCashDataSource}
+                    onChange={(e) => setPettyCashDataSource(e.target.value as "LIVE" | "EXCEL_DEMO")}
+                    className="w-full rounded-lg border border-slate-600 bg-slate-900 px-2.5 py-1.5 text-xs text-white"
+                  >
+                    <option value="LIVE">Live Jurnal Kas Sistem ({cashJournals.length} Transaksi)</option>
+                    <option value="EXCEL_DEMO">⚡ Contoh Excel PT. Panca (Demo)</option>
+                  </select>
+                </div>
+
+                {/* 2. Filter Tanggal & Saldo Awal */}
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                    Tanggal Laporan:
+                  </label>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="date"
+                      value={pettyCashDate}
+                      onChange={(e) => setPettyCashDate(e.target.value)}
+                      className="w-full rounded-lg border border-slate-600 bg-slate-900 px-2.5 py-1.5 text-xs text-white font-mono"
+                    />
+                    {pettyCashDataSource === "LIVE" && (
+                      <select
+                        value={pettyCashDateFilter}
+                        onChange={(e) => setPettyCashDateFilter(e.target.value as "SELECTED_DATE" | "ALL")}
+                        className="rounded-lg border border-slate-600 bg-slate-900 px-2 py-1.5 text-[11px] text-white"
+                      >
+                        <option value="SELECTED_DATE">Hari Ini</option>
+                        <option value="ALL">Semua</option>
+                      </select>
+                    )}
+                  </div>
+                </div>
+
+                {/* 3. Saldo Awal / Sisa Saldo Kemarin */}
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                    Sisa Saldo Awal (Rp):
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={pettyCashOpeningBalance}
+                    onChange={(e) => setPettyCashOpeningBalance(Number(e.target.value))}
+                    className="w-full rounded-lg border border-slate-600 bg-slate-900 px-2.5 py-1.5 text-xs text-white font-mono"
+                  />
+                </div>
+
+                {/* 4. Pembuat & Penyetuju */}
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                    Yang Membuat (Staff Keuangan):
+                  </label>
+                  <div className="flex items-center gap-1">
+                    <select
+                      value={pettyCashCreator}
+                      onChange={(e) => setPettyCashCreator(e.target.value)}
+                      className="w-full rounded-lg border border-slate-600 bg-slate-900 px-2.5 py-1.5 text-xs font-bold text-amber-300"
+                    >
+                      <option value="TIKFI">TIKFI (Staff Keuangan)</option>
+                      <option value="TAUFIK">TAUFIK (Staff Keuangan)</option>
+                      {defaultPettyCashCreator !== "TIKFI" && defaultPettyCashCreator !== "TAUFIK" && (
+                        <option value={defaultPettyCashCreator}>{defaultPettyCashCreator} (Login Anda)</option>
+                      )}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Toolbar */}
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="font-semibold text-slate-300">Format Kertas:</span>
+                  <div className="inline-flex rounded-lg border border-slate-700 bg-slate-800 p-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setPettyCashPaperSize("F4")}
+                      className={`rounded px-2.5 py-1 text-xs font-bold transition ${
+                        pettyCashPaperSize === "F4" ? "bg-teal-500 text-slate-950" : "text-slate-300 hover:text-white"
+                      }`}
+                    >
+                      F4 / Folio (215 x 330 mm)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPettyCashPaperSize("A4")}
+                      className={`rounded px-2.5 py-1 text-xs font-bold transition ${
+                        pettyCashPaperSize === "A4" ? "bg-teal-500 text-slate-950" : "text-slate-300 hover:text-white"
+                      }`}
+                    >
+                      A4 (210 x 297 mm)
+                    </button>
+                  </div>
+                  <span className="text-[11px] text-slate-400">
+                    Penyetuju Default: <strong className="text-white">{pettyCashApprover}</strong> (Pimpinan PT. Panca)
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-600 px-5 py-2.5 text-xs font-extrabold text-white shadow-lg hover:from-teal-400 hover:to-emerald-500 transition cursor-pointer"
+                  >
+                    <Printer className="h-4 w-4" />
+                    🖨️ Cetak / Simpan PDF ({pettyCashPaperSize})
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* AREA LEMBAR CETAK PETTY CASH (IDENTIK 100% PERSIS FORMAT EXCEL MANUAL PT PANCA BANYU AJISAKTI) */}
+            <div className="mt-4 max-h-[70vh] overflow-y-auto rounded-xl bg-slate-100 p-3 sm:p-6 print:max-h-none print:overflow-visible print:bg-white print:p-0">
+              <div
+                className={`petty-cash-sheet mx-auto bg-white p-6 sm:p-10 font-sans text-slate-950 shadow-xl border border-slate-300 print:shadow-none print:border-none print:p-4 ${
+                  pettyCashPaperSize === "F4" ? "max-w-[850px]" : "max-w-[800px]"
+                }`}
+              >
+                {/* 1. KOP JUDUL LAPORAN IDENTIK EXCEL */}
+                <div className="text-center font-serif leading-tight text-black">
+                  <h1 className="text-base sm:text-lg font-bold tracking-wider uppercase underline">
+                    LAPORAN HARIAN
+                  </h1>
+                  <h2 className="text-sm sm:text-base font-bold tracking-wide mt-0.5">
+                    PT. Panca Banyu Ajisakti
+                  </h2>
+                  <h3 className="text-xs sm:text-sm font-bold tracking-wide mt-0.5 uppercase">
+                    PENGELUARAN PETTY CASH {formatIndonesianDateHeader(pettyCashDate)}
+                  </h3>
+                </div>
+
+                {/* 2. TABEL DATA PETTY CASH IDENTIK EXCEL */}
+                <div className="mt-6 overflow-x-auto">
+                  <table className="w-full border-collapse border border-black text-xs font-sans text-black">
+                    <thead>
+                      <tr className="border-b border-black font-bold text-center bg-slate-50 print:bg-transparent">
+                        <th className="border border-black px-3 py-2 w-[44%] text-center uppercase">
+                          KETERANGAN
+                        </th>
+                        <th className="border border-black px-2 py-2 w-[10%] text-center uppercase">
+                          CODE
+                        </th>
+                        <th className="border border-black px-3 py-2 w-[15%] text-center uppercase">
+                          DEBET
+                        </th>
+                        <th className="border border-black px-3 py-2 w-[15%] text-center uppercase">
+                          KREDIT
+                        </th>
+                        <th className="border border-black px-3 py-2 w-[16%] text-center uppercase">
+                          SALDO
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {/* Baris Sisa Saldo Kemarin */}
+                      <tr className="border-b border-black">
+                        <td className="border border-black px-3 py-1.5 font-medium">
+                          Sisa Saldo {formatIndonesianDateHeader(pettyCashDate)}
+                        </td>
+                        <td className="border border-black px-2 py-1.5 text-center font-mono"></td>
+                        <td className="border border-black px-3 py-1.5 text-right font-mono"></td>
+                        <td className="border border-black px-3 py-1.5 text-right font-mono"></td>
+                        <td className="border border-black px-3 py-1.5 text-right font-mono font-medium">
+                          {formatExcelCurrency(pettyCashOpeningBalance)}
+                        </td>
+                      </tr>
+
+                      {/* Baris Kosong Pemisah */}
+                      <tr className="border-b border-black h-5">
+                        <td className="border border-black"></td>
+                        <td className="border border-black"></td>
+                        <td className="border border-black"></td>
+                        <td className="border border-black"></td>
+                        <td className="border border-black"></td>
+                      </tr>
+
+                      {/* Header PEMASUKAN */}
+                      <tr className="border-b border-black font-bold">
+                        <td className="border border-black px-3 py-1.5 text-center tracking-wider">
+                          PEMASUKAN
+                        </td>
+                        <td className="border border-black"></td>
+                        <td className="border border-black"></td>
+                        <td className="border border-black"></td>
+                        <td className="border border-black"></td>
+                      </tr>
+
+                      {/* Data Pemasukan */}
+                      {pettyCashReportData.incomes.length > 0 ? (
+                        pettyCashReportData.incomes.map((inc) => (
+                          <tr key={inc.id} className="border-b border-black">
+                            <td className="border border-black px-3 py-1.5">
+                              {inc.desc}
+                            </td>
+                            <td className="border border-black px-2 py-1.5 text-center font-mono text-[11px]">
+                              {inc.code || "-"}
+                            </td>
+                            <td className="border border-black px-3 py-1.5 text-right font-mono">
+                              {inc.debet > 0 ? formatExcelCurrency(inc.debet) : ""}
+                            </td>
+                            <td className="border border-black px-3 py-1.5 text-right font-mono font-medium">
+                              {formatExcelCurrency(inc.kredit)}
+                            </td>
+                            <td className="border border-black px-3 py-1.5 text-right font-mono font-medium">
+                              {formatExcelCurrency(inc.saldo)}
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr className="border-b border-black text-slate-400">
+                          <td className="border border-black px-3 py-1.5 italic text-center text-[11px]">
+                            (Tidak ada transaksi pemasukan kas pada periode ini)
+                          </td>
+                          <td className="border border-black text-center">-</td>
+                          <td className="border border-black"></td>
+                          <td className="border border-black text-right font-mono">-</td>
+                          <td className="border border-black text-right font-mono">
+                            {formatExcelCurrency(pettyCashOpeningBalance)}
+                          </td>
+                        </tr>
+                      )}
+
+                      {/* Header PENGELUARAN */}
+                      <tr className="border-b border-black font-bold">
+                        <td className="border border-black px-3 py-1.5 text-center tracking-wider">
+                          PENGELUARAN
+                        </td>
+                        <td className="border border-black"></td>
+                        <td className="border border-black"></td>
+                        <td className="border border-black"></td>
+                        <td className="border border-black"></td>
+                      </tr>
+
+                      {/* Data Pengeluaran */}
+                      {pettyCashReportData.expenses.length > 0 ? (
+                        pettyCashReportData.expenses.map((exp) => (
+                          <tr key={exp.id} className="border-b border-black">
+                            <td className="border border-black px-3 py-1.5">
+                              {exp.desc}
+                            </td>
+                            <td className="border border-black px-2 py-1.5 text-center font-mono text-[11px]">
+                              {exp.code || "-"}
+                            </td>
+                            <td className="border border-black px-3 py-1.5 text-right font-mono font-medium">
+                              {formatExcelCurrency(exp.debet)}
+                            </td>
+                            <td className="border border-black px-3 py-1.5 text-right font-mono">
+                              {exp.kredit > 0 ? formatExcelCurrency(exp.kredit) : ""}
+                            </td>
+                            <td className="border border-black px-3 py-1.5 text-right font-mono font-medium">
+                              {formatExcelCurrency(exp.saldo)}
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr className="border-b border-black text-slate-400">
+                          <td className="border border-black px-3 py-1.5 italic text-center text-[11px]">
+                            (Tidak ada transaksi pengeluaran kas pada periode ini)
+                          </td>
+                          <td className="border border-black text-center">-</td>
+                          <td className="border border-black text-right font-mono">-</td>
+                          <td className="border border-black"></td>
+                          <td className="border border-black text-right font-mono">
+                            {formatExcelCurrency(pettyCashOpeningBalance)}
+                          </td>
+                        </tr>
+                      )}
+
+                      {/* Baris Kosong Pemisah Sebelum TOTAL */}
+                      <tr className="border-b border-black h-5">
+                        <td className="border border-black"></td>
+                        <td className="border border-black"></td>
+                        <td className="border border-black"></td>
+                        <td className="border border-black"></td>
+                        <td className="border border-black"></td>
+                      </tr>
+
+                      {/* Baris TOTAL Sesuai Excel */}
+                      <tr className="border-t-2 border-black font-bold">
+                        <td className="border border-black px-3 py-2 text-center uppercase tracking-wider">
+                          TOTAL
+                        </td>
+                        <td className="border border-black"></td>
+                        <td className="border border-black px-3 py-2 text-right font-mono font-bold">
+                          {formatExcelCurrency(pettyCashReportData.totalDebet)}
+                        </td>
+                        <td className="border border-black px-3 py-2 text-right font-mono font-bold">
+                          {formatExcelCurrency(pettyCashReportData.totalKredit)}
+                        </td>
+                        <td className="border border-black px-3 py-2 text-right font-mono font-bold">
+                          {formatExcelCurrency(pettyCashReportData.finalSaldo)}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* 3. TANDA TANGAN IDENTIK EXCEL */}
+                <div className="mt-10 grid grid-cols-2 text-xs font-sans text-black">
+                  <div className="flex flex-col items-center">
+                    <p className="font-medium">Yang membuat</p>
+                    <div className="h-20" />
+                    <p className="font-bold tracking-wider">
+                      (&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{pettyCashCreator}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <p className="font-medium">Yang menyetujui</p>
+                    <div className="h-20" />
+                    <p className="font-bold tracking-wider">
+                      (&nbsp;&nbsp;&nbsp;{pettyCashApprover}&nbsp;&nbsp;&nbsp;)
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
