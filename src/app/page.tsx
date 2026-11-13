@@ -3274,20 +3274,21 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
           </div>
         </div>
 
-        {/* KOLOM KANAN (FORM LOGIN PERSIS GAMBAR 2 DENGAN WARNA & DESAIN ASLINYA) */}
-        <div className="relative flex min-h-screen w-full flex-col justify-between items-center overflow-y-auto bg-slate-950 p-6 sm:p-10 lg:w-1/2 lg:p-12 text-white">
-          {/* Elemen Dekorasi Cahaya Latar (Ambient Glow Halus) */}
-          <div className="pointer-events-none absolute -top-40 -left-40 h-96 w-96 rounded-full bg-sky-500/15 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-teal-500/15 blur-3xl" />
+        {/* KOLOM KANAN (FORM LOGIN PERSIS GAMBAR 2 DENGAN BACKGROUND LEBIH CERAH & ELEGAN) */}
+        <div className="relative flex min-h-screen w-full flex-col justify-between items-center overflow-y-auto bg-gradient-to-br from-[#f8fafc] via-[#f1f5f9] to-[#e2e8f0] p-6 sm:p-10 lg:w-1/2 lg:p-12 text-slate-800">
+          {/* Elemen Dekorasi Cahaya Latar Lembut (Soft Ambient Glow Cerah) */}
+          <div className="pointer-events-none absolute -top-40 -right-40 h-96 w-96 rounded-full bg-sky-400/20 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-40 -left-40 h-96 w-96 rounded-full bg-teal-400/20 blur-3xl" />
+          <div className="pointer-events-none absolute top-1/3 right-10 h-72 w-72 rounded-full bg-indigo-300/15 blur-3xl" />
 
           {/* Mobile Only: Tampilan Ringkas Logo 3D di Layar Ponsel */}
           <div className="relative z-10 mb-4 flex w-full max-w-md flex-col items-center pt-2 text-center lg:hidden">
             <img
               src="/logo-panca-3d.png"
               alt="Logo 3D PT Panca Banyu Ajisakti"
-              className="h-20 w-auto object-contain drop-shadow-lg"
+              className="h-20 w-auto object-contain drop-shadow-md"
             />
-            <p className="mt-2 text-[10px] font-semibold tracking-widest text-slate-400 uppercase">
+            <p className="mt-2 text-[10px] font-bold tracking-widest text-slate-700 uppercase">
               Sistem Informasi Manajemen P3MI
             </p>
           </div>
@@ -3299,22 +3300,22 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
               <img
                 src="/logo-pas.png"
                 alt="PASMigranPro Logo"
-                className="h-14 w-14 rounded-2xl bg-white object-contain p-1.5 shadow-xl ring-2 ring-white/20"
+                className="h-14 w-14 rounded-2xl bg-white object-contain p-1.5 shadow-md ring-1 ring-slate-300/80"
               />
               <div className="mt-3 flex items-center gap-2">
-                <span className="text-2xl font-extrabold tracking-tight text-white">
+                <span className="text-2xl font-black tracking-tight text-slate-900">
                   PASMigranPro
                 </span>
-                <span className="rounded-full border border-teal-400/40 bg-teal-500/20 px-2.5 py-0.5 text-[10px] font-bold tracking-wider text-teal-300 uppercase">
+                <span className="rounded-full border border-teal-600/30 bg-teal-50 px-2.5 py-0.5 text-[10px] font-bold tracking-wider text-teal-800 uppercase shadow-xs">
                   Enterprise Cloud
                 </span>
               </div>
-              <p className="mt-1 text-xs text-slate-400">
+              <p className="mt-1 text-xs font-medium text-slate-600">
                 PT Panca Banyu Ajisakti · Sistem Manajemen Operasional P3MI
               </p>
             </div>
 
-            <div className="rounded-3xl border border-white/15 bg-slate-900/85 p-8 shadow-2xl backdrop-blur-xl">
+            <div className="rounded-3xl border border-slate-700/60 bg-[#0c1626] p-8 shadow-2xl shadow-slate-900/40 backdrop-blur-xl ring-1 ring-white/10 text-white">
               <div className="flex items-center justify-between">
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/15 px-3 py-1 text-[11px] font-bold text-emerald-300">
                   <Lock className="h-3 w-3" />
@@ -3431,7 +3432,7 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
           </div>
 
           {/* Footer Hak Cipta Sisi Kanan (Sesuai Gaya Gambar 1) */}
-          <div className="relative z-10 mt-6 text-center text-xs text-slate-500">
+          <div className="relative z-10 mt-6 text-center text-xs font-medium text-slate-500">
             © {new Date().getFullYear()} PT Panca Banyu Ajisakti · PASMigranPro. All rights reserved.
           </div>
         </div>
