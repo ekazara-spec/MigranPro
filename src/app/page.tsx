@@ -3230,146 +3230,209 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
 
   if (!isAuthenticated) {
     return (
-      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 p-6 text-white">
-        {/* Elemen Dekorasi Cahaya Latar (Ambient Glow Halus) */}
-        <div className="pointer-events-none absolute -top-40 -left-40 h-96 w-96 rounded-full bg-sky-500/15 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-teal-500/15 blur-3xl" />
+      <div className="relative flex min-h-screen w-full flex-col lg:flex-row overflow-x-hidden bg-slate-950 text-white">
+        {/* KOLOM KIRI (BRANDING & LOGO 3D PANCA BANYU AJISAKTI SEPERTI GAMBAR 1) */}
+        <div className="relative hidden min-h-screen w-full flex-col justify-between overflow-hidden border-r border-white/10 bg-gradient-to-br from-[#060b18] via-[#0a122c] to-[#040814] p-10 xl:p-14 lg:flex lg:w-1/2">
+          {/* Efek Ambient Glow Halus di Belakang Logo 3D */}
+          <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[520px] w-[520px] rounded-full bg-gradient-to-tr from-sky-600/20 via-blue-600/15 to-teal-500/10 blur-[120px]" />
+          <div className="pointer-events-none absolute -top-28 -left-28 h-80 w-80 rounded-full bg-sky-500/10 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-28 -right-28 h-80 w-80 rounded-full bg-teal-500/10 blur-3xl" />
 
-        {/* KARTU LOGIN SUPERADMIN TERPUSAT YANG BERSIH & ELEGAN */}
-        <div className="relative z-10 w-full max-w-md">
-          {/* Header Logo & Identitas Perusahaan di Atas Kartu */}
-          <div className="mb-6 flex flex-col items-center text-center">
-            <img
-              src="/logo-pas.png"
-              alt="PASMigranPro Logo"
-              className="h-14 w-14 rounded-2xl bg-white object-contain p-1.5 shadow-xl ring-2 ring-white/20"
-            />
-            <div className="mt-3 flex items-center gap-2">
-              <span className="text-2xl font-extrabold tracking-tight text-white">
-                PASMigranPro
-              </span>
-              <span className="rounded-full border border-teal-400/40 bg-teal-500/20 px-2.5 py-0.5 text-[10px] font-bold tracking-wider text-teal-300 uppercase">
-                Enterprise Cloud
-              </span>
+          {/* Header Atas Sisi Kiri (Status Resmi Operasional P3MI) */}
+          <div className="relative z-10 flex w-full items-center justify-between">
+            <span className="inline-flex items-center gap-2 rounded-full border border-sky-400/30 bg-sky-500/10 px-3.5 py-1 text-xs font-semibold tracking-wider text-sky-300">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+              Sistem Operasional Resmi P3MI
+            </span>
+            <span className="font-mono text-[11px] tracking-widest text-slate-400 uppercase">
+              SIPKOMP · SISKOP2MI
+            </span>
+          </div>
+
+          {/* Bagian Tengah: LOGO 3D PANCA BANYU AJISAKTI (GAMBAR 3) & SUBTITLE (GAMBAR 1) */}
+          <div className="relative z-10 my-auto flex flex-col items-center text-center">
+            <div className="relative group">
+              <div className="absolute -inset-4 rounded-full bg-sky-500/15 blur-2xl opacity-70 group-hover:opacity-100 transition duration-500" />
+              <img
+                src="/logo-panca-3d.png"
+                alt="Logo 3D PT Panca Banyu Ajisakti"
+                className="relative w-72 max-w-xs xl:max-w-sm drop-shadow-[0_25px_45px_rgba(0,0,0,0.75)] object-contain transition duration-500 hover:scale-105"
+              />
             </div>
-            <p className="mt-1 text-xs text-slate-400">
-              PT Panca Banyu Ajisakti · Sistem Manajemen Operasional P3MI
+            <p className="mt-8 text-sm font-semibold tracking-[0.25em] text-slate-300 uppercase">
+              Sistem Informasi Manajemen
+            </p>
+            <p className="mt-1.5 text-xs font-normal tracking-wider text-sky-400/90">
+              Operasional Penempatan Pekerja Migran Indonesia (P3MI)
             </p>
           </div>
 
-          <div className="rounded-3xl border border-white/15 bg-slate-900/85 p-8 shadow-2xl backdrop-blur-xl">
-            <div className="flex items-center justify-between">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/15 px-3 py-1 text-[11px] font-bold text-emerald-300">
-                <Lock className="h-3 w-3" />
-                Otorisasi Superadmin
-              </span>
-              <span className="font-mono text-[11px] text-slate-400">Multi-Tenant</span>
-            </div>
+          {/* Footer Bawah Sisi Kiri */}
+          <div className="relative z-10 flex w-full items-center justify-between text-xs text-slate-400">
+            <span>PT Panca Banyu Ajisakti</span>
+            <span>SIP3MI No. KEP-542/MEN/2016</span>
+          </div>
+        </div>
 
-            <h2 className="mt-4 text-xl font-extrabold text-white">
-              Masuk ke Command Center
-            </h2>
+        {/* KOLOM KANAN (FORM LOGIN PERSIS GAMBAR 2 DENGAN WARNA & DESAIN ASLINYA) */}
+        <div className="relative flex min-h-screen w-full flex-col justify-between items-center overflow-y-auto bg-slate-950 p-6 sm:p-10 lg:w-1/2 lg:p-12 text-white">
+          {/* Elemen Dekorasi Cahaya Latar (Ambient Glow Halus) */}
+          <div className="pointer-events-none absolute -top-40 -left-40 h-96 w-96 rounded-full bg-sky-500/15 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-teal-500/15 blur-3xl" />
 
-            {/* Informasi Tenant Aktif */}
-            <div className="mt-4 flex items-center justify-between rounded-2xl border border-sky-500/25 bg-sky-500/10 px-4 py-2.5 text-xs">
-              <div>
-                <span className="text-[10px] font-bold tracking-wider text-sky-300 uppercase block">
-                  Master Tenant P3MI
+          {/* Mobile Only: Tampilan Ringkas Logo 3D di Layar Ponsel */}
+          <div className="relative z-10 mb-4 flex w-full max-w-md flex-col items-center pt-2 text-center lg:hidden">
+            <img
+              src="/logo-panca-3d.png"
+              alt="Logo 3D PT Panca Banyu Ajisakti"
+              className="h-20 w-auto object-contain drop-shadow-lg"
+            />
+            <p className="mt-2 text-[10px] font-semibold tracking-widest text-slate-400 uppercase">
+              Sistem Informasi Manajemen P3MI
+            </p>
+          </div>
+
+          {/* KARTU LOGIN SUPERADMIN TERPUSAT (DESIGN & WARNA ASLI GAMBAR 2) */}
+          <div className="relative z-10 my-auto w-full max-w-md">
+            {/* Header Logo & Identitas Perusahaan di Atas Kartu */}
+            <div className="mb-6 flex flex-col items-center text-center">
+              <img
+                src="/logo-pas.png"
+                alt="PASMigranPro Logo"
+                className="h-14 w-14 rounded-2xl bg-white object-contain p-1.5 shadow-xl ring-2 ring-white/20"
+              />
+              <div className="mt-3 flex items-center gap-2">
+                <span className="text-2xl font-extrabold tracking-tight text-white">
+                  PASMigranPro
                 </span>
-                <strong className="text-white">PT Panca Banyu Ajisakti</strong>
+                <span className="rounded-full border border-teal-400/40 bg-teal-500/20 px-2.5 py-0.5 text-[10px] font-bold tracking-wider text-teal-300 uppercase">
+                  Enterprise Cloud
+                </span>
               </div>
-              <span className="rounded-lg bg-sky-500/20 px-2 py-0.5 text-[10px] font-bold text-sky-200 border border-sky-400/30">
-                Verified
-              </span>
+              <p className="mt-1 text-xs text-slate-400">
+                PT Panca Banyu Ajisakti · Sistem Manajemen Operasional P3MI
+              </p>
             </div>
 
-            {superAdminError && (
-              <div className="mt-4 rounded-xl border border-rose-500/40 bg-rose-500/15 p-3 text-xs text-rose-200">
-                <p className="font-bold flex items-center gap-1.5">
-                  <AlertTriangle className="h-4 w-4 text-rose-400 shrink-0" />
-                  Autentikasi Ditolak
-                </p>
-                <p className="mt-1 text-[11px]">{superAdminError}</p>
-              </div>
-            )}
-
-            <form onSubmit={handleSuperAdminLogin} className="mt-5 space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1.5">
-                  Email / Username Superadmin
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={superAdminEmail}
-                  onChange={(e) => setSuperAdminEmail(e.target.value)}
-                  placeholder="superadmin@pasmigranpro.id"
-                  className="w-full rounded-xl border border-white/15 bg-slate-950/90 px-4 py-3 text-sm font-medium text-white placeholder-slate-500 focus:border-sky-400 focus:ring-2 focus:ring-sky-400/20 focus:outline-none"
-                />
+            <div className="rounded-3xl border border-white/15 bg-slate-900/85 p-8 shadow-2xl backdrop-blur-xl">
+              <div className="flex items-center justify-between">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/15 px-3 py-1 text-[11px] font-bold text-emerald-300">
+                  <Lock className="h-3 w-3" />
+                  Otorisasi Superadmin
+                </span>
+                <span className="font-mono text-[11px] text-slate-400">Multi-Tenant</span>
               </div>
 
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-xs font-bold text-slate-300">
-                    Kata Sandi / Kunci Otorisasi
+              <h2 className="mt-4 text-xl font-extrabold text-white">
+                Masuk ke Command Center
+              </h2>
+
+              {/* Informasi Tenant Aktif */}
+              <div className="mt-4 flex items-center justify-between rounded-2xl border border-sky-500/25 bg-sky-500/10 px-4 py-2.5 text-xs">
+                <div>
+                  <span className="text-[10px] font-bold tracking-wider text-sky-300 uppercase block">
+                    Master Tenant P3MI
+                  </span>
+                  <strong className="text-white">PT Panca Banyu Ajisakti</strong>
+                </div>
+                <span className="rounded-lg bg-sky-500/20 px-2 py-0.5 text-[10px] font-bold text-sky-200 border border-sky-400/30">
+                  Verified
+                </span>
+              </div>
+
+              {superAdminError && (
+                <div className="mt-4 rounded-xl border border-rose-500/40 bg-rose-500/15 p-3 text-xs text-rose-200">
+                  <p className="font-bold flex items-center gap-1.5">
+                    <AlertTriangle className="h-4 w-4 text-rose-400 shrink-0" />
+                    Autentikasi Ditolak
+                  </p>
+                  <p className="mt-1 text-[11px]">{superAdminError}</p>
+                </div>
+              )}
+
+              <form onSubmit={handleSuperAdminLogin} className="mt-5 space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                    Email / Username Superadmin
                   </label>
+                  <input
+                    type="text"
+                    required
+                    value={superAdminEmail}
+                    onChange={(e) => setSuperAdminEmail(e.target.value)}
+                    placeholder="superadmin@pasmigranpro.id"
+                    className="w-full rounded-xl border border-white/15 bg-slate-950/90 px-4 py-3 text-sm font-medium text-white placeholder-slate-500 focus:border-sky-400 focus:ring-2 focus:ring-sky-400/20 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-bold text-slate-300">
+                      Kata Sandi / Kunci Otorisasi
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowSuperAdminPassword(!showSuperAdminPassword)}
+                      className="text-[11px] font-semibold text-sky-400 hover:text-sky-300"
+                    >
+                      {showSuperAdminPassword ? "Sembunyikan" : "Tampilkan Sandi"}
+                    </button>
+                  </div>
+                  <input
+                    type={showSuperAdminPassword ? "text" : "password"}
+                    required
+                    value={superAdminPassword}
+                    onChange={(e) => setSuperAdminPassword(e.target.value)}
+                    placeholder="••••••••••••••"
+                    className="w-full rounded-xl border border-white/15 bg-slate-950/90 px-4 py-3 font-mono text-sm text-white placeholder-slate-500 focus:border-sky-400 focus:ring-2 focus:ring-sky-400/20 focus:outline-none"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-teal-500 px-5 py-3.5 text-sm font-extrabold text-slate-950 shadow-lg shadow-sky-500/25 transition hover:from-sky-400 hover:to-teal-400"
+                >
+                  Masuk ke Command Center P3MI
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </form>
+
+              {/* Box Kredensial Demo 1 User Superadmin */}
+              <div className="mt-5 rounded-2xl border border-white/10 bg-slate-950/70 p-3.5 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-slate-200 flex items-center gap-1.5">
+                    <KeyRound className="h-3.5 w-3.5 text-amber-400" />
+                    Akun Demo Superadmin
+                  </span>
                   <button
                     type="button"
-                    onClick={() => setShowSuperAdminPassword(!showSuperAdminPassword)}
-                    className="text-[11px] font-semibold text-sky-400 hover:text-sky-300"
+                    onClick={() => {
+                      setSuperAdminEmail("superadmin@pasmigranpro.id");
+                      setSuperAdminPassword("SuperAdmin2026!");
+                      setSuperAdminError("");
+                    }}
+                    className="rounded-lg border border-sky-400/30 bg-sky-500/15 px-2.5 py-1 text-[10px] font-bold text-sky-300 hover:bg-sky-500/25"
                   >
-                    {showSuperAdminPassword ? "Sembunyikan" : "Tampilkan Sandi"}
+                    ⚡ Isi Otomatis
                   </button>
                 </div>
-                <input
-                  type={showSuperAdminPassword ? "text" : "password"}
-                  required
-                  value={superAdminPassword}
-                  onChange={(e) => setSuperAdminPassword(e.target.value)}
-                  placeholder="••••••••••••••"
-                  className="w-full rounded-xl border border-white/15 bg-slate-950/90 px-4 py-3 font-mono text-sm text-white placeholder-slate-500 focus:border-sky-400 focus:ring-2 focus:ring-sky-400/20 focus:outline-none"
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-teal-500 px-5 py-3.5 text-sm font-extrabold text-slate-950 shadow-lg shadow-sky-500/25 transition hover:from-sky-400 hover:to-teal-400"
-              >
-                Masuk ke Command Center P3MI
-                <ArrowRight className="h-4 w-4" />
-              </button>
-            </form>
-
-            {/* Box Kredensial Demo 1 User Superadmin */}
-            <div className="mt-5 rounded-2xl border border-white/10 bg-slate-950/70 p-3.5 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-slate-200 flex items-center gap-1.5">
-                  <KeyRound className="h-3.5 w-3.5 text-amber-400" />
-                  Akun Demo Superadmin
-                </span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSuperAdminEmail("superadmin@pasmigranpro.id");
-                    setSuperAdminPassword("SuperAdmin2026!");
-                    setSuperAdminError("");
-                  }}
-                  className="rounded-lg border border-sky-400/30 bg-sky-500/15 px-2.5 py-1 text-[10px] font-bold text-sky-300 hover:bg-sky-500/25"
-                >
-                  ⚡ Isi Otomatis
-                </button>
-              </div>
-              <div className="mt-2 space-y-1 font-mono text-[11px] text-slate-300">
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Username:</span>
-                  <span className="font-bold text-white">superadmin@pasmigranpro.id</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Password:</span>
-                  <span className="font-bold text-teal-300">SuperAdmin2026!</span>
+                <div className="mt-2 space-y-1 font-mono text-[11px] text-slate-300">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Username:</span>
+                    <span className="font-bold text-white">superadmin@pasmigranpro.id</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Password:</span>
+                    <span className="font-bold text-teal-300">SuperAdmin2026!</span>
+                  </div>
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Footer Hak Cipta Sisi Kanan (Sesuai Gaya Gambar 1) */}
+          <div className="relative z-10 mt-6 text-center text-xs text-slate-500">
+            © {new Date().getFullYear()} PT Panca Banyu Ajisakti · PASMigranPro. All rights reserved.
           </div>
         </div>
       </div>
