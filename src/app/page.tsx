@@ -3232,25 +3232,14 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
     return (
       <div className="relative flex min-h-screen w-full flex-col lg:flex-row overflow-x-hidden bg-slate-950 text-white">
         {/* KOLOM KIRI (BRANDING & LOGO 3D PANCA BANYU AJISAKTI SEPERTI GAMBAR 1) */}
-        <div className="relative hidden min-h-screen w-full flex-col justify-between overflow-hidden border-r border-white/10 bg-gradient-to-br from-[#060b18] via-[#0a122c] to-[#040814] p-10 xl:p-14 lg:flex lg:w-1/2">
+        <div className="relative hidden min-h-screen w-full flex-col items-center justify-center overflow-hidden border-r border-white/10 bg-gradient-to-br from-[#060b18] via-[#0a122c] to-[#040814] p-10 xl:p-14 lg:flex lg:w-1/2">
           {/* Efek Ambient Glow Halus di Belakang Logo 3D */}
           <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[520px] w-[520px] rounded-full bg-gradient-to-tr from-sky-600/20 via-blue-600/15 to-teal-500/10 blur-[120px]" />
           <div className="pointer-events-none absolute -top-28 -left-28 h-80 w-80 rounded-full bg-sky-500/10 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-28 -right-28 h-80 w-80 rounded-full bg-teal-500/10 blur-3xl" />
 
-          {/* Header Atas Sisi Kiri (Status Resmi Operasional P3MI) */}
-          <div className="relative z-10 flex w-full items-center justify-between">
-            <span className="inline-flex items-center gap-2 rounded-full border border-sky-400/30 bg-sky-500/10 px-3.5 py-1 text-xs font-semibold tracking-wider text-sky-300">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              Sistem Operasional Resmi P3MI
-            </span>
-            <span className="font-mono text-[11px] tracking-widest text-slate-400 uppercase">
-              SIPKOMP · SISKOP2MI
-            </span>
-          </div>
-
           {/* Bagian Tengah: LOGO 3D PANCA BANYU AJISAKTI (GAMBAR 3) & SUBTITLE (GAMBAR 1) */}
-          <div className="relative z-10 my-auto flex flex-col items-center text-center">
+          <div className="relative z-10 flex flex-col items-center text-center">
             <div className="relative group">
               <div className="absolute -inset-4 rounded-full bg-sky-500/15 blur-2xl opacity-70 group-hover:opacity-100 transition duration-500" />
               <img
@@ -3262,15 +3251,6 @@ Catatan Sponsor: Formulir Baru F4 fisik & dokumen asli sudah lengkap diserahkan 
             <p className="mt-8 text-sm font-semibold tracking-[0.25em] text-slate-300 uppercase">
               Sistem Informasi Manajemen
             </p>
-            <p className="mt-1.5 text-xs font-normal tracking-wider text-sky-400/90">
-              Operasional Penempatan Pekerja Migran Indonesia (P3MI)
-            </p>
-          </div>
-
-          {/* Footer Bawah Sisi Kiri */}
-          <div className="relative z-10 flex w-full items-center justify-between text-xs text-slate-400">
-            <span>PT Panca Banyu Ajisakti</span>
-            <span>SIP3MI No. KEP-542/MEN/2016</span>
           </div>
         </div>
 
